@@ -1,6 +1,7 @@
 buildscript {
     ext.kotlin_version = '1.2.31'
     ext.acraVersion = '5.1.3'
+    ext.lithoVersion = '0.14.0'
     repositories {
         mavenCentral()
         google()
@@ -19,6 +20,7 @@ repositories {
     maven {
         url "https://jitpack.io"
     }
+    jcenter()
 }
 
 androidGitVersion {
@@ -123,6 +125,15 @@ dependencies {
     implementation 'dnsjava:dnsjava:2.1.8'
 
     // UI libraries
+    implementation "com.facebook.litho:litho-core:$lithoVersion"
+    implementation "com.facebook.litho:litho-widget:$lithoVersion"
+    compileOnly "com.facebook.litho:litho-annotations:$lithoVersion"
+    annotationProcessor "com.facebook.litho:litho-processor:$lithoVersion"
+    implementation "com.facebook.litho:litho-sections-core:$lithoVersion"
+    implementation "com.facebook.litho:litho-sections-widget:$lithoVersion"
+    compileOnly "com.facebook.litho:litho-sections-annotations:$lithoVersion"
+    annotationProcessor "com.facebook.litho:litho-sections-processor:$lithoVersion"
+    implementation 'com.facebook.soloader:soloader:0.2.0'
     implementation ('com.github.ozodrukh:CircularReveal:2.0.1@aar') {
         transitive = true
     }
