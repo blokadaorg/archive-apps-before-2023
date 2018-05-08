@@ -7,7 +7,6 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
-import nl.komponents.kovenant.task
 
 /**
  * ABootReceiver gets a ping from the OS after boot. Don't forget to register

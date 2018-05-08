@@ -4,9 +4,9 @@ import android.content.Context
 import android.support.v7.widget.AppCompatTextView
 import android.text.Html
 import android.util.AttributeSet
-import android.widget.TextView
-import nl.komponents.kovenant.ui.promiseOnUi
 import gs.presentation.doAfter
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 
 
 class AInfoView(
@@ -27,7 +27,7 @@ class AInfoView(
                     slideIn()
                 }
             } else {
-                promiseOnUi {
+                launch(UI) {
                     text = Html.fromHtml(value)
                 }
                 shown = true
@@ -48,14 +48,14 @@ class AInfoView(
 
     private fun slideIn(after: () -> Unit = {}) {
         if (!shown) return
-        promiseOnUi {
+        launch(UI) {
             animate().alpha(1f).doAfter { after() }
         }
     }
 
     private fun slideOut(after: () -> Unit = {}) {
         if (shown) return
-        promiseOnUi {
+        launch(UI) {
             animate().alpha(0f).doAfter { after() }
         }
     }

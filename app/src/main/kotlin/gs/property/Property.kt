@@ -1,8 +1,10 @@
 package gs.property
 
 import gs.environment.Worker
-import nl.komponents.kovenant.task
-import nl.komponents.kovenant.ui.promiseOnUi
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 
 /**
  * IProperty represents a mutable state, changes of which may be monitored using listeners.
@@ -162,13 +164,19 @@ private class When(
 
     override fun execute() {
         if (kctx == null) {
-            promiseOnUi(alwaysSchedule = true) { action() } fail { throw it }
+//            promiseOnUi(alwaysSchedule = true) { action() } fail { throw it }
+            launch(UI) { action() }
         } else {
-            task(kctx) {
+//            task(kctx) {
+//                if (condition()) {
+//                    action()
+//                }
+//            } fail { throw it }
+            launch(kctx) {
                 if (condition()) {
                     action()
                 }
-            } fail { throw it }
+            }
         }
     }
 
@@ -220,14 +228,16 @@ private open class BaseProperty<T>(
     private val listeners: MutableList<IWhenExecute> = mutableListOf()
 
     init {
-        refresh()
+        launch(kctx) {
+            refresh()
+        }
     }
 
     internal var value: T? = null
         @Synchronized get
         @Synchronized set(value) {
             field = value
-            task(kctx) {
+            launch(kctx) {
                 listeners.forEach { aWhen ->
                     if (aWhen()) aWhen.execute()
                 }
@@ -236,7 +246,7 @@ private open class BaseProperty<T>(
 
     override fun doWhen(condition: () -> Boolean): IWhen {
         val newWhen = When(kctx, condition, immediate = value != null)
-        task(kctx) {
+        launch(kctx) {
             listeners.add(newWhen)
         }
         return newWhen
@@ -248,7 +258,7 @@ private open class BaseProperty<T>(
 
     override fun doOnUiWhenSet(): IWhen {
         val newWhen = When(null, { true }, immediate = value != null)
-        task(kctx) {
+        launch(kctx) {
             listeners.add(newWhen)
         }
         return newWhen
@@ -256,7 +266,7 @@ private open class BaseProperty<T>(
 
     override fun doWhenChanged(withInit: Boolean): IWhen {
         val newWhen = WhenChanged(this, withInit, When(kctx, { true }, immediate = false))
-        task(kctx) {
+        launch(kctx) {
             listeners.add(newWhen)
         }
         return newWhen
@@ -264,14 +274,14 @@ private open class BaseProperty<T>(
 
     override fun doOnUiWhenChanged(withInit: Boolean): IWhen {
         val newWhen = WhenChanged(this, withInit, When(null, { true }, immediate = false))
-        task(kctx) {
+        launch(kctx) {
             listeners.add(newWhen)
         }
         return newWhen
     }
 
     override fun cancel(existingWhen: IWhen?) {
-        task(kctx) {
+        launch(kctx) {
             listeners.remove(existingWhen)
         }
     }
@@ -283,36 +293,35 @@ private open class BaseProperty<T>(
     override fun refresh(force: Boolean, blocking: Boolean) {
         val value = this.value
         if (blocking) {
-            if (value == null) {
-                try {
-                    this.value = init()
-                } catch (e: Exception) {
-                    kctx.workerContext.errorHandler(e)
-                }
-                return
-            }
-
-            if (force or shouldRefresh(value)) {
-                try {
-                    this.value = refresh(value)
-                } catch (e: Exception) {
-                    kctx.workerContext.errorHandler(e)
+            runBlocking {
+                if (value == null) {
+                    try {
+                        this@BaseProperty.value = init()
+                    } catch (e: Exception) {
+//                    kctx.workerContext.errorHandler(e)
+                    }
+                } else {
+                    if (force or shouldRefresh(value)) {
+                        try {
+                            this@BaseProperty.value = refresh(value)
+                        } catch (e: Exception) {
+//                    kctx.workerContext.errorHandler(e)
+                        }
+                    }
                 }
             }
         } else {
-            if (value == null) {
-                task(kctx) {
-                    if (this.value == null) {
+            launch(kctx) {
+                try {
+                    if (value == null) {
                         val v = init()
-                        this.value = v
-                    }
-                } fail { throw it }
-            } else if (force or shouldRefresh(value)) {
-                task(kctx) {
-                    if (force or shouldRefresh(value)) {
+                        this@BaseProperty.value = v
+                    } else if (force or shouldRefresh(value)) {
                         val v = refresh(value)
-                        this.value = v
+                        this@BaseProperty.value = v
                     }
+                } catch (e: Exception) {
+                    // TODO
                 }
             }
         }
@@ -325,23 +334,20 @@ private open class BaseProperty<T>(
     override fun invoke(force: Boolean, after: (value: T) -> Unit) {
         val value = this.value
         if (value == null) {
-            task(kctx) {
-                if (this.value == null) {
+            launch(kctx) {
+                if (this@BaseProperty.value == null) {
                     val v = init()
-                    this.value = v
+                    this@BaseProperty.value = v
                     v
-                } else this.value!!
-            } success {
-                after(it)
-            } fail { throw it }
+                }
+                after(this@BaseProperty.value!!)
+            }
         } else if (force) {
-            task(kctx) {
+            launch(kctx) {
                 val v = refresh(value)
-                this.value = v
-                v
-            } success {
-                after(it)
-            } fail { throw it }
+                this@BaseProperty.value = v
+                after(v)
+            }
         } else after(value)
     }
 
@@ -363,7 +369,7 @@ private class PersistedProperty<T>(
         private val shouldRefresh: (value: T) -> Boolean = { false }
 ): BaseProperty<T>(
         kctx = kctx,
-        zeroValue = { persistence.read(zeroValue()) },
+        zeroValue = { runBlocking { async { persistence.read(zeroValue()) }.await() } },
         refresh = refresh ?: { persistence.read(it) },
         shouldRefresh = shouldRefresh
 ) {

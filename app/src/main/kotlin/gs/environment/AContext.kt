@@ -11,8 +11,6 @@ import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.KodeinAware
 import com.github.salomonbrys.kodein.bind
 import com.github.salomonbrys.kodein.singleton
-import nl.komponents.kovenant.android.androidUiDispatcher
-import nl.komponents.kovenant.ui.KovenantUi
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -87,9 +85,6 @@ fun newAndroidModule(ctx: Context): Kodein.Module {
         }
 
         onReady {
-            KovenantUi.uiContext {
-                dispatcher = androidUiDispatcher()
-            }
         }
     }
 }

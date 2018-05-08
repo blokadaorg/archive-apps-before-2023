@@ -1,10 +1,11 @@
 package core
 
 import android.content.Context
+import android.util.AttributeSet
 import gs.presentation.doAfter
 import gs.property.Persistence
-import nl.komponents.kovenant.ui.promiseOnUi
-import android.util.AttributeSet
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import org.blokada.R
 
 /**
@@ -85,7 +86,7 @@ class ADashesPersistence(
     override fun read(current: List<Dash>): List<Dash> {
         val dashes = ArrayList(current)
         val updateDash = { id: String, active: Boolean ->
-            promiseOnUi {
+            launch(UI) {
                 val dash = dashes.firstOrNull { it.id == id }
                 if (dash != null) {
                     dash.active = active

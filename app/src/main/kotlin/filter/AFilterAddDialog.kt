@@ -16,9 +16,8 @@ import gs.environment.ComponentProvider
 import gs.environment.Journal
 import gs.environment.inject
 import gs.presentation.nullIfEmpty
-import nl.komponents.kovenant.task
-import nl.komponents.kovenant.ui.failUi
-import nl.komponents.kovenant.ui.successUi
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
 import org.blokada.R
 
 /**
@@ -115,81 +114,90 @@ class AFilterAddDialog(
             AFiltersAddView.Tab.LINK -> {
                 if (!view.linkView.correct) view.linkView.showError = true
                 else {
-                    task {
-                        val source = sourceProvider("link")
-                        if (!source.fromUserInput(view.linkView.text))
-                            throw Exception("invalid source")
-                        val hosts = source.fetch()
-                        if (hosts.isEmpty()) throw Exception("source with no hosts")
-                        source to hosts
-                    } successUi {
-                        dialog.dismiss()
-                        onSave(Filter(
-                                id = filter?.id ?: it.first.serialize(),
-                                source = it.first,
-                                hosts = it.second,
-                                active = true,
-                                whitelist = filter?.whitelist ?: whitelist,
-                                localised = LocalisedFilter(sourceToName(ctx, it.first),
-                                        view.linkView.comment.nullIfEmpty())
-                        ))
-                        view.linkView.correct = true
-                    } failUi {
-                        view.linkView.correct = false
-                        view.linkView.showError = true
+                    launch {
+                        try {
+                            val source = sourceProvider("link")
+                            if (!source.fromUserInput(view.linkView.text))
+                                throw Exception("invalid source")
+                            val hosts = source.fetch()
+                            if (hosts.isEmpty()) throw Exception("source with no hosts")
+
+                            launch(UI) {
+                                dialog.dismiss()
+                                onSave(Filter(
+                                        id = filter?.id ?: source.serialize(),
+                                        source = source,
+                                        hosts = hosts,
+                                        active = true,
+                                        whitelist = filter?.whitelist ?: whitelist,
+                                        localised = LocalisedFilter(sourceToName(ctx, source),
+                                                view.linkView.comment.nullIfEmpty())
+                                ))
+                                view.linkView.correct = true
+                            }
+                        } catch (e: Exception) {
+                            view.linkView.correct = false
+                            view.linkView.showError = true
+                        }
                     }
                 }
             }
             AFiltersAddView.Tab.FILE -> {
                 if (!view.fileView.correct) view.fileView.showError = true
                 else {
-                    task {
-                        val source = sourceProvider("file") as FilterSourceUri
-                        source.source = view.fileView.uri
-                        source.flags = view.fileView.flags
-                        val hosts = source.fetch()
-                        if (hosts.isEmpty()) throw Exception("source with no hosts")
-                        source to hosts
-                    } successUi {
-                        dialog.dismiss()
-                        onSave(Filter(
-                                id = filter?.id ?: it.first.serialize(),
-                                source = it.first,
-                                hosts = it.second,
-                                active = true,
-                                whitelist = filter?.whitelist ?: whitelist,
-                                localised = LocalisedFilter(sourceToName(ctx, it.first),
-                                        view.fileView.comment.nullIfEmpty())
-                        ))
-                        view.fileView.correct = true
-                    } failUi {
-                        view.fileView.correct = false
-                        view.fileView.showError = true
+                    launch {
+                        try {
+                            val source = sourceProvider("file") as FilterSourceUri
+                            source.source = view.fileView.uri
+                            source.flags = view.fileView.flags
+                            val hosts = source.fetch()
+                            if (hosts.isEmpty()) throw Exception("source with no hosts")
+
+                            launch(UI) {
+                                dialog.dismiss()
+                                onSave(Filter(
+                                        id = filter?.id ?: source.serialize(),
+                                        source = source,
+                                        hosts = hosts,
+                                        active = true,
+                                        whitelist = filter?.whitelist ?: whitelist,
+                                        localised = LocalisedFilter(sourceToName(ctx, source),
+                                                view.linkView.comment.nullIfEmpty())
+                                ))
+                                view.fileView.correct = true
+                            }
+                        } catch (e: Exception) {
+                            view.fileView.correct = false
+                            view.fileView.showError = true
+                        }
                     }
                 }
             }
             AFiltersAddView.Tab.APP -> {
                 if (!view.appView.correct) view.appView.showError = true
                 else {
-                    task {
-                        val source = sourceProvider("app")
-                        if (!source.fromUserInput(view.appView.text))
-                            throw Exception("invalid source")
-                        source
-                    } successUi {
-                        dialog.dismiss()
-                        onSave(Filter(
-                                id = filter?.id ?: it.serialize(),
-                                source = it,
-                                active = true,
-                                whitelist = true,
-                                localised = LocalisedFilter(sourceToName(ctx, it),
-                                        view.appView.comment.nullIfEmpty())
-                        ))
-                        view.appView.correct = true
-                    } failUi {
-                        view.appView.correct = false
-                        view.appView.showError = true
+                    launch {
+                        try {
+                            val source = sourceProvider("app")
+                            if (!source.fromUserInput(view.appView.text))
+                                throw Exception("invalid source")
+
+                            launch(UI) {
+                                dialog.dismiss()
+                                onSave(Filter(
+                                        id = filter?.id ?: source.serialize(),
+                                        source = source,
+                                        active = true,
+                                        whitelist = true,
+                                        localised = LocalisedFilter(sourceToName(ctx, source),
+                                                view.appView.comment.nullIfEmpty())
+                                ))
+                                view.appView.correct = true
+                            }
+                        } catch (e: Exception) {
+                            view.appView.correct = false
+                            view.appView.showError = true
+                        }
                     }
                 }
             }

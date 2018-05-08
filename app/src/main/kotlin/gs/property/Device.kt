@@ -9,9 +9,9 @@ import android.net.wifi.WifiManager
 import android.os.PowerManager
 import com.github.salomonbrys.kodein.*
 import gs.environment.*
-import nl.komponents.kovenant.Kovenant
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.task
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -55,7 +55,7 @@ class DeviceImpl (
 class ConnectivityReceiver : BroadcastReceiver() {
 
     override fun onReceive(ctx: Context, intent: Intent?) {
-        task(ctx.inject().with("ConnectivityReceiver").instance()) {
+        launch(ctx.inject().with("ConnectivityReceiver").instance()) {
             // Do it async so that Android can refresh the current network info before we access it
             val j: Journal = ctx.inject().instance()
             j.log("ConnectivityReceiver: ping")
@@ -88,7 +88,7 @@ fun newDeviceModule(ctx: Context): Kodein.Module {
         bind<IWatchdog>() with singleton { AWatchdog(ctx) }
         onReady {
             // Register various Android listeners to receive events
-            task {
+            launch {
 //                 In a task because we are in DI and using DI can lead to stack overflow
                 ConnectivityReceiver.register(ctx)
                 ScreenOnReceiver.register(ctx)
@@ -100,7 +100,7 @@ fun newDeviceModule(ctx: Context): Kodein.Module {
 
 class ScreenOnReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent?) {
-        task(ctx.inject().with("ScreenOnReceiver").instance()) {
+        launch(ctx.inject().with("ScreenOnReceiver").instance()) {
             // This causes everything to load
             val j: Journal = ctx.inject().instance()
             j.log("ScreenOnReceiver: ping")
@@ -123,7 +123,7 @@ class ScreenOnReceiver : BroadcastReceiver() {
 
 class LocaleReceiver : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent?) {
-        task(ctx.inject().with("LocaleReceiver").instance()) {
+        launch(ctx.inject().with("LocaleReceiver").instance()) {
             val j: Journal = ctx.inject().instance()
             j.log("LocaleReceiver: ping")
             val i18n: I18n = ctx.inject().instance()
@@ -174,25 +174,25 @@ class AWatchdog(
     private val MAX = 120
     private var started = false
     private var wait = 1
-    private var nextTask: Promise<*, *>? = null
+    private var nextTask: Deferred<*>? = null
 
     @Synchronized override fun start() {
         if (started) return
         if (!d.watchdogOn()) { return }
         started = true
         wait = 1
-        if (nextTask != null) Kovenant.cancel(nextTask!!, Exception("cancelled"))
+        if (nextTask != null) nextTask?.cancel()
         nextTask = tick()
     }
 
     @Synchronized override fun stop() {
         started = false
-        if (nextTask != null) Kovenant.cancel(nextTask!!, Exception("cancelled"))
+        if (nextTask != null) nextTask?.cancel()
         nextTask = null
     }
 
-    private fun tick(): Promise<*, *> {
-        return task(kctx) {
+    private fun tick(): Deferred<*> {
+        return async(kctx) {
             if (started) {
                 // Delay the first check to not cause false positives
                 if (wait == 1) Thread.sleep(1000L)

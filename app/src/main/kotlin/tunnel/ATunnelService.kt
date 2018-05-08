@@ -8,7 +8,9 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import com.github.salomonbrys.kodein.instance
 import gs.environment.inject
-import nl.komponents.kovenant.task
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import java.io.FileDescriptor
 
 /**
@@ -61,9 +63,11 @@ class ATunnelService : VpnService(), ITunnelActions {
 
     @Synchronized override fun turnOn(): Int {
         try {
-            tunDescriptor = task {
-                establishTunnelInternal()
-            }.get()
+            runBlocking {
+                tunDescriptor = async {
+                    establishTunnelInternal()
+                }.await()
+            }
             tunFd = tunDescriptor?.fd ?: -1
         } catch (e: Exception) {
             tunFd = -1
@@ -73,9 +77,8 @@ class ATunnelService : VpnService(), ITunnelActions {
     }
 
     @Synchronized override fun turnOff() {
-        task {
+        launch {
             releaseTunnelInternal()
-        } always {
             tunDescriptor = null
             tunFd = -1
         }

@@ -11,8 +11,6 @@ import android.os.PowerManager
 import android.view.View
 import com.github.salomonbrys.kodein.*
 import gs.property.*
-import nl.komponents.kovenant.android.androidUiDispatcher
-import nl.komponents.kovenant.ui.KovenantUi
 
 fun newGscoreModule(ctx: Context): Kodein.Module {
     return Kodein.Module {
@@ -72,10 +70,6 @@ fun newGscoreModule(ctx: Context): Kodein.Module {
         }
         bind<JobScheduler>() with singleton {
             ctx.getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-        }
-
-        KovenantUi.uiContext {
-            dispatcher = androidUiDispatcher()
         }
     }
 }

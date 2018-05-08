@@ -9,9 +9,8 @@ import gs.environment.Worker
 import gs.environment.inject
 import gs.obsolete.hasCompleted
 import gs.property.*
-import nl.komponents.kovenant.Kovenant
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.task
+import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.async
 import tunnel.checkTunnelPermissions
 
 abstract class Tunnel {
@@ -131,16 +130,16 @@ fun newTunnelModule(ctx: Context): Module {
             }
 
             // Things that happen after we get everything set up nice and sweet
-            var resetRetriesTask: Promise<*, *>? = null
+            var resetRetriesTask: Deferred<*>? = null
 
             s.tunnelState.doWhenChanged().then {
                 if (s.tunnelState(TunnelState.ACTIVE)) {
                     // Make sure the tunnel is actually usable by checking connectivity
                     if (d.screenOn()) watchdog.start()
-                    if (resetRetriesTask != null) Kovenant.cancel(resetRetriesTask!!, Exception())
+                    if (resetRetriesTask != null) resetRetriesTask?.cancel()
 
                     // Reset retry counter in case we seem to be stable
-                    resetRetriesTask = task(retryKctx) {
+                    resetRetriesTask = async(retryKctx) {
                         if (s.tunnelState(TunnelState.ACTIVE)) {
                             Thread.sleep(15 * 1000)
                             j.log("tunnel: stable")
@@ -156,13 +155,13 @@ fun newTunnelModule(ctx: Context): Module {
                     s.active %= false
                     s.restart %= true
                     s.tunnelState %= TunnelState.INACTIVE
-                    if (resetRetriesTask != null) Kovenant.cancel(resetRetriesTask!!, Exception())
+                    if (resetRetriesTask != null) resetRetriesTask?.cancel()
 
                     // Monitor connectivity if disconnected, in case we can't relay on Android event
                     if (s.enabled() && d.screenOn()) watchdog.start()
 
                     // Reset retry counter after a longer break since we never give up, never surrender
-                    resetRetriesTask = task(retryKctx) {
+                    resetRetriesTask = async(retryKctx) {
                         if (s.enabled() && s.retries(0) && !s.tunnelState(TunnelState.ACTIVE)) {
                             Thread.sleep(5 * 1000)
                             if (s.enabled() && !s.tunnelState(TunnelState.ACTIVE)) {

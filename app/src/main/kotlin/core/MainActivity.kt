@@ -23,7 +23,8 @@ import gs.property.Device
 import gs.property.IWhen
 import gs.property.Version
 import io.codetail.widget.RevealFrameLayout
-import nl.komponents.kovenant.task
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.BuildConfig
 import org.blokada.R
 import tunnel.startAskTunnelPermissions
@@ -177,7 +178,7 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
         }
         if (intent.getBooleanExtra("askPermissions", false)) {
             j.log("Started main activity for askForPermissions permissions")
-            task {
+            launch {
                 try {
                     askPermissions()
                 } catch (e: Exception) {
@@ -222,7 +223,7 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
 
     private val display = { i: Info ->
         currentlyDisplayed = if (i.type == InfoType.CUSTOM) null else i.type
-        task(ictx) {
+        launch(ictx) {
             infoView?.message = handleInfo(i)
         }
     }
@@ -312,8 +313,9 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
                 throw Exception("starting MainActivity")
             }
 
-            val task = startAskTunnelPermissions(act).promise.get()
-            if (!task) { throw Exception("Could not get tunnel permissions") }
+            runBlocking {
+                startAskTunnelPermissions(act).await()
+            }
         }
 
 //        fun share(id: String) {

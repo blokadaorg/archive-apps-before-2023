@@ -3,8 +3,9 @@ package tunnel
 import android.app.Activity
 import android.content.Context
 import android.net.VpnService
-import nl.komponents.kovenant.Deferred
-import nl.komponents.kovenant.deferred
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.launch
 
 
 /**
@@ -12,34 +13,35 @@ import nl.komponents.kovenant.deferred
  * permissions using Android APIs.
  */
 
+
+val tunnelPermissionsChannel = Channel<Int>()
+
 /**
  * Initiates the procedure causing the OS to display the permission dialog.
  *
  * Returns a deferred object which will be resolved once the flow is finished.
  * If permissions are already granted, the deferred is already resolved.
  */
-fun startAskTunnelPermissions(act: Activity): Deferred<Boolean, Exception> {
-    val deferred = deferred<Boolean, Exception> { }
+fun startAskTunnelPermissions(act: Activity) = async {
     val intent = VpnService.prepare(act)
     when (intent) {
-        null -> deferred.resolve(true)
-        else -> act.startActivityForResult(intent, 0)
+        null -> Unit
+        else -> {
+            act.startActivityForResult(intent, 0)
+            if (tunnelPermissionsChannel.receive() != -1) {
+                throw Exception("tunnel permissions rejected")
+            }
+        }
     }
-    setDeferred(deferred)
-    return deferred
 }
 
 /**
  * Finishes the flow. Should be hooked up to onActivityResult() of Activity.
  */
 fun stopAskTunnelPermissions(resultCode: Int) {
-    val deferred = getDeferred()
-    when {
-        deferred == null -> return
-        resultCode == -1 -> deferred.resolve(true)
-        else -> deferred.resolve(false)
+    launch {
+        tunnelPermissionsChannel.send(resultCode)
     }
-    setDeferred(null)
 }
 
 /**
@@ -49,16 +51,5 @@ fun checkTunnelPermissions(ctx: Context) {
     if (VpnService.prepare(ctx) != null) {
         throw Exception("no tunnel permissions")
     }
-}
-
-/**
- * TODO: make this thing nicer.
- */
-private var deferredActivityResult: Deferred<Boolean, Exception>? = null
-@Synchronized private fun setDeferred(deferred: Deferred<Boolean, Exception>?) {
-    deferredActivityResult = deferred
-}
-@Synchronized private fun getDeferred(): Deferred<Boolean, Exception>? {
-    return deferredActivityResult
 }
 

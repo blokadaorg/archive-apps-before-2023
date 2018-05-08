@@ -4,13 +4,14 @@ import android.app.IntentService
 import android.content.Intent
 import android.widget.Toast
 import com.github.salomonbrys.kodein.instance
-import gs.environment.inject
-import nl.komponents.kovenant.ui.promiseOnUi
-import org.blokada.R
 import core.Filter
-import filter.FilterSourceSingle
-import core.LocalisedFilter
 import core.Filters
+import core.LocalisedFilter
+import filter.FilterSourceSingle
+import gs.environment.inject
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import org.blokada.R
 
 class ANotificationsWhitelistService : IntentService("notificationsWhitelist") {
 
@@ -36,9 +37,9 @@ class ANotificationsWhitelistService : IntentService("notificationsWhitelist") {
             s.changed %= true
         }
 
-        promiseOnUi {
-            Toast.makeText(this, R.string.notification_blocked_whitelist_applied, Toast.LENGTH_SHORT).show()
-            hideNotification(this)
+        launch(UI) {
+            Toast.makeText(this@ANotificationsWhitelistService, R.string.notification_blocked_whitelist_applied, Toast.LENGTH_SHORT).show()
+            hideNotification(this@ANotificationsWhitelistService)
         }
     }
 

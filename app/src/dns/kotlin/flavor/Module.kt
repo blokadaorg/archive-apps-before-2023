@@ -12,9 +12,10 @@ import filter.FilterSourceApp
 import gs.environment.Journal
 import gs.environment.Worker
 import gs.property.IWhen
-import nl.komponents.kovenant.any
-import nl.komponents.kovenant.task
-import nl.komponents.kovenant.then
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.selects.select
 import notification.NotificationDashKeepAlive
 import notification.createNotificationKeepAlive
 import org.blokada.R
@@ -34,20 +35,26 @@ fun newFlavorModule(ctx: Context): Kodein.Module {
                 val agent: ATunnelAgent by lazy { ATunnelAgent(ctx)}
                 val waitKctx: Worker by lazy { with("ienginemanager").instance<Worker>() }
                 override fun start() {
-                    val binding = agent.bind(object : ITunnelEvents {
-                        override fun configure(builder: VpnService.Builder): Long { return 0L }
-                        override fun revoked() {}
-                    }).then {
-                        binder = it
-                        binder!!.actions.turnOn()
-                    }
-                    val wait = task(waitKctx) {
-                        Thread.sleep(3000)
-                    }
-                    any(listOf(binding, wait)).get()
-                    if (!binding.isSuccess()) {
-                        j.log(binding.getError())
-                        throw Exception("could not bind to lollipop agent")
+                    runBlocking {
+                        val binding = agent.bind(object : ITunnelEvents {
+                            override fun configure(builder: VpnService.Builder): Long { return 0L }
+                            override fun revoked() {}
+                        }).await()
+                        val wait = async(waitKctx) {
+                            delay(3000)
+                        }
+
+                        select<Any> {
+                            binding.onReceiveOrNull { it ->
+                                binder = it
+                                wait.cancel()
+                                if (it != null) binder!!.actions.turnOn()
+                                else throw Exception("could not bind to agent")
+                            }
+                            wait.onAwait {
+                                throw Exception("agent wait timed out")
+                            }
+                        }
                     }
                 }
                 override fun updateFilters() {}

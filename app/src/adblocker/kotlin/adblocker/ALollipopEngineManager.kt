@@ -21,8 +21,10 @@ import core.IEngineManager
 import gs.environment.Journal
 import gs.environment.Worker
 import gs.environment.inject
-import nl.komponents.kovenant.any
-import nl.komponents.kovenant.task
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.delay
+import kotlinx.coroutines.experimental.runBlocking
+import kotlinx.coroutines.experimental.selects.select
 import tunnel.ATunnelAgent
 import tunnel.ATunnelBinder
 
@@ -43,17 +45,27 @@ class ALollipopEngineManager(
     private val agent by lazy { ATunnelAgent(ctx) }
 
     @Synchronized override fun start() {
-        val binding = agent.bind(events)
-        binding.success {
-            binder = it
-            binder!!.actions.turnOn()
-            thread = TunnelThreadLollipopAndroid(it.actions, j, s, f, adBlocked, error)
+        runBlocking {
+            val binding = agent.bind(events).await()
+            val wait = async(waitKctx) {
+                delay(3000)
+            }
+
+            select<Any> {
+                binding.onReceiveOrNull { it ->
+                    binder = it
+                    wait.cancel()
+                    if (it != null) {
+                        binder!!.actions.turnOn()
+                        thread = TunnelThreadLollipopAndroid(it.actions, j, s, f, adBlocked, error)
+                    }
+                    else throw Exception("could not bind to agent")
+                }
+                wait.onAwait {
+                    throw Exception("agent wait timed out")
+                }
+            }
         }
-        val wait = task(waitKctx) {
-            Thread.sleep(3000)
-        }
-        any(listOf(binding, wait)).get()
-        if (!binding.isSuccess()) throw Exception("could not bind to lollipop agent")
     }
 
     @Synchronized override fun updateFilters() {

@@ -11,8 +11,9 @@ import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
 import gs.environment.Worker
 import gs.environment.inject
-import nl.komponents.kovenant.Promise
-import nl.komponents.kovenant.deferred
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.launch
 import java.io.FileDescriptor
 import java.net.DatagramSocket
 
@@ -24,33 +25,36 @@ class ATunnelAgent(val ctx: Context) {
     private val tunnelKctx by lazy { ctx.inject().with("tunnel").instance<Worker>() }
 
     private var events: ITunnelEvents? = null
-    private var deferred = deferred<ATunnelBinder, Exception>(tunnelKctx)
+    private var channel: Channel<ATunnelBinder?> = Channel()
 
     private val serviceConnection = object: ServiceConnection {
         @Synchronized override fun onServiceConnected(name: ComponentName, binder: IBinder) {
             val b = binder as ATunnelBinder
             b.events = events
-            deferred.resolve(b)
+            launch {
+                 channel.send(b)
+            }
         }
 
         @Synchronized override fun onServiceDisconnected(name: ComponentName?) {
-            deferred.reject(Exception("service disconnected"))
+            launch {
+                channel.send(null)
+            }
         }
     }
 
-    fun bind(events: ITunnelEvents): Promise<ATunnelBinder, Exception> {
-        this.events = events
-        this.deferred = deferred(tunnelKctx)
+    fun bind(events: ITunnelEvents) = async {
+        this@ATunnelAgent.events = events
         val intent = Intent(ctx, ATunnelService::class.java)
         intent.setAction(ATunnelService.BINDER_ACTION)
-        return when (ctx.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE
+        when (ctx.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE
             or Context.BIND_ABOVE_CLIENT or Context.BIND_IMPORTANT)) {
-            true -> deferred.promise
+            true -> Unit
             else -> {
-                deferred.reject(Exception("could not bind in TunnelAgent"))
-                deferred.promise
+                channel.send(null)
             }
         }
+        channel
     }
 
     fun unbind() {
