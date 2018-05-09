@@ -10,6 +10,7 @@ import android.widget.*
 import com.github.salomonbrys.kodein.instance
 import core.Filters
 import gs.environment.inject
+import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.R
 
 class AFiltersAddAppView(
@@ -126,8 +127,10 @@ class AFiltersAddAppView(
     private val s by lazy { ctx.inject().instance<Filters>() }
 
     private val appNames by lazy {
-        s.apps.refresh(blocking = true)
-        s.apps().map { "${it.label} | ${it.appId}" }
+        runBlocking {
+            s.apps.refresh()?.join()
+            s.apps().map { "${it.label} | ${it.appId}" }
+        }
     }
 
     private val appSearch by lazy {

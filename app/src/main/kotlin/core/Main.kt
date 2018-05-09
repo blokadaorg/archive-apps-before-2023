@@ -19,9 +19,9 @@ import gs.environment.Journal
 import gs.environment.inject
 import gs.environment.newGscoreModule
 import gs.property.Device
-import gs.property.IWhen
 import gs.property.newDeviceModule
 import gs.property.newUserModule
+import kotlinx.coroutines.experimental.android.UI
 import org.acra.ACRA
 import org.acra.ReportField
 import org.acra.config.CoreConfigurationBuilder
@@ -164,17 +164,14 @@ class BootJobService : JobService() {
                     j.log("BootJobService: finnish immediately, not enabled")
                     false
                 }
-                listener != null -> {
+                this.params != null -> {
                     j.log("BootJobService: finnish immediately, service waiting")
                     false
                 }
                 else -> {
                     j.log("BootJobService: scheduling to stop when tunnel active")
-                    listener = t.active.doOnUiWhenChanged().then {
-                        t.active.cancel(listener)
-                        listener = null
-                        jobFinished(params, false)
-                    }
+                    this.params = params
+                    t.active.onChange(UI, listener)
                     true
                 }
             }
@@ -184,9 +181,14 @@ class BootJobService : JobService() {
         }
     }
 
-    private var listener: IWhen? = null
+    private var params: JobParameters? = null
+    private var listener = { active: Boolean ->
+        if (active) jobFinished(params, false)
+    }
 
     override fun onStopJob(params: JobParameters?): Boolean {
+        this.params = null
+        t.active.cancel(listener, UI)
         return true
     }
 

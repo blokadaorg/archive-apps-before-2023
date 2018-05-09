@@ -20,9 +20,9 @@ import gs.environment.inject
 import gs.obsolete.Sync
 import gs.presentation.isWrongInstance
 import gs.property.Device
-import gs.property.IWhen
 import gs.property.Version
 import io.codetail.widget.RevealFrameLayout
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.BuildConfig
@@ -58,9 +58,7 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
 
     // TODO: less stuff in this class, more modules
 
-    private var listener11: IWhen? = null
-    private var listener12: IWhen? = null
-    private var listener13: gs.property.IWhen? = null
+    private var listener11: (List<Dash>) -> Unit = {}
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
@@ -117,14 +115,11 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
         grid?.ui = ui
         grid?.contentActor = contentActor
 
-        val updateItems = {
-                ui.dashes().filter(Dash::active)
+        listener11 = {
+            grid?.items = ui.dashes().filter(Dash::active)
         }
-
-        grid?.items = updateItems()
-        listener11 = ui.dashes.doOnUiWhenSet().then {
-            grid?.items = updateItems()
-        }
+        ui.dashes.onChange(UI, listener11)
+        ui.dashes() // properties are lazy
 
         grid?.onScrollToTop = { isTop ->
             if (!isTop && !landscape) topBar?.mode = ATopBarView.Mode.BAR
@@ -191,7 +186,7 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
 
     override fun onStart() {
         super.onStart()
-        infoListener = ui.infoQueue.doWhenChanged().then { infoQueueHandler(ui.infoQueue()) }
+        ui.infoQueue.onChange(job = infoListener)
     }
 
     override fun onStop() {
@@ -228,7 +223,10 @@ class MainActivity : AppCompatActivity(), LazyKodeinAware {
         }
     }
 
-    var infoListener: IWhen? = null
+    var infoListener: (List<Info>) -> Unit = {
+        infoQueueHandler(ui.infoQueue())
+    }
+
     val infoQueueHandler = { queue: List<Info> ->
         val queue = ui.infoQueue()
         when (queue.size) {

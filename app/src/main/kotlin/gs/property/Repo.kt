@@ -1,7 +1,10 @@
 package gs.property
 
 import com.github.salomonbrys.kodein.instance
-import gs.environment.*
+import gs.environment.Environment
+import gs.environment.Journal
+import gs.environment.Time
+import gs.environment.openUrl
 import java.net.URL
 import java.util.*
 
@@ -15,13 +18,12 @@ data class RepoContent(
 )
 
 abstract class Repo {
-    abstract val url: IProperty<String>
-    abstract val content: IProperty<RepoContent>
-    abstract val lastRefreshMillis: IProperty<Long>
+    abstract val url: Property<String>
+    abstract val content: Property<RepoContent>
+    abstract val lastRefreshMillis: Property<Long>
 }
 
 class RepoImpl(
-        private val kctx: Worker,
         private val xx: Environment
 ) : Repo() {
 
@@ -29,12 +31,12 @@ class RepoImpl(
     private val time: Time by xx.instance()
     private val version: Version by xx.instance()
 
-    override val url = newPersistedProperty(kctx, BasicPersistence(xx, "repo_url"), zeroValue = { "" })
+    override val url = Property.ofPersisted({""}, BasicPersistence(xx, "repo_url"))
 
     init {
-        url.doWhenSet().then {
+        url.onChange {
             j.log("repo: url set: ${url()}")
-            content.refresh(force = true)
+            content.refresh()
         }
     }
 
@@ -75,8 +77,8 @@ class RepoImpl(
         }
     }
 
-    override val content = newPersistedProperty(kctx, ARepoPersistence(xx),
-            zeroValue = { RepoContent(null, listOf(), 0, "", listOf(), "") },
+    override val content = Property.ofPersisted({ RepoContent(null, listOf(), 0, "", listOf(), "") },
+            ARepoPersistence(xx),
             refresh = { repoRefresh() },
             shouldRefresh = {
                 val ttl = 86400 * 1000
@@ -92,7 +94,7 @@ class RepoImpl(
             }
     )
 
-    override val lastRefreshMillis = newPersistedProperty(kctx, BasicPersistence(xx, "repo_refresh"), zeroValue = { 0L })
+    override val lastRefreshMillis = Property.ofPersisted({0L}, BasicPersistence(xx, "repo_refresh"))
 }
 
 class ARepoPersistence(xx: Environment) : PersistenceWithSerialiser<RepoContent>(xx) {

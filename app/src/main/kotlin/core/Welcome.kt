@@ -7,38 +7,40 @@ import android.widget.Toast
 import com.github.salomonbrys.kodein.*
 import gs.environment.Environment
 import gs.environment.Journal
-import gs.environment.Worker
 import gs.presentation.SimpleDialog
 import gs.presentation.WebDash
-import gs.property.*
+import gs.property.BasicPersistence
+import gs.property.I18n
+import gs.property.Property
+import gs.property.Version
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 
 abstract class Welcome {
-    abstract val introSeen: IProperty<Boolean>
-    abstract val guideSeen: IProperty<Boolean>
-    abstract val patronShow: IProperty<Boolean>
-    abstract val patronSeen: IProperty<Boolean>
-    abstract val ctaSeenCounter: IProperty<Int>
-    abstract val advanced: IProperty<Boolean>
-    abstract val conflictingBuilds: IProperty<List<String>>
+    abstract val introSeen: Property<Boolean>
+    abstract val guideSeen: Property<Boolean>
+    abstract val patronShow: Property<Boolean>
+    abstract val patronSeen: Property<Boolean>
+    abstract val ctaSeenCounter: Property<Int>
+    abstract val advanced: Property<Boolean>
+    abstract val conflictingBuilds: Property<List<String>>
 }
 
 class WelcomeImpl (
-        w: Worker,
         xx: Environment,
         val i18n: I18n = xx().instance(),
         val j: Journal = xx().instance()
 ) : Welcome() {
-    override val introSeen = newPersistedProperty(w, BasicPersistence(xx, "intro_seen"), { false })
-    override val guideSeen = newPersistedProperty(w, BasicPersistence(xx, "guide_seen"), { false })
-    override val patronShow = newProperty(w, { false })
-    override val patronSeen = newPersistedProperty(w, BasicPersistence(xx, "optional_seen"), { false })
-    override val ctaSeenCounter = newPersistedProperty(w, BasicPersistence(xx, "cta_seen"), { 3 })
-    override val advanced = newPersistedProperty(w, BasicPersistence(xx, "advanced"), { false })
-    override val conflictingBuilds = newProperty(w, { listOf<String>() })
+    override val introSeen = Property.ofPersisted({ false }, BasicPersistence(xx, "intro_seen"))
+    override val guideSeen = Property.ofPersisted({ false }, BasicPersistence(xx, "guide_seen"))
+    override val patronShow = Property.of({ false })
+    override val patronSeen = Property.ofPersisted({ false }, BasicPersistence(xx, "optional_seen"))
+    override val ctaSeenCounter = Property.ofPersisted({ 3 }, BasicPersistence(xx, "cta_seen"))
+    override val advanced = Property.ofPersisted({ false }, BasicPersistence(xx, "advanced"))
+    override val conflictingBuilds = Property.of({ listOf<String>() })
 
     init {
-        i18n.locale.doWhenSet().then {
+        i18n.locale.onChange {
             val root = i18n.contentUrl()
             j.log("welcome: locale set: contentUrl: $root")
             patronShow %= true
@@ -51,7 +53,7 @@ class WelcomeImpl (
 fun newWelcomeModule(ctx: Context): Kodein.Module {
     return Kodein.Module {
         bind<Welcome>() with singleton {
-            WelcomeImpl(w = with("gscore").instance(2), xx = lazy)
+            WelcomeImpl(xx = lazy)
         }
     }
 }
@@ -71,10 +73,10 @@ class WelcomeDialogManager (
     private var displaying = false
 
     init {
-        pages.loaded.doOnUiWhenChanged(withInit = true).then {
+        pages.loaded.onChange(UI) {
             run()
         }
-        version.obsolete.doOnUiWhenChanged(withInit = true).then {
+        version.obsolete.onChange(UI) {
             run()
         }
     }

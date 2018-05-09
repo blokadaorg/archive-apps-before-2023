@@ -5,7 +5,7 @@ import core.Tunnel
 import core.TunnelState
 import gs.environment.Environment
 import gs.environment.Journal
-import gs.property.IWhen
+import kotlinx.coroutines.experimental.android.UI
 import java.net.URL
 
 /**
@@ -18,27 +18,26 @@ class UpdateCoordinator(
         private val j: Journal = xx().instance()
 ) {
 
-    private var w: IWhen? = null
+    private var urls: List<URL> = emptyList()
     private var downloading = false
+
+    private val downloadContinue = { it: TunnelState ->
+        if (it == TunnelState.INACTIVE && !downloading) {
+            j.log("UpdateCoordinator: tunnel deactivated")
+            download(urls)
+        }
+    }
 
     fun start(urls: List<URL>) {
         if (downloading) return
-        if (s.tunnelState(TunnelState.INACTIVE)) {
+        if (s.tunnelState() == TunnelState.INACTIVE ) {
             download(urls)
         }
         else {
             j.log("UpdateCoordinator: deactivate tunnel: ${s.tunnelState()}")
-            s.tunnelState.cancel(w)
-            w = s.tunnelState.doOnUiWhenChanged().then {
-                if (s.tunnelState(TunnelState.INACTIVE)) {
-                    if (!downloading) {
-                        j.log("UpdateCoordinator: tunnel deactivated")
-                        s.tunnelState.cancel(w)
-                        w = null
-                        download(urls)
-                    }
-                }
-            }
+            this.urls = urls
+            s.tunnelState.cancel(downloadContinue)
+            s.tunnelState.onChange(UI, downloadContinue)
 
             s.updating %= true
             s.restart %= true
@@ -48,6 +47,7 @@ class UpdateCoordinator(
 
     private fun download(urls: List<URL>) {
         j.log("UpdateCoordinator: start download")
+        s.tunnelState.cancel(downloadContinue)
         downloading = true
         downloader.downloadUpdate(urls, { uri ->
             j.log("UpdateCoordinator: downloaded: url $uri")

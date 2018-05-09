@@ -12,6 +12,8 @@ import core.*
 import filter.DashFilterBlacklist
 import filter.DashFilterWhitelist
 import gs.environment.Journal
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.runBlocking
 import notification.NotificationDashKeepAlive
 import notification.NotificationDashOn
 import notification.displayNotification
@@ -45,10 +47,11 @@ fun newFlavorModule(ctx: Context): Kodein.Module {
 
                     },
                     onRevoked = {
-                        s.tunnelPermission.refresh(blocking = true)
+                        runBlocking {
+                            s.tunnelPermission.refresh()?.join()
+                        }
                         s.restart %= true
                         s.active %= false
-
                     })
         }
         bind<List<Engine>>() with singleton {
@@ -104,7 +107,7 @@ fun newFlavorModule(ctx: Context): Kodein.Module {
             val ui: UiState = instance()
 
             // Show confirmation message to the user whenever notifications are enabled or disabled
-            ui.notifications.doWhenChanged().then {
+            ui.notifications.onChange {
                 if (ui.notifications()) {
                     ui.infoQueue %= ui.infoQueue() + Info(InfoType.NOTIFICATIONS_ENABLED)
                 } else {
@@ -113,18 +116,15 @@ fun newFlavorModule(ctx: Context): Kodein.Module {
             }
 
             // Display notifications for dropped
-            s.tunnelRecentDropped.doOnUiWhenSet().then {
+            s.tunnelRecentDropped.onChange(UI) {
                 if (s.tunnelRecentDropped().isEmpty()) hideNotification(ctx)
                 else if (ui.notifications()) displayNotification(ctx, s.tunnelRecentDropped().last())
             }
 
             // Hide notification when disabled
-            ui.notifications.doOnUiWhenSet().then {
+            ui.notifications.onChange(UI) {
                 hideNotification(ctx)
             }
-
-            // Initialize default values for properties that need it (async)
-            s.tunnelDropCount {}
         }
     }
 }

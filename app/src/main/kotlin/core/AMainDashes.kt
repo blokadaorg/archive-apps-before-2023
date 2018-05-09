@@ -9,8 +9,8 @@ import com.github.salomonbrys.kodein.instance
 import gs.environment.*
 import gs.presentation.WebDash
 import gs.property.Device
-import gs.property.IProperty
-import gs.property.IWhen
+import gs.property.Property
+import kotlinx.coroutines.experimental.android.UI
 import org.acra.ACRA
 import org.blokada.R
 import java.net.URL
@@ -226,9 +226,8 @@ class AutoStartDash(
             onUpdate.forEach { it() }
         }}
 
-    private var listener: IWhen? = null
     init {
-        listener = s.startOnBoot.doOnUiWhenSet().then {
+        s.startOnBoot.onChange(UI) {
             checked = s.startOnBoot()
         }
     }
@@ -251,9 +250,8 @@ class ConnectivityDash(
             onUpdate.forEach { it() }
         }}
 
-    private var listener: IWhen? = null
     init {
-        listener = s.watchdogOn.doOnUiWhenSet().then {
+         s.watchdogOn.onChange(UI) {
             checked = s.watchdogOn()
         }
     }
@@ -261,7 +259,7 @@ class ConnectivityDash(
 
 class OpenInBrowserDash(
         val ctx: Context,
-        val url: IProperty<URL>
+        val url: Property<URL>
 ) : Dash(
         "open_in_browser",
         R.drawable.ic_open_in_new,
@@ -276,7 +274,7 @@ class OpenInBrowserDash(
 
 class ChatDash(
         val ctx: Context,
-        val url: IProperty<URL>
+        val url: Property<URL>
 ) : Dash(
         "chat",
         R.drawable.ic_comment_multiple_outline,

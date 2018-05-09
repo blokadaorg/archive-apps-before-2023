@@ -6,9 +6,9 @@ import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.Time
 import gs.environment.Worker
-import gs.property.IProperty
+import gs.property.Property
 import gs.property.Repo
-import gs.property.newPersistedProperty
+import kotlinx.coroutines.experimental.android.UI
 import notification.displayNotificationForUpdate
 import org.blokada.R
 import update.AUpdateDownloader
@@ -16,7 +16,7 @@ import update.UpdateCoordinator
 import update.isUpdate
 
 abstract class Update {
-    abstract val lastSeenUpdateMillis: IProperty<Long>
+    abstract val lastSeenUpdateMillis: Property<Long>
 }
 
 class UpdateImpl (
@@ -25,8 +25,7 @@ class UpdateImpl (
         val ctx: Context = xx().instance()
 ) : Update() {
 
-    override val lastSeenUpdateMillis = newPersistedProperty(w, APrefsPersistence(ctx, "lastSeenUpdate"),
-            { 0L })
+    override val lastSeenUpdateMillis = Property.ofPersisted({0L}, APrefsPersistence(ctx, "lastSeenUpdate"))
 }
 
 fun newUpdateModule(ctx: Context): Kodein.Module {
@@ -45,22 +44,24 @@ fun newUpdateModule(ctx: Context): Kodein.Module {
             val repo: Repo = instance()
 
             // Check for update periodically
-            t.tunnelState.doWhen { t.tunnelState(TunnelState.ACTIVE) }.then {
-                // This "pokes" the cache and refreshes if needed
-                repo.content.refresh()
-                s.filters.refresh()
+            t.tunnelState.onChange {
+                if (t.tunnelState() == TunnelState.ACTIVE) {
+                    // This "pokes" the cache and refreshes if needed
+                    repo.content.refresh(recheck = true)
+                    s.filters.refresh(recheck = true)
+                }
             }
 
             // Display an info message when update is available
-            repo.content.doOnUiWhenSet().then {
+            repo.content.onChange(UI) {
                 if (isUpdate(ctx, repo.content().newestVersionCode)) {
                     ui.infoQueue %= ui.infoQueue() + Info(InfoType.CUSTOM, R.string.update_infotext)
-                    u.lastSeenUpdateMillis.refresh(force = true)
+                    u.lastSeenUpdateMillis.refresh()
                 }
             }
 
             // Display notifications for updates
-            u.lastSeenUpdateMillis.doOnUiWhenSet().then {
+            u.lastSeenUpdateMillis.onChange(UI) {
                 val content = repo.content()
                 val last = u.lastSeenUpdateMillis()
                 val cooldown = 86400 * 1000L

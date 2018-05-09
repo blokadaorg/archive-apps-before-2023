@@ -10,9 +10,9 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import gs.property.Property
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
-import gs.property.IProperty
-import gs.property.IWhen
 
 /**
  * Represents basic view structure that can be embedded in lists or displayed independently, also as
@@ -41,10 +41,10 @@ abstract class ViewDash(
 
 open class SwitchDash(
         val text: String,
-        val property: IProperty<Boolean>
+        val property: Property<Boolean>
 ) : ViewDash(R.layout.dash_switch) {
 
-    private var changeListener: IWhen? = null
+    private var changeListener: (Boolean) -> Unit = {}
 
     override fun attach(view: View) {
         val v = view as SwitchDashView
@@ -53,13 +53,16 @@ open class SwitchDash(
         v.onChecked = {
             property %= v.checked ?: property()
         }
-        changeListener = property.doOnUiWhenChanged().then { v.checked = property() }
+        changeListener = { it: Boolean ->
+            v.checked = property()
+        }
+        property.onChange(UI, changeListener)
     }
 
     override fun detach(view: View) {
         val v = view as SwitchDashView
         v.onChecked = {}
-        property.cancel(changeListener)
+        property.cancel(changeListener, UI)
     }
 
 }

@@ -2,34 +2,32 @@ package core
 
 import com.github.salomonbrys.kodein.LazyKodein
 import com.github.salomonbrys.kodein.instance
+import kotlinx.coroutines.experimental.android.UI
 
 /**
  * Translates internal MainState changes into higher level events used by topbar and fab.
  */
 class EnabledStateActor(
         val di: LazyKodein,
+        val s: Tunnel = di().instance(),
         val listeners: MutableList<IEnabledStateActorListener> = mutableListOf()
 ) {
 
-    // Refs to ensure listeners live only as long as this class
-    private val listener1: Any
-    private val listener2: Any
-    private val listener3: Any
+    private val listener = { it: Any ->
+        update(s)
+    }
 
     init {
-        val s: Tunnel = di().instance()
-
-        listener1 = s.enabled.doOnUiWhenChanged().then { update(s) }
-        listener2 = s.active.doOnUiWhenChanged().then { update(s) }
-        listener3 = s.tunnelState.doOnUiWhenChanged().then { update(s) }
-        update(s)
+        s.enabled.onChange(UI, listener)
+        s.active.onChange(UI, listener)
+        s.tunnelState.onChange(UI, listener)
     }
 
     fun update(s: Tunnel) {
         when {
-            s.tunnelState(TunnelState.ACTIVATING) -> startActivating()
-            s.tunnelState(TunnelState.DEACTIVATING) -> startDeactivating()
-            s.tunnelState(TunnelState.ACTIVE) -> finishActivating()
+            s.tunnelState() == TunnelState.ACTIVATING -> startActivating()
+            s.tunnelState() == TunnelState.DEACTIVATING -> startDeactivating()
+            s.tunnelState() == TunnelState.ACTIVE -> finishActivating()
             s.active() -> startActivating()
             else -> finishDeactivating()
         }

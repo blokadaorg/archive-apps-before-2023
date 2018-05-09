@@ -34,6 +34,7 @@ class ANotificationsWhitelistService : IntentService("notificationsWhitelist") {
             s.changed %= true
         } else if (!existing.active) {
             existing.active = true
+            s.uiChangeCounter %= s.uiChangeCounter() + 1
             s.changed %= true
         }
 

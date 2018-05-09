@@ -12,7 +12,7 @@ import core.Filter
 import core.UiState
 import gs.environment.inject
 import gs.presentation.Spacing
-import gs.property.IWhen
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 
 class AFilterListView(
@@ -23,7 +23,9 @@ class AFilterListView(
     private val s by lazy { context.inject().instance<core.Filters>() }
     private val ui by lazy { context.inject().instance<UiState>() }
     private var filters = listOf<Filter>()
-    private var listener: IWhen? = null
+    private var listener = { it: Any ->
+        refreshFilters()
+    }
 
     var landscape: Boolean = false
         set(value) {
@@ -46,8 +48,12 @@ class AFilterListView(
         setAdapter(adapter)
         landscape = false
 
-        s.filters.cancel(listener)
-        s.filters.doOnUiWhenSet().then { refreshFilters() }
+        s.filters.cancel(listener, UI)
+        s.filters.onChange(UI, listener)
+        s.uiChangeCounter.cancel(listener, UI)
+        s.uiChangeCounter.onChange(UI, listener)
+        s.changed.cancel(listener, UI)
+        s.changed.onChange(UI, listener)
     }
 
     private fun refreshFilters() {

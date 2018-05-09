@@ -8,7 +8,7 @@ import com.github.salomonbrys.kodein.provider
 import core.*
 import gs.environment.ComponentProvider
 import gs.environment.inject
-import gs.property.IWhen
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 
 val DASH_ID_BLACKLIST = "filter_blacklist"
@@ -26,11 +26,9 @@ class DashFilterBlacklist(
         onBack = { s.changed %= true },
         hasView = true
 ) {
-    private var listener: IWhen? = null
-
     init {
-        listener = s.changed.doOnUiWhenSet().then {
-            update(s.filters().filter { it.active && !it.whitelist })
+        s.uiChangeCounter.onChange(UI) {
+            update(s.filters().filter { it.active && it.whitelist })
         }
     }
 
@@ -64,10 +62,8 @@ class DashFilterWhitelist(
         hasView = true
 ) {
 
-    private var listener: IWhen? = null
-
     init {
-        listener = s.changed.doOnUiWhenSet().then {
+        s.uiChangeCounter.onChange(UI) {
             update(s.filters().filter { it.active && it.whitelist })
         }
     }
@@ -167,9 +163,8 @@ class ShowSystemAppsWhitelist(
             onUpdate.forEach { it() }
         }}
 
-    private val listener: Any
     init {
-        listener = ui.showSystemApps.doOnUiWhenSet().then {
+        ui.showSystemApps.onChange(UI) {
             checked = ui.showSystemApps()
         }
     }

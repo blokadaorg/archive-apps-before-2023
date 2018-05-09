@@ -21,7 +21,11 @@ import filter.AFilterView
 import filter.AFilterViewHolder
 import gs.environment.*
 import gs.presentation.Spacing
-import gs.property.*
+import gs.property.Device
+import gs.property.I18n
+import gs.property.PersistenceWithSerialiser
+import gs.property.Property
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 import java.io.InputStreamReader
 import java.net.InetAddress
@@ -37,7 +41,7 @@ fun newDnsModule(ctx: Context): Kodein.Module {
             GenerateDialog(xx = lazy)
         }
         bind<Dns>() with singleton {
-            DnsImpl(with("gscore").instance(), lazy)
+            DnsImpl(lazy)
         }
         bind<DnsLocalisedFetcher>() with singleton {
             DnsLocalisedFetcher(xx = lazy)
@@ -48,7 +52,7 @@ fun newDnsModule(ctx: Context): Kodein.Module {
             // Reload engine in case dns selection changes
             val dns: Dns = instance()
             var currentDns: DnsChoice? = null
-            dns.choices.doWhenSet().then {
+            dns.choices.onChange {
                 val newChoice = dns.choices().firstOrNull { it.active }
                 if (newChoice != null && newChoice != currentDns) {
                     currentDns = newChoice
@@ -70,12 +74,11 @@ fun newDnsModule(ctx: Context): Kodein.Module {
 }
 
 abstract class Dns {
-    abstract val choices: IProperty<List<DnsChoice>>
-    abstract val dnsServers: IProperty<List<InetAddress>>
+    abstract val choices: Property<List<DnsChoice>>
+    abstract val dnsServers: Property<List<InetAddress>>
 }
 
 class DnsImpl(
-        w: Worker,
         xx: Environment,
         pages: Pages = xx().instance(),
         serialiser: DnsSerialiser = DnsSerialiser(),
@@ -127,26 +130,25 @@ class DnsImpl(
         newDns
     }
 
-    override val choices = newPersistedProperty(w, DnsChoicePersistence(xx),
-            zeroValue = { listOf() },
+    override val choices = Property.ofPersisted({ listOf<DnsChoice>() }, DnsChoicePersistence(xx),
             refresh = refresh,
             shouldRefresh = { it.size <= 1 })
 
-    override val dnsServers = newProperty(w, {
+    override val dnsServers = Property.of({
         val d = choices().firstOrNull { it.active }
         if (d?.servers?.isEmpty() ?: true) getDnsServers(ctx)
         else d?.servers!!
     })
 
     init {
-        pages.dns.doWhenSet().then {
+        pages.dns.onChange {
             choices.refresh()
         }
 
-        choices.doOnUiWhenSet().then {
+        choices.onChange(UI) {
             dnsServers.refresh()
         }
-        d.connected.doOnUiWhenSet().then {
+        d.connected.onChange(UI) {
             dnsServers.refresh()
         }
     }
@@ -231,7 +233,7 @@ class DnsLocalisedFetcher(
         private val j: Journal = xx().instance()
 ) {
     init {
-        i18n.locale.doWhenChanged().then { fetch() }
+        i18n.locale.onChange { fetch() }
     }
 
     fun fetch() {
@@ -264,12 +266,13 @@ class DashDns(
         menuDashes = Triple(Add(ctx), QuickActions(xx), null),
         hasView = true
 ) {
-    private var listener: IWhen? = null
+
+    val updater = { it: List<DnsChoice> ->
+        update(dns.choices().firstOrNull { it.active })
+    }
 
     init {
-        listener = dns.choices.doOnUiWhenSet().then {
-            update(dns.choices().firstOrNull { it.active })
-        }
+        dns.choices.onChange(UI, updater)
     }
 
     private fun update(dns: DnsChoice?) {
@@ -366,7 +369,7 @@ class GenerateDialog(
     private fun handleSave() {
         when (which) {
             0 -> {
-                dns.choices.refresh(force = true)
+                dns.choices.refresh()
             }
             1 -> {
                 dns.choices %= emptyList()
@@ -385,8 +388,14 @@ class DnsListView(
 
     private val dns by lazy { context.inject().instance<Dns>() }
     private var choices = listOf<DnsChoice>()
-    private var listener: IWhen? = null
-    private var listener2: IWhen? = null
+
+    val updater = { it: List<DnsChoice> ->
+        refreshDns()
+    }
+
+    val updater2 = { it: List<InetAddress> ->
+        adapter.notifyDataSetChanged()
+    }
 
     var landscape: Boolean = false
         set(value) {
@@ -403,13 +412,13 @@ class DnsListView(
         setAdapter(adapter)
         landscape = false
 
-        dns.choices.cancel(listener)
-        listener = dns.choices.doOnUiWhenSet().then { refreshFilters() }
-        dns.dnsServers.cancel(listener2)
-        listener2 = dns.dnsServers.doOnUiWhenSet().then { adapter.notifyDataSetChanged() }
+        dns.choices.cancel(updater)
+        dns.choices.onChange(UI, updater)
+        dns.dnsServers.cancel(updater2)
+        dns.dnsServers.onChange(UI, updater2)
     }
 
-    private fun refreshFilters() {
+    private fun refreshDns() {
         choices = dns.choices()
         adapter.notifyDataSetChanged()
     }
@@ -480,7 +489,7 @@ class DnsActor(
                 dns.choices().filter { it.active }.forEach { it.active = false }
             }
             filter.active = active
-            dns.choices %= dns.choices()
+            dns.choices.changed()
         }
     }
 

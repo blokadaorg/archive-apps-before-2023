@@ -13,17 +13,17 @@ import java.nio.charset.Charset
 import java.util.Properties
 
 abstract class Filters {
-    abstract val filters: IProperty<List<Filter>>
-    abstract val filtersCompiled: IProperty<Set<String>>
-    abstract val changed: IProperty<Boolean>
-    abstract val apps: IProperty<List<App>>
+    abstract val filters: Property<List<Filter>>
+    abstract val filtersCompiled: Property<Set<String>>
+    abstract val changed: Property<Boolean>
+    abstract val uiChangeCounter: Property<Int>
+    abstract val apps: Property<List<App>>
 
     // Those do not change during lifetime of the app
-    abstract val filterConfig: IProperty<FilterConfig>
+    abstract val filterConfig: Property<FilterConfig>
 }
 
 class FiltersImpl(
-        private val kctx: Worker,
         private val xx: Environment,
         private val ctx: Context = xx().instance(),
         private val j: Journal = xx().instance()
@@ -31,11 +31,13 @@ class FiltersImpl(
 
     private val pages: Pages by xx.instance()
 
-    override val filterConfig = newProperty<FilterConfig>(kctx, { ctx.inject().instance() })
-    override val changed = newProperty(kctx, { false })
+    override val filterConfig = Property.of({ ctx.inject().instance<FilterConfig>() })
+    override val changed = Property.of({ false })
+    override val uiChangeCounter = Property.of({ 0 })
 
     private val filtersRefresh = { it: List<Filter> ->
         j.log("filters: refresh: start ${pages.filters}")
+        changed %= false
         val c = filterConfig()
         val serialiser: FilterSerializer = ctx.inject().instance()
         val builtinFilters = try {
@@ -93,11 +95,11 @@ class FiltersImpl(
         a
     }
 
-    override val apps = newProperty(kctx, zeroValue = { emptyList<App>() }, refresh = { appsRefresh() },
+    override val apps = Property.of({ appsRefresh() }, refresh = { appsRefresh() },
             shouldRefresh = { it.isEmpty() })
 
-    override val filters = newPersistedProperty(kctx,
-            persistence = AFiltersPersistence(xx = xx, apps = apps, default = { filtersRefresh(emptyList()) }),
+    override val filters = Property.ofPersisted(
+            persistence = AFiltersPersistence(xx = xx, apps = apps, default = { emptyList() }),
             zeroValue = { emptyList() },
             refresh = filtersRefresh,
             shouldRefresh = {
@@ -109,31 +111,38 @@ class FiltersImpl(
                 // TODO: maybe check if we have connectivity (assuming we can trust it)
                     else -> false
                 }
-            }
+            },
+            name = "filters"
     )
 
-    override val filtersCompiled = newPersistedProperty(kctx,
+    override val filtersCompiled = Property.ofPersisted(
             persistence = ACompiledFiltersPersistence(xx),
             zeroValue = { emptySet() },
             refresh = {
                 j.log("filters: compile: start")
+                changed %= false
 
                 // Drop any not-selected filters to free memory
                 filters().filter { !it.active }.forEach {
                     it.hosts = emptyList()
                 }
 
-                val selected = filters().filter(Filter::active)
-                j.log("filters: compile: downloading")
-                downloadFilters(selected)
-                val selectedBlacklist = selected.filter { !it.whitelist }
-                val selectedWhitelist = selected.filter(Filter::whitelist)
+                try {
+                    val selected = filters().filter(Filter::active)
+                    j.log("filters: compile: downloading")
+                    downloadFilters(selected)
+                    val selectedBlacklist = selected.filter { !it.whitelist }
+                    val selectedWhitelist = selected.filter(Filter::whitelist)
 
-                j.log("filters: compile: combining")
-                val c = combine(selectedBlacklist, selectedWhitelist)
-                j.log("filters: compile: finish")
-                changed %= false
-                c
+                    j.log("filters: compile: combining")
+                    val c = combine(selectedBlacklist, selectedWhitelist)
+                    j.log("filters: compile: finish")
+                    c
+                } catch (e: Exception) {
+                    j.log("filters: compile: fail", e)
+                    changed %= true
+                    it
+                }
             },
             shouldRefresh = {
                 val c = filterConfig()
@@ -144,7 +153,8 @@ class FiltersImpl(
                     it.isEmpty() -> true
                     else -> false
                 }
-            }
+            },
+            name = "filtersCompiled"
     )
 
 }
@@ -166,7 +176,7 @@ internal fun combine(blacklist: List<Filter>, whitelist: List<Filter>): Set<Stri
 
 fun newFiltersModule(ctx: Context): Kodein.Module {
     return Kodein.Module {
-        bind<Filters>() with singleton { FiltersImpl(kctx = with("gscore").instance(10), xx = lazy,
+        bind<Filters>() with singleton { FiltersImpl(xx = lazy,
                 ctx = ctx) }
         bind<IHostlineProcessor>() with singleton { DefaultHostlineProcessor() }
         bind<IFilterSource>() with factory { sourceId: String ->
@@ -218,7 +228,7 @@ fun newFiltersModule(ctx: Context): Kodein.Module {
 
             // Reload engine in case whitelisted apps selection changes
             var currentApps = listOf<Filter>()
-            s.changed.doWhenSet().then {
+            s.changed.onChange {
                 val newApps = s.filters().filter { it.whitelist && it.active && it.source is FilterSourceApp }
                 if (newApps != currentApps) {
                     currentApps = newApps
@@ -236,32 +246,32 @@ fun newFiltersModule(ctx: Context): Kodein.Module {
             }
 
             // Compile filters every time they change
-            s.changed.doWhenChanged(withInit = true).then {
-                j.log("filters: compiled: refresh ping")
-                s.filtersCompiled.refresh()
+            s.changed.onChange {
+                if (s.changed()) {
+                    j.log("filters: compiled: refresh ping")
+                    s.filtersCompiled.refresh(recheck = true)
+                }
             }
 
             // Push filters to engine every time they're changed
             val engine: IEngineManager = instance()
-            s.filtersCompiled.doWhenSet().then {
+            s.filtersCompiled.onChange {
                 engine.updateFilters()
             }
 
             // On locale change, refresh all localised content
             val i18n: I18n = instance()
 
-            i18n.locale.doWhenChanged().then {
+            i18n.locale.onChange {
                 j.log("refresh filters from locale change")
-                s.filters.refresh(force = true)
+                s.filters.refresh()
             }
 
             // Refresh filters list whenever system apps switch is changed
             val ui: UiState = instance()
-            ui.showSystemApps.doWhenChanged().then {
-                s.filters %= s.filters()
+            ui.showSystemApps.onChange {
+                s.uiChangeCounter %= s.uiChangeCounter() + 1
             }
-
-            s.filtersCompiled {}
         }
     }
 }
@@ -308,25 +318,27 @@ data class FilterConfig(
 
 class AFiltersPersistence(
         val xx: Environment,
-        val apps: IProperty<List<App>>,
+        val apps: Property<List<App>>,
         val ctx: Context = xx().instance(),
         val j: Journal = xx().instance(),
+        val s: FilterSerializer = xx().instance(),
         val default: () -> List<Filter>
 ) : Persistence<List<Filter>> {
 
     val p by lazy { ctx.getSharedPreferences("filters", Context.MODE_PRIVATE) }
 
     override fun read(current: List<Filter>): List<Filter> {
-        j.log("FiltersPersistence: read: refresh apps")
-        apps.refresh(blocking = true)
-        val s : FilterSerializer = ctx.inject().instance()
-        val filters = s.deserialise(p.getString("filters", "").split("^"))
-        j.log("FiltersPersistence: read: ${filters.size} loaded")
-        return if (filters.isNotEmpty()) filters else default()
+        return try {
+            j.log("FiltersPersistence: read")
+            val filters = s.deserialise(p.getString("filters", "").split("^"))
+            j.log("FiltersPersistence: read: ${filters.size} loaded")
+            if (filters.isNotEmpty()) filters else default()
+        } catch (e: Exception) {
+            current
+        }
     }
 
     override fun write(source: List<Filter>) {
-        val s : FilterSerializer = ctx.inject().instance()
         val e = p.edit()
         e.putInt("migratedVersion", 20)
         e.putString("filters", s.serialise(source).joinToString("^"))
@@ -348,10 +360,11 @@ interface IFilterSource {
 class ACompiledFiltersPersistence(
         val xx: Environment,
         val ctx: Context = xx().instance(),
-        val j: Journal = xx().instance()
+        val j: Journal = xx().instance(),
+        val cfg: FilterConfig = xx().instance()
 ) : Persistence<Set<String>> {
 
-    private val cache by lazy { ctx.inject().instance<FilterConfig>().cacheFile }
+    private val cache by lazy { cfg.cacheFile }
 
     override fun read(current: Set<String>): Set<String> {
         return try {

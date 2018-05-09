@@ -15,14 +15,13 @@ import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.Worker
 import gs.environment.inject
-import gs.property.IProperty
-import gs.property.IWhen
-import gs.property.newPersistedProperty
+import gs.property.Property
+import kotlinx.coroutines.experimental.android.UI
 import notification.createNotificationKeepAlive
 import org.blokada.R
 
 abstract class KeepAlive {
-    abstract val keepAlive: IProperty<Boolean>
+    abstract val keepAlive: Property<Boolean>
 }
 
 
@@ -31,9 +30,7 @@ class KeepAliveImpl(
         private val xx: Environment,
         private val ctx: Context = xx().instance()
 ) : KeepAlive() {
-    override val keepAlive = newPersistedProperty(kctx, APrefsPersistence(ctx, "keepAlive"),
-            { false }
-    )
+    override val keepAlive = Property.ofPersisted({false}, APrefsPersistence(ctx, "keepAlive"))
 }
 
 fun newKeepAliveModule(ctx: Context): Kodein.Module {
@@ -47,7 +44,7 @@ fun newKeepAliveModule(ctx: Context): Kodein.Module {
             val t: Tunnel = instance()
 
             // Show confirmation message whenever keepAlive configuration is changed
-            s.keepAlive.doWhenChanged().then {
+            s.keepAlive.onChange {
                 if (s.keepAlive()) {
                     ui.infoQueue %= ui.infoQueue() + Info(InfoType.NOTIFICATIONS_KEEPALIVE_ENABLED)
                 } else {
@@ -65,21 +62,17 @@ fun newKeepAliveModule(ctx: Context): Kodein.Module {
                 )
                 nm.notify(3, n)
             }
-            var w: IWhen? = null
-            s.keepAlive.doWhenSet().then {
+
+            s.keepAlive.onChange {
                 if (s.keepAlive()) {
-                    t.tunnelDropCount.cancel(w)
-                    w = t.tunnelDropCount.doOnUiWhenSet().then {
-                        keepAliveNotificationUpdater(t.tunnelDropCount())
-                    }
+                    t.tunnelDropCount.cancel(keepAliveNotificationUpdater, UI)
+                    t.tunnelDropCount.onChange(UI, keepAliveNotificationUpdater)
                     keepAliveAgent.bind(ctx)
                 } else {
-                    t.tunnelDropCount.cancel(w)
+                    t.tunnelDropCount.cancel(keepAliveNotificationUpdater, UI)
                     keepAliveAgent.unbind(ctx)
                 }
             }
-
-            s.keepAlive {}
         }
     }
 }

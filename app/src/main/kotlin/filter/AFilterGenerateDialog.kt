@@ -13,6 +13,7 @@ import core.LocalisedFilter
 import gs.environment.ComponentProvider
 import gs.environment.Journal
 import gs.environment.inject
+import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.R
 
 class AFilterGenerateDialog(
@@ -68,16 +69,18 @@ class AFilterGenerateDialog(
     private fun handleSave() {
         when (which) {
             0 -> {
-                s.apps.refresh(force = true)
-                s.filters.refresh(force = true)
+                s.apps.refresh()
+                s.filters.refresh()
             }
             1 -> {
-                s.apps.refresh(force = true)
+                s.apps.refresh()
                 s.filters %= emptyList()
                 s.filters.refresh()
             }
             2, 3, 4, 5 -> {
-                if (s.apps().isEmpty()) s.apps.refresh(blocking = true)
+                runBlocking {
+                    s.apps.refresh()?.join()
+                }
                 val filters = s.apps().filter { which in listOf(3, 4) || it.system }
                         .map { it.appId }.map { app ->
                     val source = sourceProvider("app")

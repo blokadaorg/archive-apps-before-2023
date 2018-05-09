@@ -16,20 +16,18 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 abstract class Device {
-    abstract val appInForeground: IProperty<Boolean>
-    abstract val screenOn: IProperty<Boolean>
-    abstract val connected: IProperty<Boolean>
-    abstract val tethering: IProperty<Boolean>
-    abstract val watchdogOn: IProperty<Boolean>
+    abstract val appInForeground: Property<Boolean>
+    abstract val screenOn: Property<Boolean>
+    abstract val connected: Property<Boolean>
+    abstract val tethering: Property<Boolean>
+    abstract val watchdogOn: Property<Boolean>
 
     fun isWaiting(): Boolean {
         return !connected()
     }
-
 }
 
 class DeviceImpl (
-        kctx: Worker,
         xx: Environment,
         ctx: Context = xx().instance(),
         j: Journal = xx().instance()
@@ -38,18 +36,15 @@ class DeviceImpl (
     private val pm: PowerManager by xx.instance()
     private val watchdog: IWatchdog by xx.instance()
 
-    override val appInForeground = newProperty(kctx, { false })
-    override val screenOn = newProperty(kctx, { pm.isInteractive })
-    override val connected = newProperty(kctx, {
+    override val appInForeground = Property.of({ false })
+    override val screenOn = Property.of({ pm.isInteractive })
+    override val connected = Property.of({
         val c = isConnected(ctx) or watchdog.test()
         j.log("device: connected: ${c}")
         c
-    } )
-    override val tethering = newProperty(kctx, { isTethering(ctx)} )
-
-    override val watchdogOn = newPersistedProperty(kctx, BasicPersistence(xx, "watchdogOn"),
-            { true })
-
+    })
+    override val tethering = Property.of({ isTethering(ctx)})
+    override val watchdogOn = Property.ofPersisted({ true }, BasicPersistence(xx, "watchdogOn"))
 }
 
 class ConnectivityReceiver : BroadcastReceiver() {
@@ -80,7 +75,7 @@ class ConnectivityReceiver : BroadcastReceiver() {
 fun newDeviceModule(ctx: Context): Kodein.Module {
     return Kodein.Module {
         bind<Device>() with singleton {
-            DeviceImpl(kctx = with("gscore").instance(2), xx = lazy)
+            DeviceImpl(xx = lazy)
         }
         bind<ConnectivityReceiver>() with singleton { ConnectivityReceiver() }
         bind<ScreenOnReceiver>() with singleton { ScreenOnReceiver() }
@@ -127,7 +122,7 @@ class LocaleReceiver : BroadcastReceiver() {
             val j: Journal = ctx.inject().instance()
             j.log("LocaleReceiver: ping")
             val i18n: I18n = ctx.inject().instance()
-            i18n.locale.refresh(force = true)
+            i18n.locale.refresh()
         }
     }
 

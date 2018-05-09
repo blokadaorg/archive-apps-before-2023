@@ -7,6 +7,7 @@ import core.Filters
 import core.KeepAlive
 import core.UiState
 import gs.environment.inject
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 
 val DASH_ID_KEEPALIVE = "notifiction_keepalive"
@@ -28,9 +29,8 @@ class NotificationDashOn(
             onUpdate.forEach { it() }
         }}
 
-    private val listener: Any
     init {
-        listener = ui.notifications.doOnUiWhenSet().then {
+        ui.notifications.onChange(UI) {
             checked = ui.notifications()
         }
     }
@@ -52,9 +52,8 @@ class NotificationDashKeepAlive(
             onUpdate.forEach { it() }
         }}
 
-    private val listener: Any
     init {
-        listener = s.keepAlive.doOnUiWhenSet().then {
+        s.keepAlive.onChange(UI) {
             checked = s.keepAlive()
         }
     }

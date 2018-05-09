@@ -36,13 +36,13 @@ fun newGscoreModule(ctx: Context): Kodein.Module {
         }
 
         bind<Version>() with singleton {
-            VersionImpl(kctx = with("gscore").instance(2), xx = lazy)
+            VersionImpl(xx = lazy)
         }
         bind<Repo>() with singleton {
-            RepoImpl(kctx = with("gscore").instance(2), xx = lazy)
+            RepoImpl(xx = lazy)
         }
         bind<I18n>() with singleton {
-            I18nImpl(xx = lazy, kctx = with("gscore").instance(2))
+            I18nImpl(xx = lazy)
         }
         bind<I18nPersistence>() with multiton { it: LanguageTag ->
             I18nPersistence(xx = lazy, locale = it)

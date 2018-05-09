@@ -6,12 +6,11 @@ import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
 import gs.environment.Environment
 import gs.environment.Journal
-import gs.environment.Worker
 import gs.main.getPreferredLocales
 import java.util.*
 
 abstract class I18n {
-    abstract val locale: IProperty<String>
+    abstract val locale: Property<String>
     abstract val localised: (key: Any) -> String
     abstract val localisedOrNull: (key: Any) -> String?
     abstract val set: (key: Any, value: String) -> Unit
@@ -25,7 +24,6 @@ typealias Key = String
 typealias Localised = String
 
 class I18nImpl (
-        private val kctx: Worker,
         private val xx: Environment,
         private val j: Journal = xx().instance()
 ) : I18n() {
@@ -38,7 +36,7 @@ class I18nImpl (
         return "%s/%s".format(repo.content().contentPath ?: "http://localhost", locale())
     }
 
-    override val locale = newPersistedProperty(kctx, BasicPersistence(xx, "locale"), { "en" },
+    override val locale = Property.ofPersisted({ "en" }, BasicPersistence(xx, "locale"),
             refresh = {
                 val preferred = getPreferredLocales()
                 val available = repo.content().locales
@@ -110,10 +108,10 @@ class I18nImpl (
     }
 
     init {
-        repo.content.doWhenSet().then {
-            locale.refresh(force = true)
+        repo.content.onChange {
+            locale.refresh()
         }
-        locale.doWhenSet().then {
+        locale.onChange {
             val strings = localisedMap.getOrPut(locale(), { mutableMapOf<Key, Localised>() })
             strings.putAll(persistence(locale()).read(strings))
         }

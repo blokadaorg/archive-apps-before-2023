@@ -7,6 +7,7 @@ import core.Filters
 import core.Tunnel
 import core.getBrandedString
 import gs.environment.inject
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 
 val DASH_ID_HOSTS_COUNT = "tunnel_hosts"
@@ -20,12 +21,11 @@ class TunnelDashCountDropped(
         onLongClick = { t.tunnelDropCount %= 0; true }
 ) {
 
-    private val listener: Any
     init {
         text = getBlockedString(0)
-        listener = t.tunnelDropCount.doOnUiWhenSet().then {
+        t.tunnelDropCount.onChange(UI) {
             text = getBlockedString(t.tunnelDropCount())
-        } // TODO: think item lifetime vs listener leak
+        }
     }
 
     private fun getBlockedString(blocked: Int): String {
@@ -39,15 +39,14 @@ class TunnelDashHostsCount(
 ) : Dash(DASH_ID_HOSTS_COUNT,
         R.drawable.ic_counter,
         ctx.getBrandedString(R.string.tunnel_hosts_desc),
-        onClick = { s.filters.refresh(); s.filtersCompiled.refresh(); true }
+        onClick = { s.filters.refresh(); true }
 ) {
 
-    private val listener: Any
     init {
         text = getCountString(0)
-        listener = s.filtersCompiled.doOnUiWhenSet().then {
+        s.filtersCompiled.onChange(UI) {
             text = getCountString(s.filtersCompiled().size)
-        } // TODO: think item lifetime vs listener leak
+        }
     }
 
     private fun getCountString(count: Int): String {

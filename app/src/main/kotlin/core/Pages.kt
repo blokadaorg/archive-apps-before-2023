@@ -6,32 +6,31 @@ import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.Worker
 import gs.property.I18n
-import gs.property.IProperty
-import gs.property.newProperty
+import gs.property.Property
 import java.net.HttpURLConnection
 import java.net.URL
 
 abstract class Pages {
-    abstract val loaded: IProperty<Boolean>
-    abstract val intro: IProperty<URL>
-    abstract val updated: IProperty<URL>
-    abstract val obsolete: IProperty<URL>
-    abstract val download: IProperty<URL>
-    abstract val cleanup: IProperty<URL>
-    abstract val patron: IProperty<URL>
-    abstract val patronAbout: IProperty<URL>
-    abstract val cta: IProperty<URL>
-    abstract val donate: IProperty<URL>
-    abstract val news: IProperty<URL>
-    abstract val help: IProperty<URL>
-    abstract val feedback: IProperty<URL>
-    abstract val changelog: IProperty<URL>
-    abstract val credits: IProperty<URL>
-    abstract val filters: IProperty<URL>
-    abstract val filtersStrings: IProperty<URL>
-    abstract val chat: IProperty<URL>
-    abstract val dns: IProperty<URL>
-    abstract val dnsStrings: IProperty<URL>
+    abstract val loaded: Property<Boolean>
+    abstract val intro: Property<URL>
+    abstract val updated: Property<URL>
+    abstract val obsolete: Property<URL>
+    abstract val download: Property<URL>
+    abstract val cleanup: Property<URL>
+    abstract val patron: Property<URL>
+    abstract val patronAbout: Property<URL>
+    abstract val cta: Property<URL>
+    abstract val donate: Property<URL>
+    abstract val news: Property<URL>
+    abstract val help: Property<URL>
+    abstract val feedback: Property<URL>
+    abstract val changelog: Property<URL>
+    abstract val credits: Property<URL>
+    abstract val filters: Property<URL>
+    abstract val filtersStrings: Property<URL>
+    abstract val chat: Property<URL>
+    abstract val dns: Property<URL>
+    abstract val dnsStrings: Property<URL>
 }
 class PagesImpl (
         w: Worker,
@@ -42,7 +41,7 @@ class PagesImpl (
     val i18n: I18n by xx.instance()
 
     init {
-        i18n.locale.doWhenSet().then {
+        i18n.locale.onChange {
             val c = i18n.contentUrl()
             if (!c.startsWith("http://localhost")) {
                 j.log("pages: locale set: contentUrl: $c")
@@ -69,27 +68,27 @@ class PagesImpl (
         }
     }
 
-    override val loaded = newProperty(w, { false })
-    override val intro = newProperty(w, { URL("http://localhost") })
-    override val updated = newProperty(w, { URL("http://localhost") })
-    override val patronAbout = newProperty(w, { URL("http://localhost") })
-    override val cleanup = newProperty(w, { URL("http://localhost") })
-    override val cta = newProperty(w, { URL("http://localhost") })
-    override val donate = newProperty(w, { URL("http://localhost") })
-    override val help = newProperty(w, { URL("http://localhost") })
-    override val changelog = newProperty(w, { URL("http://localhost") })
-    override val credits = newProperty(w, { URL("http://localhost") })
-    override val filters = newProperty(w, { URL("http://localhost") })
-    override val filtersStrings = newProperty(w, { URL("http://localhost") })
-    override val dns = newProperty(w, { URL("http://localhost") })
-    override val dnsStrings = newProperty(w, { URL("http://localhost") })
-    override val chat = newProperty(w, { URL("http://go.blokada.org/chat") })
+    override val loaded = Property.of({ false })
+    override val intro = Property.of({ URL("http://localhost") })
+    override val updated = Property.of({ URL("http://localhost") })
+    override val patronAbout = Property.of({ URL("http://localhost") })
+    override val cleanup = Property.of({ URL("http://localhost") })
+    override val cta = Property.of({ URL("http://localhost") })
+    override val donate = Property.of({ URL("http://localhost") })
+    override val help = Property.of({ URL("http://localhost") })
+    override val changelog = Property.of({ URL("http://localhost") })
+    override val credits = Property.of({ URL("http://localhost") })
+    override val filters = Property.of({ URL("http://localhost") })
+    override val filtersStrings = Property.of({ URL("http://localhost") })
+    override val dns = Property.of({ URL("http://localhost") })
+    override val dnsStrings = Property.of({ URL("http://localhost") })
+    override val chat = Property.of({ URL("http://go.blokada.org/chat") })
 
-    override val news = newProperty(w, { URL("http://go.blokada.org/news") })
-    override val feedback = newProperty(w, { URL("http://go.blokada.org/feedback") })
-    override val patron = newProperty(w, { URL("http://go.blokada.org/patron_redirect") })
-    override val obsolete = newProperty(w, { URL("https://blokada.org/api/legacy/content/en/obsolete.html") })
-    override val download = newProperty(w, { URL("https://blokada.org/#download") })
+    override val news = Property.of({ URL("http://go.blokada.org/news") })
+    override val feedback = Property.of({ URL("http://go.blokada.org/feedback") })
+    override val patron = Property.of({ URL("http://go.blokada.org/patron_redirect") })
+    override val obsolete = Property.of({ URL("https://blokada.org/api/legacy/content/en/obsolete.html") })
+    override val download = Property.of({ URL("https://blokada.org/#download") })
 
 }
 

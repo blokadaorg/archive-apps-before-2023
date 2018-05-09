@@ -37,7 +37,7 @@ class AFilterActor(
                 // Hide default Blokada filters instead of deleting them, so they dont reappear on refresh
                 filter.hidden = true
                 filter.active = false
-                s.filters %= s.filters()
+                s.uiChangeCounter %= s.uiChangeCounter() + 1
             } else {
                 s.filters %= s.filters().minus(filter)
             }

@@ -14,7 +14,6 @@ package adblocker
 
 import core.Dns
 import core.Filters
-import gs.property.IWhen
 import org.pcap4j.packet.*
 import org.xbill.DNS.*
 import java.io.IOException
@@ -42,15 +41,16 @@ class DnsProxy(
         block = filters
     }
 
-    var listener: IWhen? = null
-
-    init {
-        listener = f.filtersCompiled.doWhenSet().then { updateFilters(f.filtersCompiled()) }
+    val updater = { it: Set<String> ->
         updateFilters(f.filtersCompiled())
     }
 
+    init {
+        f.filtersCompiled.onChange(job = updater)
+    }
+
     fun stop() {
-        f.filtersCompiled.cancel(listener)
+        f.filtersCompiled.cancel(updater)
     }
 
     fun handleRequest(packetBytes: ByteArray) {

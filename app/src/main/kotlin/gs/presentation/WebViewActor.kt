@@ -15,14 +15,14 @@ import com.github.salomonbrys.kodein.with
 import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.LazyProvider
-import gs.property.IProperty
-import gs.property.IWhen
+import gs.property.Property
+import kotlinx.coroutines.experimental.android.UI
 import org.blokada.R
 import java.net.URL
 
 class WebDash(
         private val xx: Environment,
-        private val url: IProperty<URL>,
+        private val url: Property<URL>,
         private val forceEmbedded: Boolean = false,
         private var reloadOnError: Boolean = false,
         private val javascript: Boolean = false,
@@ -57,7 +57,7 @@ class WebDash(
     private val RELOAD_ERROR_MILLIS = 5 * 1000L
 
     private var webView: WebView? = null
-    private var urlChanged: IWhen? = null
+    private var urlChanged = { it: URL -> reload()}
     private var clean = false
     private var reloadCounter = 0
 
@@ -124,7 +124,7 @@ class WebDash(
             }
         }
 
-        urlChanged = url.doOnUiWhenChanged().then { reload() }
+        url.onChange(UI, urlChanged)
         load()
     }
 
@@ -149,8 +149,7 @@ class WebDash(
     override fun detach(view: View) {
         (view.parent as ViewGroup).removeView(view)
         webView = null
-        url.cancel(urlChanged)
-        urlChanged = null
+        url.cancel(urlChanged, UI)
         clean = false
         reloadCounter = 0
         detached()

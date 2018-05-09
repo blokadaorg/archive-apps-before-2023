@@ -7,12 +7,14 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.Toast
 import com.github.salomonbrys.kodein.instance
-import gs.environment.inject
-import gs.property.Repo
-import org.blokada.BuildConfig
-import org.blokada.R
 import core.Dash
 import core.UiState
+import gs.environment.inject
+import gs.property.Repo
+import gs.property.RepoContent
+import kotlinx.coroutines.experimental.android.UI
+import org.blokada.BuildConfig
+import org.blokada.R
 
 val DASH_ID_ABOUT = "update_about"
 
@@ -46,9 +48,8 @@ class UpdateDash(
         }
 ) {
 
-    private val listener: Any
     init {
-        listener = repo.content.doOnUiWhenSet().then {
+        repo.content.onChange(UI) {
             update(repo.content().newestVersionCode)
         }
     }
@@ -72,7 +73,7 @@ class UpdateDash(
     }
 }
 
-private var listener: gs.property.IWhen? = null
+private var updater2: (RepoContent) -> Unit = {}
 private var updateView: AUpdateView? = null
 private var next: Int = 0
 private fun createUpdateView(parent: ViewGroup, s: Repo): AUpdateView {
@@ -100,12 +101,13 @@ private fun createUpdateView(parent: ViewGroup, s: Repo): AUpdateView {
             next = next++ % u.downloadLinks.size
         }
 
-        if (listener != null) s.content.cancel(listener)
-        listener = s.content.doOnUiWhenSet().then {
+        s.content.cancel(updater2)
+        updater2 = {
             val u = s.content()
             view.update = if (isUpdate(ctx, u.newestVersionCode)) u.newestVersionName
             else null
         }
+        s.content.onChange(UI, updater2)
     }
     updateView = view
     return view
@@ -116,7 +118,7 @@ class UpdateForceDash(
         val s: Repo = ctx.inject().instance()
 ) : Dash("update_force",
         R.drawable.ic_reload,
-        onClick = { s.content.refresh(force = true); true }
+        onClick = { s.content.refresh(); true }
 )
 
 fun isUpdate(ctx: Context, code: Int): Boolean {

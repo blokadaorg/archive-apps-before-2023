@@ -5,21 +5,20 @@ import gs.environment.Worker
 import org.blokada.BuildConfig
 
 abstract class Version {
-        abstract val appName: IProperty<String>
-        abstract val name: IProperty<String>
-        abstract val previousCode: IProperty<Int>
-        abstract val nameCore: IProperty<String>
-        abstract val obsolete: IProperty<Boolean>
+        abstract val appName: Property<String>
+        abstract val name: Property<String>
+        abstract val previousCode: Property<Int>
+        abstract val nameCore: Property<String>
+        abstract val obsolete: Property<Boolean>
 }
 
 class VersionImpl (
-        kctx: Worker,
         xx: Environment
 ) : Version() {
 
-        override val appName = newProperty(kctx, { "gs" })
-        override val name = newProperty(kctx, { "0.0" })
-        override val previousCode = newPersistedProperty(kctx, BasicPersistence(xx, "previous_code"), { 0 })
-        override val nameCore = newProperty(kctx, { BuildConfig.VERSION_NAME })
-        override val obsolete = newProperty(kctx, { false })
+        override val appName = Property.of({ "gs" })
+        override val name = Property.of({ "0.0" })
+        override val previousCode = Property.ofPersisted({ 0 }, BasicPersistence(xx, "previous_code"))
+        override val nameCore = Property.of({ BuildConfig.VERSION_NAME })
+        override val obsolete = Property.of({ false })
 }

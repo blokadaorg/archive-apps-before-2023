@@ -3,21 +3,18 @@ package core
 import android.app.Activity
 import android.content.Context
 import com.github.salomonbrys.kodein.*
-import gs.environment.ComponentProvider
-import gs.environment.Environment
-import gs.environment.Worker
-import gs.environment.inject
+import gs.environment.*
 import gs.property.*
 import org.blokada.BuildConfig
 import org.blokada.R
 
 abstract class UiState {
 
-    abstract val seenWelcome: IProperty<Boolean>
-    abstract val notifications: IProperty<Boolean>
-    abstract val dashes: IProperty<List<Dash>>
-    abstract val infoQueue: IProperty<List<Info>>
-    abstract val showSystemApps: IProperty<Boolean>
+    abstract val seenWelcome: Property<Boolean>
+    abstract val notifications: Property<Boolean>
+    abstract val dashes: Property<List<Dash>>
+    abstract val infoQueue: Property<List<Info>>
+    abstract val showSystemApps: Property<Boolean>
 }
 
 class AUiState(
@@ -27,20 +24,15 @@ class AUiState(
 
     private val ctx: Context by xx.instance()
 
-    override val seenWelcome = newPersistedProperty(kctx, APrefsPersistence(ctx, "seenWelcome"),
-            { false }
-    )
+    override val seenWelcome = Property.ofPersisted({ false }, APrefsPersistence(ctx, "seenWelcome"))
 
-    override val notifications = newPersistedProperty(kctx, APrefsPersistence(ctx, "notifications"),
-            { true }
-    )
+    override val notifications = Property.ofPersisted({ true }, APrefsPersistence(ctx, "notifications"))
 
-    override val dashes = newPersistedProperty(kctx, ADashesPersistence(ctx), { ctx.inject().instance() })
+    override val dashes = Property.ofPersisted({ ctx.inject().instance() }, ADashesPersistence(ctx))
 
-    override val infoQueue = newProperty(kctx, { listOf<Info>() })
+    override val infoQueue = Property.of({ listOf<Info>() })
 
-    override val showSystemApps = newPersistedProperty(kctx, APrefsPersistence(ctx, "showSystemApps"),
-            { true })
+    override val showSystemApps = Property.ofPersisted({ true }, APrefsPersistence(ctx, "showSystemApps"))
 
 }
 
@@ -57,13 +49,14 @@ fun newAppModule(ctx: Context): Kodein.Module {
             val d: Device = instance()
             val repo: Repo = instance()
             val f: Filters = instance()
+            val j: Journal = instance()
 
             // Since having filters is really important, poke whenever we get connectivity
             var wasConnected = false
-            d.connected.doWhenChanged().then {
+            d.connected.onChange {
                 if (d.connected() && !wasConnected) {
-                    repo.content.refresh()
-                    f.filters.refresh()
+                    repo.content.refresh(recheck = true)
+                    f.filters.refresh(recheck = true)
                 }
                 wasConnected = d.connected()
             }
