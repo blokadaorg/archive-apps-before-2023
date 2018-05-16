@@ -1,7 +1,7 @@
 package org.blokada.app
 
-import org.blokada.framework.combine
 import core.Filter
+import core.combine
 import filter.FilterSourceSingle
 import org.junit.Assert
 import org.junit.Test
