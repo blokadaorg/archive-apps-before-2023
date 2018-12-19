@@ -20,8 +20,8 @@
         android:label="@string/branding_app_name"
         android:supportsRtl="true"
         android:installLocation="internalOnly"
-        android:theme="@style/BlokadaColors.Main.NoActionBar"
         tools:replace="android:label">
+        <meta-data android:name="android.notch_support" android:value="true"/>
 
         <receiver
             android:name="core.BootReceiver"
@@ -51,6 +51,25 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+        </activity>
+        <activity
+            android:name="core.PanelActivity"
+            android:label="Blokada Panel"
+            android:launchMode="singleTask"
+            android:theme="@style/BlokadaColors.Main.NoActionBar">
+            <meta-data android:name="android.notch_support" android:value="true"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="core.StepActivity"
+            android:label="Blokada Steps"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:theme="@style/TransparentWindow">
+            <meta-data android:name="android.notch_support" android:value="true"/>
         </activity>
         <activity
             android:name="core.PowersaveActivity"
