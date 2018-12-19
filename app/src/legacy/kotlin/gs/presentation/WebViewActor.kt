@@ -147,7 +147,7 @@ class WebDash(
     }
 
     override fun detach(view: View) {
-        (view.parent as ViewGroup).removeView(view)
+        (view.parent as ViewGroup?)?.removeView(view)
         webView = null
         url.cancel(urlChanged)
         urlChanged = null

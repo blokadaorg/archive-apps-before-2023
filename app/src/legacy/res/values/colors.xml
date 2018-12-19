@@ -33,6 +33,54 @@
     <color name="colorThumbEnd">#f5f5f5</color>
 
 
+    <color name="gradient1_c1">#080a11</color>
+    <color name="gradient1_c2">#29335C</color>
+
+    <array name="gradient1">
+        <item>@color/gradient1_c1</item>
+        <item>@color/gradient1_c2</item>
+    </array>
+
+
+    <color name="gradient2_c1">#180b2b</color>
+    <color name="gradient2_c2">#6029ac</color>
+
+    <array name="gradient2">
+        <item>@color/gradient2_c1</item>
+        <item>@color/gradient2_c2</item>
+    </array>
+
+    <color name="gradient3_c1">#003326</color>
+    <color name="gradient3_c2">#00634a</color>
+
+    <array name="gradient3">
+        <item>@color/gradient3_c1</item>
+        <item>@color/gradient3_c2</item>
+    </array>
+
+    <color name="gradient4_c1">#2c2e2b</color>
+    <color name="gradient4_c2">#6e716b</color>
+
+    <array name="gradient4">
+        <item>@color/gradient4_c1</item>
+        <item>@color/gradient4_c2</item>
+    </array>
+
+    <color name="gradient5_c1">#2a110a</color>
+    <color name="gradient5_c2">#692918</color>
+
+    <array name="gradient5">
+        <item>@color/gradient5_c1</item>
+        <item>@color/gradient5_c2</item>
+    </array>
+
+    <color name="gradient6_c1">#2f0014</color>
+    <color name="gradient6_c2">#d1005b</color>
+
+    <array name="gradient6">
+        <item>@color/gradient6_c1</item>
+        <item>@color/gradient6_c2</item>
+    </array>
 
     <color name="ksw_md_ripple_normal">#11000000</color>
     <color name="ksw_md_ripple_checked">#33DF5401</color>

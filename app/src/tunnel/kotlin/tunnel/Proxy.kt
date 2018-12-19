@@ -57,12 +57,13 @@ internal class Proxy(
             val proxiedDns = DatagramPacket(udpRaw, 0, udpRaw.size, destination,
                     udp.header.dstPort.valueAsInt())
             forward(ktx, proxiedDns, originEnvelope)
+            ktx.emit(Events.REQUEST_FORWARDED, host)
         } else {
             dnsMessage.header.setFlag(Flags.QR.toInt())
             dnsMessage.header.rcode = Rcode.NOERROR
             dnsMessage.addRecord(denyResponse, Section.AUTHORITY)
             toDevice(ktx, dnsMessage.toWire(), originEnvelope)
-            ktx.emit(Events.BLOCKED, host)
+            ktx.emit(Events.REQUEST_BLOCKED, host)
         }
     }
 

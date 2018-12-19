@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<core.DashboardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground"
+    android:gravity="bottom"
+    app:umanoFadeColor="@android:color/transparent">
+
+    <!-- MAIN CONTENT -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <core.ColorfulBackground
+            android:id="@+id/bg_colors"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <core.PacketsView
+            android:id="@+id/bg_packets"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:id="@+id/bg_logo"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="36dp"
+            android:src="@mipmap/ic_launcher" />
+
+        <ImageView
+            android:id="@+id/bg_header"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/bg_logo"
+            android:layout_toEndOf="@id/bg_logo"
+            android:src="@drawable/bg_header" />
+
+    </RelativeLayout>
+
+    <!-- SLIDING LAYOUT -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="false">
+
+        <View
+            android:id="@+id/fg_drag"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_width="1000dp"
+            android:layout_height="400dp"
+            android:layout_marginBottom="-300dp"
+            android:background="@drawable/circle"/>
+
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/fg_content"
+            android:layout_marginTop="40dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_gravity="center_horizontal"
+            android:maxWidth="500dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <LinearLayout
+            android:id="@+id/fg_placeholder"
+            android:visibility="gone"
+            android:background="@color/colorBackground"
+            android:layout_marginTop="80dp"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:maxWidth="500dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/fg_placeholder_icon"
+                android:paddingTop="20dp"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:tint="@color/colorActive"
+                android:gravity="center"
+                android:src="@drawable/ic_block"/>
+
+            <TextView
+                android:id="@+id/fg_placeholder_title"
+                android:paddingTop="20dp"
+                android:layout_width="match_parent"
+                android:gravity="center"
+                android:textSize="36sp"
+                tools:text="Ads"
+                android:textColor="@color/colorActive"
+                android:textStyle="bold"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <com.yarolegovich.discretescrollview.DiscreteScrollView
+            android:id="@+id/fg_nav_primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="4dp"
+            app:dsv_orientation="horizontal" />
+
+        <com.ashokvarma.bottomnavigation.BottomNavigationBar
+            android:id="@+id/fg_nav_secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="4dp"
+            android:visibility="gone"
+            app:bnbActiveColor="@color/colorActive"
+            app:bnbBackgroundColor="@color/colorBackground"
+            app:bnbBackgroundStyle="background_style_static"
+            app:bnbInactiveColor="@color/colorInactive"
+            app:bnbMode="mode_shifting" />
+
+    </FrameLayout>
+</core.DashboardView>

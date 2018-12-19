@@ -31,10 +31,10 @@ class AFilterActor(
     init {
         update()
         v.setOnClickListener ret@ {
-            dialog.onSave = { newFilter ->
-                t.putFilter(v.context.ktx("filter:save"), newFilter)
-            }
-            dialog.show(filter)
+//            dialog.onSave = { newFilter ->
+//                t.putFilter(v.context.ktx("filter:save"), newFilter)
+//            }
+//            dialog.show(filter)
         }
         v.onDelete = {
             if (filter.id.startsWith("b_")) {
