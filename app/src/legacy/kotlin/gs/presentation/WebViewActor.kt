@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.webkit.*
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
+import core.Scrollable
 import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.LazyProvider
@@ -29,7 +30,12 @@ class WebDash(
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
         private val provider: LazyProvider<View> = xx().with("webview").instance()
-): CallbackDash {
+): CallbackDash, Scrollable {
+
+    override fun getScrollableView() = webView!!
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) {
+    }
 
     override fun createView(ctx: Context, parent: ViewGroup): View {
         var v = provider.get()
@@ -147,7 +153,7 @@ class WebDash(
     }
 
     override fun detach(view: View) {
-        (view.parent as ViewGroup).removeView(view)
+        (view.parent as ViewGroup?)?.removeView(view)
         webView = null
         url.cancel(urlChanged)
         urlChanged = null

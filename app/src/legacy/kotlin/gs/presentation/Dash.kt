@@ -10,9 +10,9 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import org.blokada.R
 import gs.property.IProperty
 import gs.property.IWhen
+import org.blokada.R
 
 /**
  * Represents basic view structure that can be embedded in lists or displayed independently, also as
@@ -31,12 +31,16 @@ interface CallbackDash : Dash {
 
 typealias On = Boolean
 
-abstract class ViewDash(
+open class ViewDash(
         val resId: Int
 ) : Dash {
+
     override fun createView(ctx: Context, parent: ViewGroup): View {
         return LayoutInflater.from(ctx).inflate(resId, parent, false)
     }
+
+    override fun attach(view: View) = Unit
+    override fun detach(view: View) = Unit
 }
 
 open class SwitchDash(
@@ -222,4 +226,32 @@ class IconDashView(
         iconView.setImageResource(iconRes)
         after()
     }
+}
+
+class DashCache {
+
+    private val views = mutableMapOf<Dash, View>()
+    private val parents = mutableMapOf<ViewGroup, Dash>()
+
+    fun use(dash: Dash, ctx: Context, parent: ViewGroup) = {
+        val view = views.getOrPut(dash,
+                { dash.createView(ctx, parent)} )
+        val current = parents.getOrPut(parent, { dash })
+        if (current != dash) {
+            views[current]?.apply { current.detach(this) }
+        }
+        parent.removeAllViews()
+        parents[parent] = dash
+        parent.addView(view)
+        dash.attach(view)
+    }()
+
+    fun detach(dash: Dash, parent: ViewGroup) = {
+        parents[parent]?.apply {
+            views[dash]?.apply { dash.detach(this) }
+            parent.removeAllViews()
+            parents.remove(parent)
+        }
+    }()
+
 }

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<core.RippleActiveBackgroundView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--<com.airbnb.lottie.LottieAnimationView-->
+        <!--android:id="@+id/button_off"-->
+        <!--android:layout_width="256dp"-->
+        <!--android:layout_height="256dp"-->
+        <!--android:layout_gravity="center_horizontal|top"-->
+        <!--app:lottie_rawRes="@raw/shield"/>-->
+
+    <!--<core.AFloaterView-->
+        <!--android:id="@+id/button_on"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_gravity="center_horizontal|top"-->
+        <!--android:src="@drawable/ic_power"-->
+        <!--android:tint="@color/colorActive"-->
+        <!--android:layout_marginTop="120dp"-->
+        <!--app:borderWidth="0dp"-->
+        <!--app:elevation="4dp" />-->
+
+</core.RippleActiveBackgroundView>

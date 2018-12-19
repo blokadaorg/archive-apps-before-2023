@@ -17,7 +17,8 @@ object Events {
     val RULESET_BUILT = "RULESET_BUILT".newEventOf<Pair<Int, Int>>()
     val FILTERS_CHANGING = "FILTERS_CHANGING".newEvent()
     val FILTERS_CHANGED = "FILTERS_CHANGED".newEventOf<Collection<Filter>>()
-    val BLOCKED = "BLOCKED".newEventOf<String>()
+    val REQUEST_BLOCKED = "REQUEST_BLOCKED".newEventOf<String>()
+    val REQUEST_FORWARDED = "REQUEST_FORWARDED".newEventOf<String>()
     val TUNNEL_POWER_SAVING = "TUNNEL_POWER_SAVING".newEvent()
     val MEMORY_CAPACITY = "MEMORY_CAPACITY".newEventOf<Int>()
 }
@@ -219,7 +220,7 @@ class Main(
             runBlocking { binding.join() }
             binder = binding.getCompleted()
             fd = binder!!.service.turnOn(ktx)
-            ktx.on(Events.BLOCKED, onBlocked)
+            ktx.on(Events.REQUEST_BLOCKED, onBlocked)
             ktx.v("vpn started")
         }.onFailure { ex ->
             ktx.e("failed starting vpn", ex)
@@ -251,7 +252,7 @@ class Main(
     }
 
     private fun stopVpn(ktx: AndroidKontext) {
-        ktx.cancel(Events.BLOCKED, onBlocked)
+        ktx.cancel(Events.REQUEST_BLOCKED, onBlocked)
         binder?.service?.turnOff(ktx)
         connector.unbind(ktx).mapError { ex -> ktx.w("failed unbinding connector", ex) }
         binder = null

@@ -80,7 +80,7 @@ fun newTunnelModule(ctx: Context): Module {
         bind<IPermissionsAsker>() with singleton {
             object : IPermissionsAsker {
                 override fun askForPermissions() {
-                    MainActivity.askPermissions()
+                    activityRegister.askPermissions()
                 }
             }
         }
