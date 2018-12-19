@@ -2,6 +2,7 @@ package tunnel
 
 import core.Time
 import core.Url
+import java.util.*
 
 typealias MemoryLimit = Int
 typealias FilterId = String
@@ -81,5 +82,13 @@ data class TunnelConfig(
         val wifiOnly: Boolean = true,
         val firstLoad: Boolean = true,
         val powersave: Boolean = false,
+        val dnsFallback: Boolean = true,
+        val report: Boolean = false,
         val cacheTTL: Long = 86400
+)
+
+data class Request(
+        val domain: String,
+        val blocked: Boolean = false,
+        val time: Date = Date()
 )

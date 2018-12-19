@@ -12,7 +12,7 @@ import gs.environment.ComponentProvider
 import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.inject
-import gs.presentation.CallbackDash
+import gs.presentation.CallbackViewBinder
 import gs.presentation.SimpleDialog
 import org.blokada.R
 import tunnel.Filter
@@ -20,8 +20,9 @@ import tunnel.FilterSourceDescriptor
 
 class ExportDash(
         private val xx: Environment
-) : CallbackDash {
+) : CallbackViewBinder {
 
+    override val viewType = 42
     override fun createView(ctx: Context, parent: ViewGroup): View {
         val themedContext = ContextThemeWrapper(ctx, R.style.GsTheme_Dialog)
         return LayoutInflater.from(themedContext).inflate(R.layout.view_export, parent, false)

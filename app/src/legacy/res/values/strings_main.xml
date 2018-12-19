@@ -76,4 +76,134 @@
 
     <!-- To display a big number in short way, eg. 420 thousand -->
     <string name="core_format_thousand">%s thousand</string>
+
+    <string name="dashboard_name_explore">Home</string>
+    <string name="dashboard_name_ads">Ad blocking</string>
+    <string name="dashboard_name_apps">Apps</string>
+    <string name="dashboard_settings_name">Advanced</string>
+    <string name="dashboard_apps_all">All</string>
+
+    <string name="dashboard_name_start">Start</string>
+    <string name="dashboard_name_help">Help</string>
+    <string name="dashboard_name_community">Community</string>
+
+    <string name="dashboard_name_lists">Lists</string>
+    <string name="dashboard_name_whitelist">Allowed</string>
+
+    <string name="dashboard_name_dns">DNS</string>
+    <string name="dashboard_log_name">Log</string>
+    <string name="dashboard_ads_settings_name">Settings</string>
+    <string name="dashboard_apps_system_name">System</string>
+    <string name="dashboard_dns_settings_name">Settings</string>
+    <string name="dashboard_update_name">Updates</string>
+
+    <string name="dashboard_forwarded">Allowed &lt;b&gt;%s&lt;/b&gt;</string>
+    <string name="dashboard_blocked">Blocked &lt;b&gt;%s&lt;/b&gt;</string>
+
+    <string name="slot_desc_forward">This domain has been allowed. To block it, use the button below.</string>
+    <string name="slot_desc_block">This domain has been blocked. To allow it in the future, use the button below.</string>
+
+    <string name="slot_ruleset_header">Filters counter</string>
+    <string name="slot_ruleset_title">Filters now have %s rules.</string>
+    <string name="slot_ruleset_updating">Updating filters...</string>
+    <string name="slot_desc_ruleset_built">Filters are now configured with &lt;b&gt;%s&lt;/b&gt; rules. Up to &lt;b&gt;%s&lt;/b&gt; rules can fit into your device memory overall.</string>
+
+    <string name="slot_message">Message</string>
+    <string name="slot_counter">Counter</string>
+    <string name="slot_status">App status</string>
+
+    <string name="slot_action_allow">Allow</string>
+    <string name="slot_action_block">Block</string>
+    <string name="slot_action_close">Close</string>
+
+    <string name="slot_switch_on">On</string>
+    <string name="slot_switch_off">Off</string>
+    <string name="slot_switch_switch_bitch">Switch</string>
+    <string name="slot_action_delete">Remove</string>
+    <string name="slot_action_credits">Website</string>
+
+    <string name="main_start">swipe up to start</string>
+    <string name="main_intro_new">Welcome to %s! Tap here for intro.</string>
+    <string name="main_intro_new_header">How to use the new UI?</string>
+    <string name="main_intro_description">You can tap on any item, like this one, to open it up perform actions on it. For example, this item can be removed once you are done with it. &lt;br/&gt;&lt;br/&gt;You are currently on the Home section. Swipe left or right for additional sections. Each of them has its own bottom menu - open it by swiping up. &lt;br/&gt;&lt;br/&gt;Go ahead and explore the app now!</string>
+    <string name="main_intro_info">Psst... Some items have the question mark icon on them. Tapping it will display a short help message, like this one!</string>
+
+    <string name="slot_new_filter">Add new list</string>
+    <string name="slot_unset">unset</string>
+    <string name="slot_set">set</string>
+    <string name="slot_invalid">invalid</string>
+    <string name="slot_continue">Continue</string>
+    <string name="slot_remove">Remove</string>
+
+    <string name="slot_enter_domain_title">Domain(s)</string>
+    <string name="slot_enter_domain_desc">Enter domains separated by a comma. You can also paste a link to any host list, or import a local host list file.</string>
+    <string name="slot_enter_domain_error">This does not look like anything to me.</string>
+    <string name="slot_enter_domain_file">File</string>
+
+    <string name="slot_enter_name_title">Name</string>
+    <string name="slot_enter_name_desc">Enter name for the new entry. You can also generate a suggested name.</string>
+    <string name="slot_enter_name_error">This does not look like anything to me.</string>
+    <string name="slot_enter_name_generate">Generate</string>
+
+    <string name="slot_app_label">&lt;b&gt;%s&lt;/b&gt; is whitelisted</string>
+    <string name="slot_app_desc">This app is whitelisted, which means no blocking or filtering is performed on it.</string>
+
+    <string name="slot_allapp_desc">You can whitelist this app in order to stop blocking any traffic for it.</string>
+    <string name="slot_allapp_whitelisted">Whitelisted</string>
+    <string name="slot_allapp_normal">Not whitelisted</string>
+    <string name="slot_allapp_whitelist">Whitelist</string>
+
+    <string name="slot_dns_name">Current DNS server(s): &lt;b&gt;%s&lt;/b&gt;</string>
+    <string name="slot_dns_dns">You can change the current servers using the bottom menu.</string>
+    <string name="slot_action_none">This action is not available yet.</string>
+    <string name="slot_action_facts">Facts</string>
+    <string name="slot_action_unwhitelist">Cancel</string>
+    <string name="slot_action_author">Author</string>
+    <string name="slot_action_share">Share</string>
+    <string name="slot_input_suggestion">An entry</string>
+    <string name="slot_input_suggestion_for">An entry for %s</string>
+
+    <string name="slot_dns_control_title">DNS servers list</string>
+    <string name="slot_dns_control_description">You can sync the DNS servers list with our servers without losing your custom entries. &lt;br/&gt;&lt;br/&gt;Alternatively, you can drop all entries (including yours), and download them again.</string>
+    <string name="slot_action_refresh">Sync</string>
+    <string name="slot_action_restore">Drop</string>
+
+
+    <string name="slot_export_title">Settings location</string>
+    <string name="slot_export_description">You can change where the configuration is saved to (and loaded from). If you are importing existing settings, please select Import first, otherwise they will be overwritten.</string>
+    <string name="slot_action_import">Import</string>
+    <string name="slot_action_internal">Internal Storage</string>
+    <string name="slot_action_external">External Storage</string>
+
+    <string name="slot_filters_title">Filters list</string>
+    <string name="slot_filters_description">You can sync the filters list with our servers without losing your custom entries. &lt;br/&gt;&lt;br/&gt;Alternatively, you can drop all entries (including yours), and download them again.</string>
+
+    <string name="slot_blocked_title">Domain blocked</string>
+    <string name="slot_forwarded_title">Domain forwarded</string>
+
+    <string name="slot_whitelist_title">Whitelisted app</string>
+
+    <string name="slot_list_no_desc">This entry does not have any description.</string>
+
+    <string name="slot_status_title">App status</string>
+    <string name="slot_status_description">You can turn the app off or on using the buttons below, or by swiping the bottom menu.</string>
+    <string name="slot_status_info">When the app is Active, the VPN tunnel is activated and your device is protected.</string>
+
+    <string name="slot_action_deactivate">Turn off</string>
+    <string name="slot_action_activate">Turn on</string>
+
+    <string name="slot_dropped_counter">Blocked domains counter</string>
+    <string name="slot_dropped_counter_info">This counter displays the number of domains that has been blocked since the installation of the app.</string>
+    <string name="slot_dropped_action_clear">Reset</string>
+
+    <string name="slot_notifications_title">Notifications are %s.</string>
+    <string name="slot_notifications_desc">You can turn notifications on or off here. Remember that on some devices, Android will display a separate VPN notification that cannot be turned off.</string>
+    <string name="slot_notifications_enabled">enabled</string>
+    <string name="slot_notifications_disabled">disabled</string>
+
+    <string name="slot_update_action_refresh">Check again</string>
+
+    <string name="slot_telegram_title">Join us at Telegram!</string>
+    <string name="slot_telegram_desc">Visit our Telegram channel for help or just to be part of our community.</string>
+    <string name="slot_telegram_action">Open</string>
 </resources>

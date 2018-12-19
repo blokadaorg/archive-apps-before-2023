@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.webkit.*
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
+import core.Scrollable
 import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.LazyProvider
@@ -29,7 +30,14 @@ class WebDash(
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
         private val provider: LazyProvider<View> = xx().with("webview").instance()
-): CallbackDash {
+): CallbackViewBinder, Scrollable {
+
+    override val viewType = 43
+
+    override fun getScrollableView() = webView!!
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) {
+    }
 
     override fun createView(ctx: Context, parent: ViewGroup): View {
         var v = provider.get()
@@ -108,7 +116,8 @@ class WebDash(
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?,
                                          error: WebResourceError?) {
                 val url = if (Build.VERSION.SDK_INT >= 21) request?.url?.toString() else null
-                handleError(url, Exception("onReceivedError $error"))
+                if (Build.VERSION.SDK_INT >= 23) handleError(url, Exception("onReceivedError: ${error?.errorCode} ${error?.description}"))
+                else handleError(url, Exception("onReceivedError: $error"))
             }
 
             override fun onReceivedError(view: WebView?, errorCode: Int,
@@ -147,7 +156,7 @@ class WebDash(
     }
 
     override fun detach(view: View) {
-        (view.parent as ViewGroup).removeView(view)
+        (view.parent as ViewGroup?)?.removeView(view)
         webView = null
         url.cancel(urlChanged)
         urlChanged = null

@@ -17,6 +17,7 @@ import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.task
 import org.blokada.R
 import tunnel.Main
+import tunnel.Persistence
 import tunnel.checkTunnelPermissions
 
 abstract class Tunnel {
@@ -80,7 +81,7 @@ fun newTunnelModule(ctx: Context): Module {
         bind<IPermissionsAsker>() with singleton {
             object : IPermissionsAsker {
                 override fun askForPermissions() {
-                    MainActivity.askPermissions()
+                    activityRegister.askPermissions()
                 }
             }
         }
@@ -100,10 +101,14 @@ fun newTunnelModule(ctx: Context): Module {
                                 Intent(ctx, MainActivity::class.java),
                                 PendingIntent.FLAG_CANCEL_CURRENT))
                 },
-                onBlocked = { host ->
-                    tunnelState.tunnelDropCount %= tunnelState.tunnelDropCount() + 1
-                    val dropped = tunnelState.tunnelRecentDropped() + host
-                    tunnelState.tunnelRecentDropped %= dropped.takeLast(10)
+                onRequest = { request ->
+                    if (request.blocked) {
+                        tunnelState.tunnelDropCount %= tunnelState.tunnelDropCount() + 1
+                        val dropped = tunnelState.tunnelRecentDropped() + request.domain
+                        tunnelState.tunnelRecentDropped %= dropped.takeLast(10)
+                    }
+
+                    Persistence.request.save(request)
                 },
                 doResolveFilterSource = {
                     res.from(it.source.id, it.source.source)

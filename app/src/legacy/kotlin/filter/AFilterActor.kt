@@ -31,10 +31,10 @@ class AFilterActor(
     init {
         update()
         v.setOnClickListener ret@ {
-            dialog.onSave = { newFilter ->
-                t.putFilter(v.context.ktx("filter:save"), newFilter)
-            }
-            dialog.show(filter)
+//            dialog.onSave = { newFilter ->
+//                t.putFilter(v.context.ktx("filter:save"), newFilter)
+//            }
+//            dialog.show(filter)
         }
         v.onDelete = {
             if (filter.id.startsWith("b_")) {
@@ -48,7 +48,7 @@ class AFilterActor(
         v.showDelete = true
         v.onSwitched = { active ->
             filter = filter.copy(active = active)
-            t.putFilter(v.context.ktx("filter:switch"), filter, sync = false)
+            t.putFilter(v.context.ktx("filter:onSwitch"), filter, sync = false)
         }
     }
 
