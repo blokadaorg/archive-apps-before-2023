@@ -77,17 +77,21 @@
     <!-- To display a big number in short way, eg. 420 thousand -->
     <string name="core_format_thousand">%s thousand</string>
 
-    <string name="dashboard_help_name">Help</string>
-    <string name="dashboard_stats_name">Stats</string>
-    <string name="dashboard_ads_name">Ads</string>
-    <string name="dashboard_apps_name">Apps</string>
-    <string name="dashboard_dns_name">DNS</string>
+    <string name="dashboard_name_explore">home</string>
+    <string name="dashboard_name_ads">ad blocking</string>
+    <string name="dashboard_name_apps">apps</string>
     <string name="dashboard_settings_name">Advanced</string>
 
-    <string name="dashboard_community_name">Community</string>
+    <string name="dashboard_name_help">Help</string>
+    <string name="dashboard_name_community">Community</string>
+
+    <string name="dashboard_name_dns">DNS</string>
     <string name="dashboard_log_name">Log</string>
     <string name="dashboard_ads_settings_name">Settings</string>
     <string name="dashboard_apps_system_name">System apps</string>
     <string name="dashboard_dns_settings_name">Settings</string>
     <string name="dashboard_update_name">Updates</string>
+
+    <string name="dashboard_forwarded">Allowed &lt;b&gt;%s&lt;/b&gt;</string>
+    <string name="dashboard_blocked">Blocked &lt;b&gt;%s&lt;/b&gt;</string>
 </resources>

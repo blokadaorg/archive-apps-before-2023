@@ -7,7 +7,7 @@ import android.view.View
 import android.widget.Toast
 import com.github.salomonbrys.kodein.instance
 import filter.AFilterListView
-import gs.presentation.ViewDash
+import gs.presentation.LayoutViewBinder
 import gs.property.Device
 import gs.property.I18n
 import gs.property.IWhen
@@ -20,7 +20,7 @@ import update.UpdateCoordinator
 import update.isUpdate
 import kotlin.math.max
 
-class BlockedDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
+class BlockedDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
 
     private val t by lazy { ktx.di().instance<Tunnel>() }
 
@@ -40,7 +40,7 @@ class BlockedDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) 
 
 }
 
-class HostsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
+class HostsDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
 
     private var rulesetBuilt = { event: Pair<Int, Int> -> }
     private var rulesetBuilding = {}
@@ -78,7 +78,7 @@ class HostsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
 
 }
 
-class AppsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
+class AppsDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
 
     private var filtersChanged = { event: Collection<Filter> -> }
 
@@ -100,7 +100,7 @@ class AppsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
 
 }
 
-class DnsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
+class DnsDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
 
     private val dns by lazy { ktx.di().instance<Dns>() }
     private val i18n by lazy { ktx.di().instance<I18n>() }
@@ -127,7 +127,7 @@ class DnsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
 
 }
 
-class UpdateDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
+class UpdateDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
 
     private val repo by lazy { ktx.di().instance<Repo>() }
     private var updateText: IWhen? = null
@@ -152,7 +152,7 @@ class UpdateDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_top) {
 
 }
 
-class WhitelistDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_customlist) {
+class WhitelistDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.view_customlist) {
 
     override fun attach(view: View) {
         view as AFilterListView
@@ -165,7 +165,7 @@ class WhitelistDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_cus
 
 }
 
-class AdsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_ads), Backable, Scrollable {
+class AdsDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_ads), Backable, Scrollable {
 
     private var view: DashAdsView? = null
 
@@ -188,7 +188,7 @@ class AdsDash(private val ktx: AndroidKontext): ViewDash(R.layout.dash_ads), Bac
     override fun getScrollableView() = view!!.getScrollableView()
 }
 
-class DnsMainDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_dnslist) {
+class DnsMainDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.view_dnslist) {
 
     override fun attach(view: View) {
     }
@@ -199,7 +199,7 @@ class DnsMainDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_dnsli
 
 }
 
-class SettingsMainDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_tunnel_config) {
+class SettingsMainDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.view_tunnel_config) {
 
     private val t by lazy { ktx.di().instance<tunnel.Main>() }
     private val d by lazy { ktx.di().instance<Device>() }
@@ -224,7 +224,7 @@ class SettingsMainDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_
 
 }
 
-class UpdatesDash(private val ktx: AndroidKontext): ViewDash(R.layout.view_update) {
+class UpdatesDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.view_update) {
 
     private var next: Int = 0
     private val updater by lazy { ktx.di().instance<UpdateCoordinator>() }

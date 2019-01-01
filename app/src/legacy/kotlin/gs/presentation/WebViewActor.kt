@@ -30,7 +30,9 @@ class WebDash(
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
         private val provider: LazyProvider<View> = xx().with("webview").instance()
-): CallbackDash, Scrollable {
+): CallbackViewBinder, Scrollable {
+
+    override val viewType = 43
 
     override fun getScrollableView() = webView!!
 

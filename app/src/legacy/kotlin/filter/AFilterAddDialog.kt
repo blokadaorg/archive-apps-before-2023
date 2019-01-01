@@ -14,7 +14,7 @@ import core.Product
 import gs.environment.ComponentProvider
 import gs.environment.Journal
 import gs.environment.inject
-import gs.presentation.ViewDash
+import gs.presentation.LayoutViewBinder
 import gs.presentation.nullIfEmpty
 import nl.komponents.kovenant.task
 import nl.komponents.kovenant.ui.failUi
@@ -26,7 +26,7 @@ import tunnel.FilterSourceDescriptor
 class EditFilterDash(
         private val filter: Filter? = null,
         private var whitelist: Boolean = false
-) : ViewDash(R.layout.view_filtersadd) {
+) : LayoutViewBinder(R.layout.view_filtersadd) {
 
     override fun attach(view: View) {
         view as AFiltersAddView

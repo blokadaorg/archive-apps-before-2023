@@ -81,43 +81,26 @@
                 android:tint="@color/colorActive" />
         </LinearLayout>
 
-        <FrameLayout
+        <core.BindablePagesView
+            android:id="@+id/bg_pager"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <android.support.constraint.ConstraintLayout
-                android:id="@+id/bg_info"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginBottom="160dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="36dp"
-                android:alpha="0"
-                android:maxWidth="500dp">
-
-                <android.support.v7.widget.RecyclerView
-                    android:id="@+id/bg_info_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scrollbars="none"/>
-            </android.support.constraint.ConstraintLayout>
-        </FrameLayout>
+            android:layout_height="match_parent"
+            android:paddingBottom="110dp"
+            android:paddingTop="36dp"
+            android:alpha="0" />
     </RelativeLayout>
 
     <!-- SLIDING LAYOUT -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
+        android:clickable="false"
         android:focusable="false">
 
         <View
             android:id="@+id/fg_drag"
             android:layout_width="match_parent"
-            android:layout_marginTop="90dp"
-            android:layout_height="40dp"
+            android:layout_height="match_parent"
             android:layout_gravity="top" />
 
         <View
@@ -128,76 +111,49 @@
             android:layout_marginBottom="-92dp"
             android:layout_marginTop="92dp"
             android:alpha="0.7"
-            android:background="@drawable/circle" />
+            android:background="@drawable/circle"
+            android:clickable="false"
+            android:focusable="false" />
 
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/fg_content"
+        <core.BindablePagesView
+            android:id="@+id/fg_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
             android:layout_marginBottom="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="108dp"
-            android:maxWidth="500dp"
             android:visibility="gone" />
 
-        <LinearLayout
-            android:id="@+id/fg_placeholder"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="92dp"
-            android:background="@color/colorBackground"
-            android:gravity="center"
-            android:maxWidth="500dp"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <ImageView
-                android:id="@+id/fg_placeholder_icon"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
-                android:gravity="center"
-                android:paddingTop="20dp"
-                android:src="@drawable/ic_block"
-                android:tint="@color/colorActive" />
-
-            <TextView
-                android:id="@+id/fg_placeholder_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:paddingTop="20dp"
-                android:textColor="@color/colorActive"
-                android:textSize="36sp"
-                android:textStyle="bold"
-                tools:text="Ads" />
-
-        </LinearLayout>
-
-        <com.yarolegovich.discretescrollview.DiscreteScrollView
+        <core.DotsView
             android:id="@+id/fg_nav_primary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:layout_marginTop="120dp"
-            app:dsv_orientation="horizontal" />
+            android:layout_marginTop="114dp"
+            android:clickable="false"
+            android:focusable="false" />
 
-        <com.ashokvarma.bottomnavigation.BottomNavigationBar
+        <ImageView
+            android:id="@+id/fg_logo_icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="120dp"
+            android:alpha="0"
+            android:clickable="false"
+            android:focusable="false"
+            android:src="@mipmap/ic_launcher"
+            android:tint="@color/colorText" />
+
+        <core.DotsView
             android:id="@+id/fg_nav_secondary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="4dp"
-            android:visibility="gone"
-            app:bnbActiveColor="@color/colorActive"
-            app:bnbBackgroundColor="@color/colorBackground"
-            app:bnbBackgroundStyle="background_style_static"
-            app:bnbInactiveColor="@color/colorInactive"
-            app:bnbMode="mode_shifting" />
+            android:layout_gravity="bottom|center_horizontal"
+            android:clickable="false"
+            android:focusable="false"
+            android:paddingBottom="8dp"
+            android:visibility="gone" />
 
     </FrameLayout>
 </core.DashboardView>

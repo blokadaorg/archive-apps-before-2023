@@ -191,6 +191,8 @@ dependencies {
     implementation 'com.github.devlight.navigationtabstrip:navigationtabstrip:1.0.4'
     implementation 'com.ashokvarma.android:bottom-navigation-bar:2.1.0'
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
+    implementation 'com.ramotion.foldingcell:folding-cell:1.2.2'
+    implementation 'com.tbuonomo.andrui:viewpagerdotsindicator:2.1.2'
 
     // Testing and debugging
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
