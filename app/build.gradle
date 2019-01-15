@@ -193,6 +193,7 @@ dependencies {
     implementation 'com.sothree.slidinguppanel:library:3.4.0'
     implementation 'com.ramotion.foldingcell:folding-cell:1.2.2'
     implementation 'com.tbuonomo.andrui:viewpagerdotsindicator:2.1.2'
+    implementation 'jp.wasabeef:blurry:3.0.0'
 
     // Testing and debugging
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'

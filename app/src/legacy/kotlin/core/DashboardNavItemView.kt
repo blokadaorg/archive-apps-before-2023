@@ -15,8 +15,7 @@ import org.blokada.R
 
 data class DashboardSection(
         val nameResId: Int,
-        val subsections: List<DashboardNavItem> = emptyList(),
-        val backgroundGradientResId: Int
+        val subsections: List<DashboardNavItem> = emptyList()
 )
 
 data class DashboardNavItem(
@@ -35,26 +34,56 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
             subsections = listOf(
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
+                            nameResId = R.string.dashboard_name_start,
+                            dash = StartViewBinder(ktx)
+                    ),
+                    DashboardNavItem(
+                            iconResId = R.drawable.ic_help_outline,
                             nameResId = R.string.dashboard_name_help,
                             dash = WebDash(LazyKodein(ktx.di), pages.help,
                                     reloadOnError = true, javascript = true)
-                    ),
-                    DashboardNavItem(
-                            iconResId = R.drawable.ic_comment_multiple_outline,
-                            nameResId = R.string.dashboard_name_community,
-                            dash = LayoutViewBinder(R.layout.dash_placeholder)
-                    ),
-                    DashboardNavItem(
-                            iconResId = R.drawable.ic_earth,
-                            nameResId = R.string.main_blog_text,
-                            dash = WebDash(LazyKodein(ktx.di), pages.news,
-                                    forceEmbedded = true, reloadOnError = true, javascript = true)
                     ),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_heart_box,
                             nameResId = R.string.main_donate_text,
                             dash = WebDash(LazyKodein(ktx.di), pages.donate,
                             reloadOnError = true, javascript = true)
+                    ),
+                    DashboardNavItem(
+                            iconResId = R.drawable.ic_info,
+                            nameResId = R.string.main_credits,
+                            dash = WebDash(LazyKodein(ktx.di), pages.credits,
+                            reloadOnError = true, javascript = true))
+            )
+    )
+
+    sections += DashboardSection(
+            nameResId = R.string.dashboard_name_ads,
+            subsections = listOf(
+                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_lists, ListsSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_log_name, LayoutViewBinder(R.layout.dash_placeholder)),
+                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, SettingsSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, SettingsMainDash(ktx))
+            )
+    )
+
+    sections += DashboardSection(
+            nameResId = R.string.dashboard_name_apps,
+            subsections = listOf(
+                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_name_apps, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
+                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_system_name, AllAppsDashboardSectionVB(ktx.ctx, system = true))
+            )
+    )
+
+    sections += DashboardSection(
+            nameResId = R.string.dashboard_settings_name,
+            subsections = listOf(
+                    DashboardNavItem(R.drawable.ic_server, R.string.dashboard_name_dns, DnsDashboardSection(ktx.ctx)),
+                    DashboardNavItem(
+                            iconResId = R.drawable.ic_earth,
+                            nameResId = R.string.main_blog_text,
+                            dash = WebDash(LazyKodein(ktx.di), pages.news,
+                                    forceEmbedded = true, reloadOnError = true, javascript = true)
                     ),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_feedback,
@@ -66,35 +95,8 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                             nameResId = R.string.main_changelog,
                             dash = WebDash(LazyKodein(ktx.di), pages.changelog,
                                     reloadOnError = true, javascript = true)),
-                    DashboardNavItem(
-                            iconResId = R.drawable.ic_info,
-                            nameResId = R.string.main_credits,
-                            dash = WebDash(LazyKodein(ktx.di), pages.credits,
-                                    reloadOnError = true, javascript = true)),
                     DashboardNavItem(R.drawable.ic_new_releases, R.string.dashboard_update_name, UpdatesDash(ktx))
-            ),
-            backgroundGradientResId = R.array.gradient6
-    )
-
-    sections += DashboardSection(
-            nameResId = R.string.dashboard_name_ads,
-            subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_ads, AdsDash(ktx)),
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_log_name, LayoutViewBinder(R.layout.dash_placeholder)),
-                    DashboardNavItem(R.drawable.ic_settings_outline, R.string.dashboard_ads_settings_name, LayoutViewBinder(R.layout.dash_placeholder)),
-                    DashboardNavItem(R.drawable.ic_server, R.string.dashboard_name_dns, DnsMainDash(ktx)),
-                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_settings_name, SettingsMainDash(ktx))
-            ),
-            backgroundGradientResId = R.array.gradient3
-    )
-
-    sections += DashboardSection(
-            nameResId = R.string.dashboard_name_apps,
-            subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_name_apps, WhitelistDash(ktx)),
-                    DashboardNavItem(R.drawable.ic_hexagon, R.string.dashboard_apps_system_name, LayoutViewBinder(R.layout.dash_placeholder))
-            ),
-            backgroundGradientResId = R.array.gradient4
+            )
     )
 
     return sections

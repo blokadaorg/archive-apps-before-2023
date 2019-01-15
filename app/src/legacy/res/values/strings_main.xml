@@ -82,8 +82,11 @@
     <string name="dashboard_name_apps">apps</string>
     <string name="dashboard_settings_name">Advanced</string>
 
+    <string name="dashboard_name_start">Start</string>
     <string name="dashboard_name_help">Help</string>
     <string name="dashboard_name_community">Community</string>
+
+    <string name="dashboard_name_lists">Lists</string>
 
     <string name="dashboard_name_dns">DNS</string>
     <string name="dashboard_log_name">Log</string>
@@ -94,4 +97,54 @@
 
     <string name="dashboard_forwarded">Allowed &lt;b&gt;%s&lt;/b&gt;</string>
     <string name="dashboard_blocked">Blocked &lt;b&gt;%s&lt;/b&gt;</string>
+
+    <string name="slot_desc_forward">This domain has been allowed. To block it, use the button below.</string>
+    <string name="slot_desc_block">This domain has been blocked. To allow it in the future, use the button below.</string>
+    <string name="slot_desc_ruleset_built">Filters are now configured with %s rules.</string>
+
+    <string name="slot_message">Message</string>
+    <string name="slot_counter">Counter</string>
+    <string name="slot_status">App status</string>
+
+    <string name="slot_action_allow">Allow</string>
+    <string name="slot_action_block">Block</string>
+    <string name="slot_action_close">Close</string>
+
+    <string name="slot_switch_on">On</string>
+    <string name="slot_switch_off">Off</string>
+    <string name="slot_switch_switch_bitch">Switch</string>
+    <string name="slot_action_delete">Remove</string>
+    <string name="slot_action_credits">Credits</string>
+
+    <string name="main_start">swipe up to start</string>
+    <string name="main_intro_new">Welcome to %s! On this home screen you will see what is happening with the app.</string>
+    <string name="main_intro_swipe">Swipe sideways for additional screens. Swipe the bottom panel up for configuration.</string>
+    <string name="main_intro_remove">Remove this or other notification by swiping it away.</string>
+
+    <string name="slot_new_filter">Add new list</string>
+    <string name="slot_unset">unset</string>
+    <string name="slot_set">set</string>
+    <string name="slot_invalid">invalid</string>
+    <string name="slot_continue">Continue</string>
+
+    <string name="slot_enter_domain_title">Domain(s)</string>
+    <string name="slot_enter_domain_desc">Enter domains separated by a comma. You can also paste a link to any host list, or import a local host list file.</string>
+    <string name="slot_enter_domain_error">This does not look like anything to me.</string>
+    <string name="slot_enter_domain_file">File</string>
+
+    <string name="slot_enter_name_title">Name</string>
+    <string name="slot_enter_name_desc">Enter name for the new entry. You can also generate a suggested name.</string>
+    <string name="slot_enter_name_error">This does not look like anything to me.</string>
+    <string name="slot_enter_name_generate">Generate</string>
+
+    <string name="slot_app_label">&lt;b&gt;%s&lt;/b&gt; is whitelisted</string>
+    <string name="slot_app_desc">This app is whitelisted, which means no blocking or filtering is performed on it.</string>
+
+    <string name="slot_allapp_desc">You can whitelist this app in order to stop blocking any traffic for it.</string>
+    <string name="slot_allapp_whitelisted">Whitelisted</string>
+    <string name="slot_allapp_normal">Not whitelisted</string>
+    <string name="slot_allapp_whitelist">Whitelist</string>
+
+    <string name="slot_dns_name">Current DNS servers are &lt;b&gt;%s&lt;/b&gt;</string>
+    <string name="slot_dns_dns">You can change the current servers using the bottom menu.</string>
 </resources>

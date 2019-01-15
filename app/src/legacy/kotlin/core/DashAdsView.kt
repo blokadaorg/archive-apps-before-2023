@@ -3,9 +3,9 @@ package core
 import android.content.Context
 import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
+import android.view.View
 import android.widget.AbsListView
 import android.widget.FrameLayout
-import android.view.View
 import filter.AFilterListView
 import io.codetail.widget.RevealFrameLayout
 import org.blokada.R
@@ -110,3 +110,6 @@ interface Scrollable {
     fun getScrollableView(): View
 }
 
+interface Stepable {
+    fun focus()
+}

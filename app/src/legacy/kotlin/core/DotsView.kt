@@ -20,13 +20,13 @@ class DotsView(
     }
 
     private val sectionView = findViewById<TextView>(R.id.section)
-    private val dotsView = findViewById<WormDotsIndicator>(R.id.dots)
+    private val dotsView = findViewById<WormDotsIndicator>(R.id.worm_dots)
     private val backgroundView = findViewById<View>(R.id.background)
 
     var section: CharSequence = ""
         set(value) {
             field = value
-            sectionView.text = section
+            sectionView.text = value.toString().capitalize()
         }
 
     var viewPager: ViewPager? = null
@@ -59,12 +59,12 @@ class DotsView(
                     sleepingAnimationHandler.sendEmptyMessage(WAKE)
                     Unit
                 }
-                ViewPager.SCROLL_STATE_IDLE -> {
-                    sleepingAnimationHandler.removeMessages(SLEEP)
-                    sleepingAnimationHandler.sendEmptyMessageDelayed(SLEEP, FALL_MS)
-                    Unit
-                }
                 else -> Unit
+            }
+            override fun onPageSelected(position: Int) {
+                sleepingAnimationHandler.removeMessages(SLEEP)
+                sleepingAnimationHandler.sendEmptyMessageDelayed(SLEEP, FALL_MS)
+                Unit
             }
         }
         pagerListener?.apply { addOnPageChangeListener(this) }

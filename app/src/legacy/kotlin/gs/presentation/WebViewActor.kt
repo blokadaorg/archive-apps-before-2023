@@ -116,7 +116,8 @@ class WebDash(
             override fun onReceivedError(view: WebView?, request: WebResourceRequest?,
                                          error: WebResourceError?) {
                 val url = if (Build.VERSION.SDK_INT >= 21) request?.url?.toString() else null
-                handleError(url, Exception("onReceivedError $error"))
+                if (Build.VERSION.SDK_INT >= 23) handleError(url, Exception("onReceivedError: ${error?.errorCode} ${error?.description}"))
+                else handleError(url, Exception("onReceivedError: $error"))
             }
 
             override fun onReceivedError(view: WebView?, errorCode: Int,

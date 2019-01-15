@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Build
 import android.view.View
 import android.view.WindowManager
+import com.github.salomonbrys.kodein.instance
 import gs.obsolete.Sync
 import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.R
@@ -13,14 +14,24 @@ import java.lang.ref.WeakReference
 
 class PanelActivity : Activity() {
 
-    private val dashboardView by lazy { findViewById<DashboardView>(R.id.root) }
+    private val ktx = ktx("PanelActivity")
+    private val dashboardView by lazy { findViewById<DashboardView>(R.id.DashboardView) }
+    private val tunnelManager by lazy { ktx.di().instance<tunnel.Main>() }
+    private val filters by lazy { ktx.di().instance<Filters>() }
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.dashboard)
 //        setFullScreenWindowLayoutInDisplayCutout(window)
-//        trai()
         activityRegister.register(this)
+        dashboardView.onSectionClosed = {
+            filters.changed %= true
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        modalManager.closeModal()
     }
 
     override fun onBackPressed() {
@@ -39,6 +50,7 @@ class PanelActivity : Activity() {
 
 }
 
+val modalManager = ModalManager()
 val activityRegister = ActiveActivityRegister()
 
 class ActiveActivityRegister {
@@ -56,5 +68,9 @@ class ActiveActivityRegister {
             val response = deferred.await()
             if (!response) { throw Exception("could not get tunnel permissions") }
         }
+    }
+
+    fun getParentView(): View? {
+        return activity.get().get()?.findViewById(R.id.root)
     }
 }

@@ -1,23 +1,29 @@
 package core
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.text.format.DateUtils
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
+import com.github.salomonbrys.kodein.LazyKodein
 import com.github.salomonbrys.kodein.instance
+import com.github.salomonbrys.kodein.with
 import filter.AFilterListView
+import gs.environment.Worker
 import gs.presentation.LayoutViewBinder
-import gs.property.Device
-import gs.property.I18n
-import gs.property.IWhen
-import gs.property.Repo
+import gs.presentation.ViewBinder
+import gs.presentation.ViewTypeGenerator
+import gs.presentation.WebDash
+import gs.property.*
 import org.blokada.R
 import tunnel.Filter
 import tunnel.TunnelConfigView
 import update.AUpdateView
 import update.UpdateCoordinator
 import update.isUpdate
+import java.net.URL
 import kotlin.math.max
 
 class BlockedDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
@@ -265,4 +271,36 @@ class UpdatesDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.vi
         repo.content.cancel(listener)
         next = 0
     }
+}
+
+class StartViewBinder(ktx: AndroidKontext) : ViewBinder {
+
+    private val pages by lazy { ktx.di().instance<Pages>() }
+    private var nextUrl: URL? = null
+    private val worker by lazy { ktx.di().with("startview").instance<Worker>()}
+    private val url by lazy { newProperty(worker, zeroValue = { pages.intro() } ) }
+
+    private val web = WebDash(
+            xx = LazyKodein(ktx.di),
+            url = url,
+            reloadOnError = true,
+            javascript = true
+    )
+
+    override fun createView(ctx: Context, parent: ViewGroup): View {
+        return web.createView(ctx, parent)
+    }
+
+    override fun attach(view: View) {
+        if (nextUrl != null) {
+            url %= nextUrl!!
+        } else nextUrl = pages.cta()
+        return web.attach(view)
+    }
+
+    override fun detach(view: View) {
+        web.detach(view)
+    }
+
+    override val viewType = ViewTypeGenerator.get(this)
 }
