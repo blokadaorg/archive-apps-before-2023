@@ -11,8 +11,11 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import com.github.salomonbrys.kodein.instance
 import com.ramotion.foldingcell.FoldingCell
 import gs.presentation.LayoutViewBinder
+import gs.presentation.doAfter
+import gs.property.I18n
 import org.blokada.R
 import java.util.*
 
@@ -27,6 +30,7 @@ class Slot {
             val label: String,
             val header: String = label,
             val description: String? = null,
+            val info: String? = null,
             val detail: String? = null,
             val icon: Drawable? = null,
             val action1: Action? = null,
@@ -34,7 +38,8 @@ class Slot {
             val action3: Action? = null,
             val switched: Boolean? = null,
             val values: List<String> = emptyList(),
-            val selected: String? = null
+            val selected: String? = null,
+            val unread: Boolean = false
     )
 }
 
@@ -43,10 +48,17 @@ class Slot {
  */
 data class SlotMutex(internal var view: SlotView? = null)
 
-abstract class SlotVB(private val slotMutex: SlotMutex = SlotMutex()) : LayoutViewBinder(R.layout.slotview) {
+abstract class SlotVB(internal var slotMutex: SlotMutex = SlotMutex())
+    : LayoutViewBinder(R.layout.slotview), Stepable {
+
+    abstract fun attach(view: SlotView)
+    open fun detach(view: SlotView) = Unit
+
+    protected var view: SlotView? = null
 
     override fun attach(view: View) {
         view as SlotView
+        this.view = view
         view.onTap = {
             val openedView = slotMutex.view
             when {
@@ -60,13 +72,19 @@ abstract class SlotVB(private val slotMutex: SlotMutex = SlotMutex()) : LayoutVi
                 }
             }
         }
+        attach(view)
     }
 
     override fun detach(view: View) {
         view as SlotView
         view.unbind()
+        this.view = null
         slotMutex.view = null
+        detach(view)
     }
+
+    override fun focus() = view?.unfold() ?: Unit
+
 }
 
 class SlotView(
@@ -78,9 +96,13 @@ class SlotView(
         inflate(context, R.layout.slotview_content, this)
     }
 
+    private val i18n by lazy { context.ktx("SlotView").di().instance<I18n>() }
+
     private val foldingView = getChildAt(0) as FoldingCell
     private val foldedContainerView = findViewById<ViewGroup>(R.id.folded)
     private val unfoldedContainerView = findViewById<ViewGroup>(R.id.unfolded)
+    private val unfoldedContentView = findViewById<ViewGroup>(R.id.unfolded_content)
+    private val unreadView = findViewById<ImageView>(R.id.folded_unread)
     private val textView = findViewById<TextView>(R.id.folded_text)
     private val iconView = findViewById<ImageView>(R.id.folded_icon)
     private val timeView = findViewById<TextView>(R.id.folded_time)
@@ -88,6 +110,8 @@ class SlotView(
     private val descriptionView = findViewById<TextView>(R.id.unfolded_description)
     private val editView = findViewById<EditText>(R.id.unfolded_edit)
     private val detailView = findViewById<TextView>(R.id.unfolded_detail)
+    private val infoIconView = findViewById<ImageView>(R.id.unfolded_info_icon)
+    private val infoTextView = findViewById<TextView>(R.id.unfolded_info_text)
     private val switchFoldedView = findViewById<TextView>(R.id.folded_switch)
     private val switchUnfoldedView = findViewById<TextView>(R.id.unfolded_switch)
     private val action0View = findViewById<Button>(R.id.unfolded_action0)
@@ -99,6 +123,27 @@ class SlotView(
     init {
         setOnClickListener { onTap() }
         action0View.setOnClickListener { onTap() }
+        switchViews.forEach { it.setOnClickListener { action1View.callOnClick() } }
+        infoTextView.setOnClickListener {
+            isEnabled = false
+            unfoldedContentView.visibility = View.VISIBLE
+            unfoldedContentView.alpha = 0f
+            unfoldedContentView.animate().alpha(1f).setDuration(500)
+            infoTextView.animate().alpha(0f).setDuration(500).doAfter {
+                infoTextView.visibility = View.GONE
+                isEnabled = true
+            }
+        }
+        infoIconView.setOnClickListener {
+            isEnabled = false
+            unfoldedContentView.animate().alpha(0f).setDuration(500).doAfter {
+                unfoldedContentView.visibility = View.INVISIBLE
+                isEnabled = true
+            }
+            infoTextView.visibility = View.VISIBLE
+            infoTextView.alpha = 0f
+            infoTextView.animate().alpha(1f).setDuration(500)
+        }
         editView.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {
                 val error = onInput(s.toString())
@@ -129,6 +174,18 @@ class SlotView(
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) = Unit
         })
     }
+
+    val ACTION_NONE = {
+        Toast.makeText(context, i18n.getString(R.string.slot_action_none), Toast.LENGTH_LONG).show()
+    }
+
+    val ACTION_CLOSE = Slot.Action(i18n.getString(R.string.slot_action_close), {
+        onTap()
+    })
+
+    val ACTION_REMOVE = Slot.Action(i18n.getString(R.string.slot_remove), {
+        onRemove()
+    })
 
     var type: Slot.Type? = null
         set(value) {
@@ -167,9 +224,19 @@ class SlotView(
     var onSwitch = { _: Boolean -> }
     var onSelect = { _: String -> }
     var onInput: (String) -> String? = { _: String -> null }
+    var onRead = {}
+    var onRemove = {}
 
     fun fold() = foldingView.fold(false)
-    fun unfold() = foldingView.unfold(false)
+
+    fun unfold() {
+        if (content?.unread ?: false) {
+            content = content?.copy(unread = false)
+            onRead()
+        }
+        foldingView.unfold(false)
+    }
+
     fun isUnfolded() = foldingView.isUnfolded
 
     fun enableAlternativeBackground() {
@@ -185,28 +252,38 @@ class SlotView(
             content.values.isNotEmpty() && content.selected in content.values -> switchViews.forEach {
                 it.visibility = View.VISIBLE
                 it.text = content.selected
-                it.setTextColor(resources.getColor(R.color.switch_off))
+                it.setTextColor(resources.getColor(R.color.colorAccent))
             }
             type == Slot.Type.EDIT && content.switched == null -> switchViews.forEach {
                 it.visibility = View.VISIBLE
-                it.text = context.getString(R.string.slot_unset)
+                it.text = i18n.getString(R.string.slot_unset)
                 it.setTextColor(resources.getColor(R.color.switch_off))
             }
-            content.switched == null -> switchViews.forEach { it.visibility = View.GONE }
-            content.switched -> switchViews.forEach {
+            content.switched == true -> switchViews.forEach {
                 it.visibility = View.VISIBLE
                 it.setText(R.string.slot_switch_on)
                 it.setTextColor(resources.getColor(R.color.switch_on))
             }
-            else -> switchViews.forEach {
+            content.switched == false -> switchViews.forEach {
                 it.visibility = View.VISIBLE
                 it.setText(R.string.slot_switch_off)
                 it.setTextColor(resources.getColor(R.color.switch_off))
             }
+            content.action1 != null -> {
+                // Show the first action's name (or unicode icon) in top right
+                switchUnfoldedView.visibility = View.INVISIBLE
+                switchFoldedView.visibility = View.VISIBLE
+                switchFoldedView.text = actionNameToIcon(content.action1.name)
+                switchFoldedView.setTextColor(resources.getColor(R.color.colorAccent))
+            }
+            content.switched == null -> switchViews.forEach { it.visibility = View.GONE }
         }
 
         headerView.text = Html.fromHtml(content.header)
+
         if (content.description != null) descriptionView.text = Html.fromHtml(content.description)
+        else descriptionView.text = i18n.getString(R.string.slot_list_no_desc)
+
         if (content.detail != null) {
             detailView.visibility = View.VISIBLE
             detailView.text = content.detail
@@ -214,6 +291,17 @@ class SlotView(
 
         if (content.icon != null) {
             iconView.setImageDrawable(content.icon)
+        }
+
+        unreadView.visibility = if (content.unread) View.VISIBLE else View.INVISIBLE
+
+        if (content.info != null) {
+            infoTextView.visibility = View.GONE
+            infoIconView.visibility = View.VISIBLE
+            infoTextView.text = content.info
+        } else {
+            infoTextView.visibility = View.GONE
+            infoIconView.visibility = View.GONE
         }
 
         bind(content.action1, content.action2, content.action3)
@@ -259,7 +347,7 @@ class SlotView(
         }
 
         when {
-            action1  == null && (content?.values?.size ?: 0) > 1 -> {
+            action1 == null && (content?.values?.size ?: 0) > 1 -> {
                 // Set action that rolls through possible values
                 val c = content!!
                 val nextValueIndex = (c.values.indexOf(c.selected) + 1) % c.values.size
@@ -275,7 +363,7 @@ class SlotView(
                 // Set action that switches between two boolean values
                 val c = content!!
                 val nextValue = !(c.switched!!)
-                val nextValueName = resources.getString(if (nextValue) R.string.slot_switch_on
+                val nextValueName = i18n.getString(if (nextValue) R.string.slot_switch_on
                         else R.string.slot_switch_off)
                 bind(Slot.Action(nextValueName, {
                     content = c.copy(switched = nextValue)
@@ -321,6 +409,11 @@ class SlotView(
 
     private fun scheduleTimeRefresh() {
         timeRefreshHandler.sendEmptyMessageDelayed(0, 60 * 1000)
+    }
+
+    private fun actionNameToIcon(name: String) = when (name) {
+        i18n.getString(R.string.slot_remove) -> "⌫"
+        else -> name
     }
 }
 

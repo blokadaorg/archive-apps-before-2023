@@ -29,6 +29,15 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     val pages: Pages = di.instance()
 
     var sections = emptyList<DashboardSection>()
+
+    sections += DashboardSection(
+            nameResId = R.string.dashboard_name_apps,
+            subsections = listOf(
+                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_all, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
+                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_system_name, AllAppsDashboardSectionVB(ktx.ctx, system = true))
+            )
+    )
+
     sections += DashboardSection(
             nameResId = R.string.dashboard_name_explore,
             subsections = listOf(
@@ -60,18 +69,15 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     sections += DashboardSection(
             nameResId = R.string.dashboard_name_ads,
             subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_lists, ListsSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_lists, FiltersSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_whitelist, WhitelistDashboardSectionVB(ktx)),
                     DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_log_name, LayoutViewBinder(R.layout.dash_placeholder)),
-                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, SettingsSectionVB(ktx)),
-                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, SettingsMainDash(ktx))
-            )
-    )
-
-    sections += DashboardSection(
-            nameResId = R.string.dashboard_name_apps,
-            subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_name_apps, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_system_name, AllAppsDashboardSectionVB(ktx.ctx, system = true))
+                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, StaticItemsListVB(listOf(
+                            FiltersListControlVB(ktx),
+                            DownloadListsVB(ktx),
+                            ListDownloadFrequencyVB(ktx),
+                            DownloadOnWifiVB(ktx)
+                    )))
             )
     )
 
@@ -79,6 +85,15 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
             nameResId = R.string.dashboard_settings_name,
             subsections = listOf(
                     DashboardNavItem(R.drawable.ic_server, R.string.dashboard_name_dns, DnsDashboardSection(ktx.ctx)),
+                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, StaticItemsListVB(listOf(
+                            DnsListControlVB(ktx),
+                            StorageLocationVB(ktx),
+                            NotificationsVB(ktx),
+                            StartOnBootVB(ktx),
+                            KeepAliveVB(ktx),
+                            WatchdogVB(ktx),
+                            PowersaveVB(ktx)
+                    ))),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_earth,
                             nameResId = R.string.main_blog_text,

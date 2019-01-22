@@ -17,11 +17,10 @@ class HomeDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.vblis
     private val tunnelEvents2 by lazy { ctx.inject().instance<Tunnel>() }
 
     private val items = mutableListOf(
-            InfoSlotVB(R.string.main_intro_new, ctx.ktx("InfoSlotVB"), openedView),
-            InfoSlotVB(R.string.main_intro_swipe, ctx.ktx("InfoSlotVB"), openedView),
-            InfoSlotVB(R.string.main_intro_remove, ctx.ktx("InfoSlotVB"), openedView),
-            AppStatusSlotVB(ctx.ktx("AppStatusSlotVB"), openedView),
-            DroppedCountSlotVB(ctx.ktx("DroppedCountSlotVB"), openedView)
+            IntroVB(ctx.ktx("InfoSlotVB"), slotMutex = openedView, onRemove = {}),
+            AppStatusVB(ctx.ktx("AppStatusSlotVB"), slotMutex = openedView),
+            DroppedCountVB(ctx.ktx("DroppedCountSlotVB"), slotMutex = openedView),
+            HomeNotificationsVB(ctx.ktx("NotificationsVB"), slotMutex = openedView)
     )
 
     override fun attach(view: View) {

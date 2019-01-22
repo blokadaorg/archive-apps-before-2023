@@ -6,7 +6,7 @@ import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 
-class ListsSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview) {
+class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview) {
 
     private var view: VBListView? = null
     private val openedView = SlotMutex()
@@ -14,7 +14,7 @@ class ListsSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblist
     private val filtersUpdated = { filters: Collection<Filter> ->
         val items = filters.filter {
             !it.whitelist && !it.hidden
-        }.sortedBy { it.priority }.map { FilterVB(it, ktx, openedView) }
+        }.sortedBy { it.priority }.map { FilterVB(it, ktx, slotMutex = openedView) }
         view?.set(listOf(NewFilterVB(ktx)) + items)
         Unit
     }
@@ -32,16 +32,16 @@ class ListsSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblist
 
 }
 
-class SettingsSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview) {
+class StaticItemsListVB(
+        private val items: List<SlotVB>
+) : LayoutViewBinder(R.layout.vblistview) {
 
     private var view: VBListView? = null
     private val slotMutex = SlotMutex()
 
-    private val items = listOf(
-            DownloadListsVB(ktx, slotMutex = slotMutex),
-            ListDownloadFrequencyVB(ktx, slotMutex = slotMutex),
-            DownloadOnWifiVB(ktx, slotMutex = slotMutex)
-    )
+    init {
+        items.forEach { it.slotMutex = slotMutex }
+    }
 
     override fun attach(view: View) {
         this.view = view as VBListView
@@ -51,6 +51,5 @@ class SettingsSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbl
 
     override fun detach(view: View) {
         slotMutex.view = null
-//        ktx.cancel(Events.FILTERS_CHANGED, filtersUpdated)
     }
 }

@@ -24,7 +24,7 @@ class StepActivity : Activity() {
 
         stepView.pages = listOf(
                 EnterDomainVB(ktx, accepted = { it ->
-                    nameVB.generatedNameInput = if (it.size == 1) it.first().source else ""
+                    nameVB.inputForGeneratingName = if (it.size == 1) it.first().source else ""
                     sources = it
                     stepView.next()
                 }),

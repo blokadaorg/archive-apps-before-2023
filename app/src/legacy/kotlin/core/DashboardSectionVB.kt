@@ -18,7 +18,7 @@ class DashboardSectionVB(val ktx: AndroidKontext, val section: DashboardSection)
     private val requestForwarded = { it: String ->
         if (!displayingEntries.contains(it)) {
             displayingEntries.add(it)
-            val dash = ForwardSlotVB(it, Date(), ktx, openedView)
+            val dash = DomainForwarderVB(it, Date(), ktx, slotMutex = openedView)
             items.add(dash)
             view?.add(dash)
             trimListIfNecessary()
@@ -29,7 +29,7 @@ class DashboardSectionVB(val ktx: AndroidKontext, val section: DashboardSection)
     private val requestBlocked = { it: String ->
         if (!displayingEntries.contains(it)) {
             displayingEntries.add(it)
-            val dash = BlockSlotVB(it, Date(), ktx, openedView)
+            val dash = DomainBlockedVB(it, Date(), ktx, slotMutex = openedView)
             items.add(dash)
             view?.add(dash)
             trimListIfNecessary()

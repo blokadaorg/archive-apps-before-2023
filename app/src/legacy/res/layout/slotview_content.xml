@@ -7,7 +7,7 @@
     app:backSideColor="@color/colorBackground"
     app:cameraHeight="15">
 
-    <RelativeLayout
+    <FrameLayout
         android:id="@+id/unfolded"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,157 +16,202 @@
         android:visibility="gone">
 
         <TextView
-            android:id="@+id/unfolded_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentTop="true"
-            android:padding="8dp"
-            android:textColor="@color/switch_on"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/unfolded_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:textColor="@color/colorActive"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            tools:text="google.com" />
-
-        <EditText
-            android:id="@+id/unfolded_edit"
+            android:id="@+id/unfolded_info_text"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/unfolded_header"
-            android:inputType="textUri"
+            android:layout_height="match_parent"
             android:padding="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:textColor="@color/colorAccent"
+            android:gravity="center_vertical"
             android:textSize="14sp"
-            android:visibility="gone" />
+            android:textStyle="italic"
+            tools:text="This is an exemplary info text" />
 
-        <TextView
-            android:id="@+id/unfolded_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/unfolded_edit"
-            android:padding="8dp"
-            android:textColor="@color/colorActive"
-            android:textSize="14sp"
-            tools:text="google.com" />
+        <RelativeLayout
+            android:id="@+id/unfolded_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/unfolded_detail"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/unfolded_description"
-            android:padding="8dp"
-            android:textColor="@color/colorTextUnimportant"
-            android:textSize="14sp"
-            tools:text="additional information" />
+            <TextView
+                android:id="@+id/unfolded_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentTop="true"
+                android:padding="8dp"
+                android:textColor="@color/switch_on"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/unfolded_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textColor="@color/colorActive"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="google.com" />
+
+            <EditText
+                android:id="@+id/unfolded_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/unfolded_header"
+                android:inputType="textUri"
+                android:padding="8dp"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/unfolded_description"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/unfolded_edit"
+                android:padding="8dp"
+                android:textColor="@color/colorActive"
+                android:textSize="14sp"
+                tools:text="google.com" />
+
+            <TextView
+                android:id="@+id/unfolded_detail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/unfolded_description"
+                android:padding="8dp"
+                android:textColor="@color/colorTextUnimportant"
+                android:textSize="14sp"
+                tools:text="additional information" />
+
+            <ImageView
+                android:id="@+id/unfolded_info_icon"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_below="@id/unfolded_detail"
+                android:layout_gravity="start"
+                android:layout_margin="8dp"
+                android:src="@drawable/ic_help_outline"
+                android:tint="@color/colorAccent" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/unfolded_detail"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/unfolded_action3"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="4dp"
+                    android:drawablePadding="4dp"
+                    android:drawableStart="@drawable/ic_chevron_left"
+                    android:padding="8dp"
+                    android:tint="@color/colorAccent" />
+
+                <Button
+                    android:id="@+id/unfolded_action2"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:drawablePadding="4dp"
+                    android:drawableStart="@drawable/ic_chevron_down"
+                    android:padding="8dp"
+                    android:tint="@color/colorAccent" />
+
+                <Button
+                    android:id="@+id/unfolded_action1"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:drawablePadding="4dp"
+                    android:drawableStart="@drawable/ic_chevron_right"
+                    android:padding="8dp"
+                    android:tint="@color/colorAccent" />
+
+                <Button
+                    android:id="@+id/unfolded_action0"
+                    style="?android:attr/borderlessButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:drawablePadding="4dp"
+                    android:drawableStart="@drawable/ic_chevron_up"
+                    android:padding="8dp"
+                    android:text="@string/slot_action_close"
+                    android:tint="@color/colorAccent" />
+            </LinearLayout>
+
+
+        </RelativeLayout>
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/folded"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/folded_unread"
+            android:layout_width="4dp"
+            android:layout_height="4dp"
+            android:layout_gravity="top|start"
+            android:layout_margin="4dp"
+            android:src="@drawable/circle"
+            android:tint="@color/colorAccent" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/unfolded_detail"
-            android:gravity="end"
-            android:orientation="horizontal">
+            android:background="@drawable/bg_dashboard_item"
+            android:orientation="horizontal"
+            android:padding="4dp">
 
-            <Button
-                android:id="@+id/unfolded_action3"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
+            <ImageView
+                android:id="@+id/folded_icon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center_vertical"
+                android:layout_margin="4dp"
+                android:src="@drawable/ic_info"
+                android:tint="@color/colorText" />
+
+            <TextView
+                android:id="@+id/folded_text"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
                 android:layout_marginEnd="4dp"
-                android:drawablePadding="4dp"
-                android:drawableStart="@drawable/ic_chevron_left"
-                android:padding="8dp"
-                android:tint="@color/colorAccent" />
+                android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:maxLines="3"
+                android:textSize="12sp"
+                tools:text="Forwarded google.com" />
 
-            <Button
-                android:id="@+id/unfolded_action2"
-                style="?android:attr/borderlessButtonStyle"
+            <TextView
+                android:id="@+id/folded_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:drawablePadding="4dp"
-                android:drawableStart="@drawable/ic_chevron_down"
                 android:padding="8dp"
-                android:tint="@color/colorAccent" />
+                android:textColor="@color/switch_on"
+                android:textSize="14sp" />
 
-            <Button
-                android:id="@+id/unfolded_action1"
-                style="?android:attr/borderlessButtonStyle"
+            <TextView
+                android:id="@+id/folded_time"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="8dp"
                 android:layout_marginStart="4dp"
-                android:drawablePadding="4dp"
-                android:drawableStart="@drawable/ic_chevron_right"
-                android:padding="8dp"
-                android:tint="@color/colorAccent" />
-
-            <Button
-                android:id="@+id/unfolded_action0"
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:drawablePadding="4dp"
-                android:drawableStart="@drawable/ic_chevron_up"
-                android:padding="8dp"
-                android:text="@string/slot_action_close"
-                android:tint="@color/colorAccent" />
+                android:textColor="@color/colorInactive"
+                android:textSize="12sp"
+                tools:text="just now" />
         </LinearLayout>
-
-    </RelativeLayout>
-
-    <LinearLayout
-        android:id="@+id/folded"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/bg_dashboard_item"
-        android:orientation="horizontal"
-        android:padding="4dp">
-
-        <ImageView
-            android:id="@+id/folded_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="4dp"
-            android:src="@drawable/ic_info"
-            android:tint="@color/colorText" />
-
-        <TextView
-            android:id="@+id/folded_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="4dp"
-            android:layout_marginStart="4dp"
-            android:layout_weight="1"
-            android:maxLines="3"
-            android:textSize="12sp"
-            tools:text="Forwarded google.com" />
-
-        <TextView
-            android:id="@+id/folded_switch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:textColor="@color/switch_on"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/folded_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="8dp"
-            android:layout_marginStart="4dp"
-            android:textColor="@color/colorInactive"
-            android:textSize="12sp"
-            tools:text="just now" />
-    </LinearLayout>
+    </FrameLayout>
 
 </com.ramotion.foldingcell.FoldingCell>

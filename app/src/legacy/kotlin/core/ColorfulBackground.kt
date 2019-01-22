@@ -86,8 +86,8 @@ class ColorfulBackground(
     private fun positionToGradient(position: Int): IntArray {
         return if (position == 0) colors(R.array.gradient0)
         else when (position - 1 % 4) {
-            0 -> colors(R.array.gradient1)
-            1 -> colors(R.array.gradient2)
+            0 -> colors(R.array.gradient2)
+            1 -> colors(R.array.gradient1)
             2 -> colors(R.array.gradient3)
             else -> colors(R.array.gradient4)
         }

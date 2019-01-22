@@ -31,7 +31,7 @@ class AllAppsDashboardSectionVB(val ctx: Context, val system: Boolean) : LayoutV
         filters.apps.refresh()
         getApps = filters.apps.doOnUiWhenSet().then {
             filters.apps().filter { it.system == system }.map {
-                AllAppVB(it, ktx)
+                AppVB(it, ktx)
             }.apply { view.set(this) }
         }
     }

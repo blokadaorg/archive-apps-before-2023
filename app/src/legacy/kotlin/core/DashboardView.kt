@@ -52,7 +52,7 @@ class DashboardView(
             field = value
             when (value) {
                 State.INACTIVE -> {
-                    bg_colors.onScroll(1f, selectedPosition + 1, 0)
+                    bg_colors.onScroll(1f, openSection + 1, 0)
                     bg_nav.alpha = 0f
                     fg_logo_icon.alpha = 0f
                     bg_start.alpha = 1f
@@ -69,7 +69,7 @@ class DashboardView(
                     fg_drag.layoutParams = lp
                 }
                 State.ANCHORED -> {
-                    bg_colors.onScroll(1f, 0, selectedPosition + 1)
+                    bg_colors.onScroll(1f, 0, openSection + 1)
                     bg_nav.alpha = 1f
                     fg_logo_icon.alpha = 0.7f
                     bg_start.alpha = 0f
@@ -86,7 +86,7 @@ class DashboardView(
                     fg_drag.layoutParams = lp
                 }
                 State.OPENED -> {
-                    bg_colors.onScroll(1f, 0, selectedPosition + 1)
+                    bg_colors.onScroll(1f, 0, openSection + 1)
                     bg_nav.alpha = 0f
                     fg_logo_icon.alpha = 0f
                     bg_start.alpha = 0f
@@ -116,7 +116,7 @@ class DashboardView(
     private var isOpen = false
     private var openDash: gs.presentation.ViewBinder? = null
     private val inter = DecelerateInterpolator(2f)
-    private var selectedPosition = 0
+    private var openSection = 1
     private var scrolledView: View? = null
 
     override fun onFinishInflate() {
@@ -134,7 +134,7 @@ class DashboardView(
                 override fun onPanelSlide(panel: View?, slideOffset: Float) {
                     if (slideOffset < anchorPoint) {
                         val ratio = slideOffset / anchorPoint
-                        bg_colors.onScroll(1 - ratio, selectedPosition + 1, 0)
+                        bg_colors.onScroll(1 - ratio, openSection + 1, 0)
                         bg_nav.alpha = min(1f, ratio)
                         bg_start.alpha = 1 - min(1f, ratio)
                         bg_packets.alpha = min(1f, ratio)
@@ -232,7 +232,7 @@ class DashboardView(
 
         bg_nav.viewPager = bg_pager
         bg_nav.sleeping = true
-        bg_nav.section = context.getText(sections[selectedPosition].nameResId)
+        bg_nav.section = context.getText(sections[openSection].nameResId)
         bg_nav.sleepingListener = { sleeping ->
             if (sleeping) bg_nav.animate().setDuration(1000).alpha(0f)
             else bg_nav.animate().setDuration(200).alpha(1f)
@@ -242,7 +242,7 @@ class DashboardView(
 //        fg_nav_primary.adapter = dashCardsAdapter
 //        fg_nav_primary.setItemTransitionTimeMillis(100)
 //        fg_nav_primary.setItemTransformer(ScaleTransformer.Builder().setMinScale(0.5f).build())
-//        fg_nav_primary.scrollToPosition(selectedPosition)
+//        fg_nav_primary.scrollToPosition(openSection)
 
 //        fg_nav_primary.addScrollStateChangeListener(object : DiscreteScrollView.ScrollStateChangeListener<ViewHolder> {
 //            override fun onScroll(scrollPosition: Float, currentPosition: Int, newPosition: Int, currentHolder: ViewHolder?, newCurrent: ViewHolder?) {
@@ -258,7 +258,7 @@ class DashboardView(
 //            }
 //
 //            override fun onScrollEnd(currentItemHolder: ViewHolder, adapterPosition: Int) {
-//                selectedPosition = adapterPosition
+//                openSection = adapterPosition
 //            }
 //        })
 
@@ -278,9 +278,9 @@ class DashboardView(
             }
 
             override fun onPageSelected(position: Int) {
-                selectedPosition = position
-                bg_nav.section = context.getText(sections[selectedPosition].nameResId)
-                sections.getOrNull(selectedPosition)?.apply {
+                openSection = position
+                bg_nav.section = makeSectionName(sections[openSection])
+                sections.getOrNull(openSection)?.apply {
                     val icon = when (nameResId) {
                         R.string.dashboard_name_ads -> R.drawable.ic_blocked
                         R.string.dashboard_name_apps -> R.drawable.ic_apps
@@ -294,6 +294,9 @@ class DashboardView(
                 }
             }
         })
+
+        bg_pager.currentItem = openSection
+        bg_nav.section = makeSectionName(sections[openSection])
 
         var resized = false
         viewTreeObserver.addOnGlobalLayoutListener {
@@ -407,20 +410,28 @@ class DashboardView(
         onCloseSection()
     }
 
+    private fun makeSectionName(section: DashboardSection, subsection: DashboardNavItem? = null): String {
+        return if (subsection == null) context.getString(section.nameResId)
+        else {
+            "%s ⸬ %s".format(
+                    context.getString(section.nameResId),
+                    context.getString(subsection.nameResId)
+            )
+        }
+    }
+
     private fun openSelectedSection() {
         isOpen = true
         bg_nav.animate().setDuration(200).alpha(0f).doAfter {
             bg_nav.visibility = View.GONE
         }
 
-        sections.getOrNull(selectedPosition)?.apply {
-            subsections.firstOrNull()?.apply {
-                fg_nav.section = context.getString(nameResId)
-            }
+        sections.getOrNull(openSection)?.apply {
+            fg_nav.section = makeSectionName(sections[openSection], subsections.firstOrNull())
         }
 
         onOpenSection {
-            sections.getOrNull(selectedPosition)?.apply {
+            sections.getOrNull(openSection)?.apply {
 
                 fg_pager.pages = subsections.map {
                     it.dash
@@ -434,8 +445,8 @@ class DashboardView(
                     }
 
                     override fun onPageSelected(position: Int) {
-                        val section = sections[selectedPosition].subsections[position]
-                        fg_nav.section = context.getText(section.nameResId)
+                        val section = sections[openSection].subsections[position]
+                        fg_nav.section = makeSectionName(sections[openSection], section)
                         flashPlaceholder()
                     }
                 })

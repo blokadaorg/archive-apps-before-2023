@@ -14,7 +14,7 @@ class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistvi
     private val dns by lazy { ktx.di().instance<Dns>() }
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val mutex = SlotMutex()
 
     private var get: IWhen? = null
 
@@ -24,13 +24,13 @@ class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistvi
         filters.apps.refresh()
         get = dns.choices.doOnUiWhenSet().then {
             dns.choices().map {
-                DnsVB(it, ktx)
+                DnsChoiceVB(it, ktx, slotMutex = mutex)
             }.apply { view.set(this) }
         }
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        mutex.view = null
         dns.choices.cancel(get)
     }
 

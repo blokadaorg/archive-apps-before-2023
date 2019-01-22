@@ -11,10 +11,10 @@ class AdvancedDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.v
 
     private val openedView = SlotMutex()
 
-    private val items = mutableListOf<SlotVB>(
-            FiltersStatusSlotVB(ctx.ktx("FiltersStatusSlotVB"), openedView),
-            MemoryLimitSlotVB(ctx.ktx("MemoryLimitSlotVB"), openedView),
-            DnsCurrentVB(ctx.ktx("currentDns"), slotMutex = openedView)
+    private val items = mutableListOf(
+            FiltersStatusVB(ctx.ktx("FiltersStatusSlotVB"), slotMutex = openedView),
+            ActiveDnsVB(ctx.ktx("currentDns"), slotMutex = openedView),
+            UpdateVB(ctx.ktx("updateVB"), slotMutex = openedView)
     )
 
     override fun attach(view: View) {

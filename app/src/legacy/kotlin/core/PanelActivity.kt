@@ -5,6 +5,7 @@ import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import com.github.salomonbrys.kodein.instance
+import gs.environment.ComponentProvider
 import gs.obsolete.Sync
 import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.R
@@ -18,6 +19,7 @@ class PanelActivity : Activity() {
     private val dashboardView by lazy { findViewById<DashboardView>(R.id.DashboardView) }
     private val tunnelManager by lazy { ktx.di().instance<tunnel.Main>() }
     private val filters by lazy { ktx.di().instance<Filters>() }
+    private val activityContext by lazy { ktx.di().instance<ComponentProvider<Activity>>() }
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +29,7 @@ class PanelActivity : Activity() {
         dashboardView.onSectionClosed = {
             filters.changed %= true
         }
+        activityContext.set(this)
     }
 
     override fun onResume() {

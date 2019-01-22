@@ -72,7 +72,7 @@ class VBListView(
         manager.stackFromEnd = true
         listView.layoutManager = manager
         listView.adapter = adapter
-        ItemTouchHelper(touchHelper).attachToRecyclerView(listView)
+//        ItemTouchHelper(touchHelper).attachToRecyclerView(listView)
     }
 
     private val viewCreators = mutableMapOf<Int, ViewBinder>()
