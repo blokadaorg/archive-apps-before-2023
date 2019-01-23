@@ -285,7 +285,7 @@ class DashboardView(
                         R.string.dashboard_name_ads -> R.drawable.ic_blocked
                         R.string.dashboard_name_apps -> R.drawable.ic_apps
                         R.string.dashboard_settings_name -> R.drawable.ic_tune
-                        else -> R.mipmap.ic_launcher
+                        else -> R.drawable.blokada
                     }
                     fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
                         fg_logo_icon.setImageResource(icon)

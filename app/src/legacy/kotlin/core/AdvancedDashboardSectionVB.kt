@@ -14,7 +14,8 @@ class AdvancedDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.v
     private val items = mutableListOf(
             FiltersStatusVB(ctx.ktx("FiltersStatusSlotVB"), slotMutex = openedView),
             ActiveDnsVB(ctx.ktx("currentDns"), slotMutex = openedView),
-            UpdateVB(ctx.ktx("updateVB"), slotMutex = openedView)
+            UpdateVB(ctx.ktx("updateVB"), slotMutex = openedView),
+            TelegramVB(ctx.ktx("telegramVB"), slotMutex = openedView)
     )
 
     override fun attach(view: View) {

@@ -23,7 +23,6 @@ import tunnel.TunnelConfigView
 import update.AUpdateView
 import update.UpdateCoordinator
 import update.isUpdate
-import java.net.URL
 import kotlin.math.max
 
 class BlockedDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.dash_top) {
@@ -273,11 +272,20 @@ class UpdatesDash(private val ktx: AndroidKontext): LayoutViewBinder(R.layout.vi
     }
 }
 
-class StartViewBinder(ktx: AndroidKontext) : ViewBinder {
+class StartViewBinder(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val worker: Worker = ktx.di().with("StartViewBinder").instance(),
+        private val version: Version = ktx.di().instance(),
+        private val welcome: Welcome = ktx.di().instance(),
+        private val currentAppVersion: Int,
+        private val afterWelcome: () -> Unit
+) : ViewBinder {
 
-    private val pages by lazy { ktx.di().instance<Pages>() }
-    private var nextUrl: URL? = null
-    private val worker by lazy { ktx.di().with("startview").instance<Worker>()}
+    private enum class Steps { WELCOME, CTA, UPDATED, MULTIPLE_APPS, OBSOLETE }
+
+    private var step = Steps.WELCOME
     private val url by lazy { newProperty(worker, zeroValue = { pages.intro() } ) }
 
     private val web = WebDash(
@@ -287,20 +295,88 @@ class StartViewBinder(ktx: AndroidKontext) : ViewBinder {
             javascript = true
     )
 
+    private fun decide() = when {
+        version.obsolete() -> Steps.OBSOLETE
+        !welcome.introSeen() -> Steps.WELCOME
+        version.previousCode() < currentAppVersion -> Steps.UPDATED
+        getInstalledBuilds().size > 1 -> Steps.MULTIPLE_APPS
+        else -> Steps.CTA
+    }
+
+    private fun getUrl(step: Steps) = when(step) {
+        Steps.OBSOLETE -> pages.obsolete()
+        Steps.WELCOME -> pages.intro()
+        Steps.UPDATED -> pages.updated()
+        Steps.MULTIPLE_APPS -> pages.cleanup()
+        else -> pages.cta()
+    }
+
+    private fun performAction(step: Steps) = when(step) {
+        Steps.WELCOME -> {
+            welcome.introSeen %= true
+        }
+        Steps.UPDATED -> {
+            version.previousCode %= currentAppVersion
+        }
+        Steps.MULTIPLE_APPS -> {
+            Toast.makeText(ctx, R.string.welcome_cleanup_done, Toast.LENGTH_SHORT).show()
+            val builds = getInstalledBuilds()
+            for (b in builds.subList(1, builds.size).reversed()) {
+                uninstallPackage(b)
+            }
+        }
+        else -> Unit
+    }
+
     override fun createView(ctx: Context, parent: ViewGroup): View {
         return web.createView(ctx, parent)
     }
 
+    private var whenPagesLoaded: IWhen? = null
+    private var whenObsolete: IWhen? = null
+
     override fun attach(view: View) {
-        if (nextUrl != null) {
-            url %= nextUrl!!
-        } else nextUrl = pages.cta()
+        step = decide()
+        url %= getUrl(step)
+        web.onAttached {
+            performAction(step)
+        }
+        whenPagesLoaded = pages.loaded.doOnUiWhenChanged(withInit = true).then {
+            url %= getUrl(step)
+        }
+        whenObsolete = version.obsolete.doOnUiWhenChanged(withInit = true).then {
+            step = decide()
+            url %= getUrl(step)
+        }
         return web.attach(view)
     }
 
     override fun detach(view: View) {
         web.detach(view)
+        pages.loaded.cancel(whenPagesLoaded)
+        version.obsolete.cancel(whenObsolete)
     }
 
     override val viewType = ViewTypeGenerator.get(this)
+
+    private fun getInstalledBuilds(): List<String> {
+        return welcome.conflictingBuilds().map {
+            if (isPackageInstalled(it)) it else null
+        }.filterNotNull()
+    }
+
+    private fun isPackageInstalled(appId: String): Boolean {
+        val intent = ctx.packageManager.getLaunchIntentForPackage(appId) as Intent? ?: return false
+        val activities = ctx.packageManager.queryIntentActivities(intent, 0)
+        return activities.size > 0
+    }
+
+    private fun uninstallPackage(appId: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DELETE)
+            intent.data = Uri.parse("package:" + appId)
+            ctx.startActivity(intent)
+        } catch (e: Exception) {
+        }
+    }
 }

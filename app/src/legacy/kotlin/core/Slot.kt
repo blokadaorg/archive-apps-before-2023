@@ -252,7 +252,13 @@ class SlotView(
             content.values.isNotEmpty() && content.selected in content.values -> switchViews.forEach {
                 it.visibility = View.VISIBLE
                 it.text = content.selected
-                it.setTextColor(resources.getColor(R.color.colorAccent))
+                it.setTextColor(resources.getColor(
+                        when (content.selected) {
+                            i18n.getString(R.string.slot_allapp_whitelisted) -> R.color.switch_on
+                            i18n.getString(R.string.slot_allapp_normal) -> R.color.switch_off
+                            else -> R.color.colorAccent
+                        }
+                ))
             }
             type == Slot.Type.EDIT && content.switched == null -> switchViews.forEach {
                 it.visibility = View.VISIBLE

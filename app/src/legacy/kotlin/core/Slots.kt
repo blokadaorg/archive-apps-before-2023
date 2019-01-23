@@ -3,6 +3,7 @@ package core
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import com.github.salomonbrys.kodein.instance
 import filter.hostnameRegex
 import filter.id
@@ -14,6 +15,7 @@ import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 import tunnel.FilterSourceDescriptor
+import update.UpdateCoordinator
 import update.isUpdate
 import java.net.URL
 import java.util.*
@@ -542,27 +544,58 @@ class AppVB(
         slotMutex: SlotMutex = SlotMutex()
 ) : SlotVB(slotMutex) {
 
+    private val actionWhitelist = Slot.Action(i18n.getString(R.string.slot_allapp_whitelist), {
+        val filter = Filter(
+                id = id(app.appId, whitelist = true),
+                source = FilterSourceDescriptor("app", app.appId),
+                active = true,
+                whitelist = true
+        )
+        filters.putFilter(ktx, filter)
+    })
+
+    private var filter: Filter? = null
+
+    private val actionCancel = Slot.Action(i18n.getString(R.string.slot_action_unwhitelist), {
+        filter?.apply { filters.removeFilter(ktx, this) }
+    })
+
+    private val onFilters = { filters: Collection<Filter> ->
+        filter = filters.firstOrNull { it.source.id == "app" && it.source.source == app.appId
+            && it.active
+        }
+        refresh()
+        Unit
+    }
+
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
         view.type = Slot.Type.APP
-        view.content = Slot.Content(
-                label = app.label,
-                header = app.label,
-                info = i18n.getString(R.string.slot_allapp_desc),
-                detail = app.appId,
-                icon = sourceToIcon(ctx, app.appId),
-                values = listOf(
-                        i18n.getString(R.string.slot_allapp_whitelisted),
-                        i18n.getString(R.string.slot_allapp_normal)
-                ),
-                selected = i18n.getString(R.string.slot_allapp_normal),
-                action1 = Slot.Action(i18n.getString(R.string.slot_allapp_whitelist), view.ACTION_NONE),
-                action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), view.ACTION_NONE)
-        )
+        refresh()
+        ktx.on(Events.FILTERS_CHANGED, onFilters)
     }
 
-    private fun isWhitelisted() = {
-//        val current = ktx.
+    private fun refresh() {
+        view?.apply {
+            content = Slot.Content(
+                    label = app.label,
+                    header = app.label,
+                    info = i18n.getString(R.string.slot_allapp_desc),
+                    detail = app.appId,
+                    icon = sourceToIcon(ctx, app.appId),
+                    values = listOf(
+                            i18n.getString(R.string.slot_allapp_whitelisted),
+                            i18n.getString(R.string.slot_allapp_normal)
+                    ),
+                    selected = i18n.getString(if (filter != null) R.string.slot_allapp_whitelisted else R.string.slot_allapp_normal),
+                    action1 = if (filter != null) actionCancel else actionWhitelist,
+                    action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), ACTION_NONE)
+            )
+        }
+    }
+
+    override fun detach(view: SlotView) {
+        ktx.cancel(Events.FILTERS_CHANGED, onFilters)
     }
 }
 
@@ -821,6 +854,7 @@ class DnsListControlVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
+        private val dns: Dns = ktx.di().instance(),
         slotMutex: SlotMutex = SlotMutex()
 ) : SlotVB(slotMutex) {
 
@@ -831,8 +865,13 @@ class DnsListControlVB(
                 label = i18n.getString(R.string.slot_dns_control_title),
                 description = i18n.getString(R.string.slot_dns_control_description),
                 icon = ctx.getDrawable(R.drawable.ic_reload),
-                action1 = Slot.Action(i18n.getString(R.string.slot_action_refresh), view.ACTION_NONE),
-                action2 = Slot.Action(i18n.getString(R.string.slot_action_restore), view.ACTION_NONE)
+                action1 = Slot.Action(i18n.getString(R.string.slot_action_refresh), {
+                    dns.choices.refresh(force = true)
+                }),
+                action2 = Slot.Action(i18n.getString(R.string.slot_action_restore), {
+                    dns.choices %= emptyList()
+                    dns.choices.refresh()
+                })
         )
     }
 
@@ -842,6 +881,9 @@ class FiltersListControlVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
+        private val filters: Filters = ktx.di().instance(),
+        private val translations: g11n.Main = ktx.di().instance(),
+        private val tunnel: tunnel.Main = ktx.di().instance(),
         slotMutex: SlotMutex = SlotMutex()
 ) : SlotVB(slotMutex) {
 
@@ -852,8 +894,20 @@ class FiltersListControlVB(
                 label = i18n.getString(R.string.slot_filters_title),
                 description = i18n.getString(R.string.slot_filters_description),
                 icon = ctx.getDrawable(R.drawable.ic_reload),
-                action1 = Slot.Action(i18n.getString(R.string.slot_action_refresh), view.ACTION_NONE),
-                action2 = Slot.Action(i18n.getString(R.string.slot_action_restore), view.ACTION_NONE)
+                action1 = Slot.Action(i18n.getString(R.string.slot_action_refresh), {
+                    val ktx = "quickActions:refresh".ktx()
+                    filters.apps.refresh(force = true)
+                    tunnel.invalidateFilters(ktx)
+                    translations.invalidateCache(ktx)
+                    translations.sync(ktx)
+                }),
+                action2 = Slot.Action(i18n.getString(R.string.slot_action_restore), {
+                    val ktx = "quickActions:restore".ktx()
+                    filters.apps.refresh(force = true)
+                    tunnel.deleteAllFilters(ktx)
+                    translations.invalidateCache(ktx)
+                    translations.sync(ktx)
+                })
         )
     }
 
@@ -907,7 +961,7 @@ class StorageLocationVB(
                 selected = i18n.getString(if (isExternal()) R.string.slot_action_external
                     else R.string.slot_action_internal),
                 action1 = if (isExternal()) actionInternal else actionExternal,
-                action2 = Slot.Action(i18n.getString(R.string.slot_action_import), view.ACTION_NONE)
+                action2 = actionImport
         )
     }
 
@@ -918,10 +972,14 @@ class UpdateVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val repo: Repo = ktx.di().instance(),
+        private val ver: Version = ktx.di().instance(),
+        private val updater: UpdateCoordinator = ktx.di().instance(),
         slotMutex: SlotMutex = SlotMutex()
 ) : SlotVB(slotMutex) {
 
     private var listener: IWhen? = null
+    private var clickCounter = 0
+    private var next: Int = 0
 
     override fun attach(view: SlotView) {
         listener = repo.lastRefreshMillis.doOnUiWhenSet().then {
@@ -932,15 +990,31 @@ class UpdateVB(
                 view.content = Slot.Content(
                         label = i18n.getString(R.string.update_dash_available),
                         description = i18n.getString(R.string.update_notification_text, current.newestVersionName),
-                        action1 = Slot.Action(i18n.getString(R.string.update_button), view.ACTION_NONE)
+                        action1 = Slot.Action(i18n.getString(R.string.update_button), {
+                            if (clickCounter++ % 2 == 0) {
+                                Toast.makeText(ctx, R.string.update_starting, Toast.LENGTH_SHORT).show()
+                                updater.start(repo.content().downloadLinks)
+                            } else {
+                                val intent = Intent(Intent.ACTION_VIEW)
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                intent.setData(Uri.parse(repo.content().downloadLinks[next].toString()))
+                                ctx.startActivity(intent)
+
+                                next = next++ % repo.content().downloadLinks.size
+                            }
+                        })
                 )
                 view.date = Date()
             } else {
                 view.content = Slot.Content(
                         label = i18n.getString(R.string.update_header_noupdate),
+                        header = "${ver.appName} ${ver.name}",
                         description = i18n.getString(R.string.update_info),
                         action1 = Slot.Action(i18n.getString(R.string.slot_update_action_refresh), {
                             repo.content.refresh(force = true)
+                        }),
+                        action2 = Slot.Action(i18n.getString(R.string.update_button_appinfo), {
+                            try { ctx.startActivity(newAppDetailsIntent(ctx.packageName)) } catch (e: Exception) {}
                         })
                 )
                 view.date = Date(repo.lastRefreshMillis())
@@ -951,4 +1025,38 @@ class UpdateVB(
     override fun detach(view: SlotView) {
         repo.lastRefreshMillis.cancel(listener)
     }
+
+    private fun newAppDetailsIntent(packageName: String): Intent {
+        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        intent.data = Uri.parse("package:" + packageName)
+        return intent
+    }
+}
+
+class TelegramVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val i18n: I18n = ktx.di().instance(),
+        private val pages: Pages = ktx.di().instance(),
+        slotMutex: SlotMutex = SlotMutex()
+) : SlotVB(slotMutex) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_telegram_title),
+                description = i18n.getString(R.string.slot_telegram_desc),
+                icon = ctx.getDrawable(R.drawable.ic_comment_multiple_outline),
+                action1 = Slot.Action(i18n.getString(R.string.slot_telegram_action), {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        intent.data = Uri.parse(pages.chat().toString())
+                        ctx.startActivity(intent)
+                    } catch (e: Exception) {}
+                })
+        )
+    }
+
 }

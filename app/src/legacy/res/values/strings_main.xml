@@ -202,4 +202,8 @@
     <string name="slot_notifications_disabled">disabled</string>
 
     <string name="slot_update_action_refresh">Check again</string>
+
+    <string name="slot_telegram_title">Join us at Telegram!</string>
+    <string name="slot_telegram_desc">Visit our Telegram channel for help or just to be part of our community.</string>
+    <string name="slot_telegram_action">Open Telegram</string>
 </resources>
