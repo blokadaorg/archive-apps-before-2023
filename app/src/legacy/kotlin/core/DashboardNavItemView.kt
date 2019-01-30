@@ -113,8 +113,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                             iconResId = R.drawable.ic_code_tags,
                             nameResId = R.string.main_changelog,
                             dash = WebDash(LazyKodein(ktx.di), pages.changelog,
-                                    reloadOnError = true, javascript = true)),
-                    DashboardNavItem(R.drawable.ic_new_releases, R.string.dashboard_update_name, UpdatesDash(ktx))
+                                    reloadOnError = true, javascript = true))
             )
     )
 

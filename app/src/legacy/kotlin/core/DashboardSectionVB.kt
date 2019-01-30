@@ -1,14 +1,35 @@
 package core
 
+import android.app.Activity
+import android.graphics.Point
 import android.view.View
+import com.github.salomonbrys.kodein.instance
+import gs.environment.ComponentProvider
 import gs.presentation.LayoutViewBinder
 import org.blokada.R
 import tunnel.Events
 import java.util.*
+import kotlin.math.max
 
-class DashboardSectionVB(val ktx: AndroidKontext, val section: DashboardSection) : LayoutViewBinder(R.layout.vblistview) {
+class DashboardSectionVB(
+        val ktx: AndroidKontext,
+        val section: DashboardSection,
+        val activity: ComponentProvider<Activity> = ktx.di().instance()
+) : LayoutViewBinder(R.layout.vblistview) {
 
     private var view: VBListView? = null
+
+    private val screenHeight: Int by lazy {
+        val point = Point()
+        activity.get()?.windowManager?.defaultDisplay?.getSize(point)
+        if (point.y > 0) point.y else 2000
+    }
+
+    private val countLimit: Int by lazy {
+        val limit = screenHeight / ktx.ctx.dpToPx(80)
+        ktx.e("limit: ${limit}, screenHeight: ${screenHeight}")
+        max(5, limit)
+    }
 
     private val displayingEntries = mutableListOf<String>()
     private val openedView = SlotMutex()
@@ -38,7 +59,7 @@ class DashboardSectionVB(val ktx: AndroidKontext, val section: DashboardSection)
     }
 
     private fun trimListIfNecessary() {
-        if (items.size > 10) {
+        if (items.size > countLimit) {
             items.firstOrNull()?.apply {
                 items.remove(this)
                 view?.remove(this)

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:background="@drawable/bg_dashboard_item_2"
-    android:padding="2dp"
+    android:padding="@dimen/vbstep_padding"
     android:layout_height="match_parent">
 
     <android.support.constraint.ConstraintLayout
@@ -12,12 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:maxWidth="600dp">
+        android:maxWidth="@dimen/vblist_max_width">
 
         <core.VBPagesView
             android:id="@+id/pages"
             android:layout_width="match_parent"
-            android:layout_height="300dp" />
+            android:layout_height="@dimen/vbstep_height" />
 
         <core.DotsView
             android:id="@+id/dots"

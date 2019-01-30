@@ -10,9 +10,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center_horizontal"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:maxWidth="600dp">
+        android:layout_marginStart="@dimen/vblist_margin"
+        android:layout_marginEnd="@dimen/vblist_margin"
+        android:maxWidth="@dimen/vblist_max_width">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/list"
@@ -20,8 +20,8 @@
             android:layout_height="match_parent"
             android:clipChildren="false"
             android:clipToPadding="false"
-            android:paddingTop="16dp"
-            android:paddingBottom="16dp"
+            android:paddingTop="@dimen/vblist_padding"
+            android:paddingBottom="@dimen/vblist_padding"
             android:scrollbars="none" />
     </android.support.constraint.ConstraintLayout>
 </FrameLayout>

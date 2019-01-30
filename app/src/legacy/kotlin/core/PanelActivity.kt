@@ -2,6 +2,7 @@ package core
 
 import android.app.Activity
 import android.os.Build
+import android.support.annotation.RequiresApi
 import android.view.View
 import android.view.WindowManager
 import com.github.salomonbrys.kodein.instance
@@ -30,6 +31,7 @@ class PanelActivity : Activity() {
             filters.changed %= true
         }
         activityContext.set(this)
+        getNotch()
     }
 
     override fun onResume() {
@@ -49,6 +51,14 @@ class PanelActivity : Activity() {
             lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             window.attributes = lp
         }
+    }
+
+    @RequiresApi(28)
+    private fun getNotch() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val displayCutout = getWindow().getDecorView().getRootWindowInsets().getDisplayCutout()
+            dashboardView.notchPx = displayCutout.safeInsetTop
+        } else dashboardView.notchPx = resources.getDimensionPixelSize(R.dimen.dashboard_notch_inset)
     }
 
 }

@@ -6,6 +6,8 @@ import android.support.v4.view.ViewPager
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import android.widget.TextView
 import com.tbuonomo.viewpagerdotsindicator.WormDotsIndicator
 import org.blokada.R
@@ -19,6 +21,7 @@ class DotsView(
         inflate(ctx, R.layout.dots, this)
     }
 
+    private val contentView = findViewById<LinearLayout>(R.id.content)
     private val sectionView = findViewById<TextView>(R.id.section)
     private val dotsView = findViewById<WormDotsIndicator>(R.id.worm_dots)
     private val backgroundView = findViewById<View>(R.id.background)
@@ -50,6 +53,14 @@ class DotsView(
             if (value) backgroundView.visibility = View.VISIBLE
             else backgroundView.visibility = View.INVISIBLE
         }
+
+    fun alignEnd() {
+        val lp = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT)
+        lp.addRule(RelativeLayout.ALIGN_PARENT_END)
+        contentView.layoutParams = lp
+    }
 
     private fun activateSleeping() = viewPager?.apply {
         pagerListener = object : ViewPager.SimpleOnPageChangeListener() {

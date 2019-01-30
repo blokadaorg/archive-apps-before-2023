@@ -38,17 +38,17 @@
 
                 <ImageView
                     android:id="@+id/bg_logo_icon"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="42dp"
+                    android:layout_width="@dimen/dashboard_logo_size"
+                    android:layout_height="@dimen/dashboard_logo_size"
+                    android:layout_marginStart="@dimen/dashboard_logo_margin_start"
+                    android:layout_marginTop="@dimen/dashboard_logo_margin_top"
                     android:src="@drawable/blokada" />
             </LinearLayout>
 
             <ImageView
                 android:id="@+id/bg_off_logo"
-                android:layout_width="256dp"
-                android:layout_height="256dp"
+                android:layout_width="@dimen/dashboard_off_size"
+                android:layout_height="@dimen/dashboard_off_size"
                 android:layout_centerInParent="true"
                 android:src="@drawable/bg_window" />
 
@@ -66,14 +66,14 @@
                     android:gravity="center_horizontal"
                     android:text="@string/main_start"
                     android:textColor="@color/colorText"
-                    android:textSize="14sp" />
+                    android:textSize="@dimen/dashboard_start_text_size" />
 
                 <ImageView
                     android:id="@+id/bg_start_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginBottom="48dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_width="@dimen/dashboard_start_icon_size"
+                    android:layout_height="@dimen/dashboard_start_icon_size"
+                    android:layout_marginBottom="@dimen/dashboard_start_icon_margin_bottom"
+                    android:layout_marginTop="@dimen/dashboard_start_icon_margin_top"
                     android:rotation="-90"
                     android:src="@drawable/ic_chevron_right"
                     android:tint="@color/colorActive" />
@@ -84,18 +84,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:alpha="0"
-                android:paddingBottom="110dp"
-                android:paddingTop="36dp" />
+                android:paddingBottom="@dimen/dashboard_pager_margin_bottom"
+                android:paddingTop="@dimen/dashboard_pager_margin_top" />
 
             <core.DotsView
                 android:id="@+id/bg_nav"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_horizontal"
-                android:layout_marginTop="26dp"
+                android:layout_gravity="top"
+                android:layout_marginTop="@dimen/dashboard_nav_margin_top"
                 android:clickable="false"
-                android:focusable="false"
-                android:paddingTop="4dp" />
+                android:focusable="false" />
 
         </RelativeLayout>
 
@@ -114,11 +113,11 @@
 
             <View
                 android:id="@+id/fg_nav_panel"
-                android:layout_width="1988dp"
+                android:layout_width="@dimen/dashboard_panel_width"
                 android:layout_height="match_parent"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="-92dp"
-                android:layout_marginTop="92dp"
+                android:layout_marginBottom="@dimen/dashboard_panel_margin_bottom"
+                android:layout_marginTop="@dimen/dashboard_panel_margin_top"
                 android:alpha="0.7"
                 android:background="@drawable/circle"
                 android:clickable="false"
@@ -128,18 +127,18 @@
                 android:id="@+id/fg_pager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="108dp"
+                android:layout_marginBottom="@dimen/dashboard_fg_pager_margin"
+                android:layout_marginEnd="@dimen/dashboard_fg_pager_margin"
+                android:layout_marginStart="@dimen/dashboard_fg_pager_margin"
+                android:layout_marginTop="@dimen/dashboard_fg_pager_margin_top"
                 android:visibility="gone" />
 
             <ImageView
                 android:id="@+id/fg_logo_icon"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/dashboard_fg_logo_size"
+                android:layout_height="@dimen/dashboard_fg_logo_size"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="120dp"
+                android:layout_marginTop="@dimen/dashboard_fg_logo_margin_top"
                 android:alpha="0"
                 android:clickable="false"
                 android:focusable="false"
@@ -150,11 +149,10 @@
                 android:id="@+id/fg_nav"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="top|center_horizontal"
-                android:layout_marginTop="26dp"
+                android:layout_gravity="top"
+                android:layout_marginTop="@dimen/dashboard_nav_margin_top"
                 android:clickable="false"
                 android:focusable="false"
-                android:paddingTop="4dp"
                 android:visibility="gone" />
 
         </FrameLayout>

@@ -3,4 +3,22 @@
          (such as screen margins) for screens with more than 820dp of available width. This
          would include 7" and 10" devices in landscape (~960dp and ~1280dp respectively). -->
     <dimen name="activity_horizontal_margin">64dp</dimen>
+
+    <dimen name="dashboard_notch_inset">28dp</dimen>
+    <dimen name="dashboard_panel_width">3000dp</dimen>
+    <dimen name="dashboard_panel_anchor_size">50dp</dimen>
+    <dimen name="dashboard_logo_size">42dp</dimen>
+    <dimen name="dashboard_logo_margin_top">10dp</dimen>
+    <dimen name="dashboard_panel_margin_top">80dp</dimen>
+    <dimen name="dashboard_panel_margin_bottom">-80dp</dimen>
+    <dimen name="dashboard_fg_pager_margin_top">66dp</dimen>
+    <dimen name="dashboard_fg_logo_margin_top">100dp</dimen>
+    <dimen name="dashboard_pager_margin_bottom">80dp</dimen>
+
+    <dimen name="dots_padding_sides">2dp</dimen>
+    <dimen name="dots_text_size">@dimen/secondary_text_size</dimen>
+    <dimen name="dots_margin_top">8dp</dimen>
+    <dimen name="dots_size">14dp</dimen>
+
+
 </resources>

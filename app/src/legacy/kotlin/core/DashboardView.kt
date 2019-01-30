@@ -11,6 +11,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
 import android.widget.*
+import com.github.michaelbull.result.onFailure
 import com.github.salomonbrys.kodein.instance
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import gs.environment.inject
@@ -20,6 +21,8 @@ import org.blokada.R
 import tunnel.Events
 import kotlin.math.max
 import kotlin.math.min
+
+
 
 class DashboardView(
         ctx: Context,
@@ -315,12 +318,35 @@ class DashboardView(
         }
     }
 
+    var notchPx: Int = 0
+
     private fun resize() {
 //        val layoutParams = fg_drag.layoutParams as FrameLayout.LayoutParams
 //        layoutParams.width = width * widthMultiplier
 //        fg_drag.layoutParams = layoutParams
-        val percentHeight = context.dpToPx(80).toFloat() / height
+        val percentHeight = resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size).toFloat() / height
         sliding.anchorPoint = percentHeight
+
+        bg_logo.addToTopMargin(notchPx)
+        bg_pager.addToTopMargin(notchPx)
+        fg_pager.addToTopMargin(notchPx)
+        bg_nav.addToTopMargin(notchPx)
+        fg_nav.addToTopMargin(notchPx)
+
+        if (width >= context.dpToPx(820)) {
+            bg_nav.alignEnd()
+            fg_nav.alignEnd()
+        }
+    }
+
+    private fun View.addToTopMargin(size: Int) {
+        Result.of {
+            val lp = layoutParams as RelativeLayout.LayoutParams
+            lp.topMargin += size
+        }.onFailure {
+            val lp = layoutParams as FrameLayout.LayoutParams
+            lp.topMargin += size
+        }
     }
 
     private fun animateStart() {
