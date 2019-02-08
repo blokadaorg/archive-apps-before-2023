@@ -71,7 +71,6 @@ class MainApplication: Application(), KodeinAware {
         val ktx = "boot".ktx()
         repeat(10) { ktx.v("BLOKADA", "*".repeat(it * 2)) }
         setRestartAppOnCrash()
-        Paper.init(this)
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -122,6 +121,8 @@ class MainApplication: Application(), KodeinAware {
         dialog.setResCommentPrompt(R.string.main_report_comment)
         dialog.setResTheme(R.style.GsTheme_Dialog)
         dialog.setResIcon(R.drawable.ic_blokada)
+
+        Paper.init(this)
 
         val d: Device = kodein.instance()
         if (d.reports()) ACRA.init(this, builder)
