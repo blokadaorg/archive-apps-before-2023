@@ -68,14 +68,16 @@ class MainApplication: Application(), KodeinAware {
 
     override fun onCreate() {
         super.onCreate()
+        Paper.init(this)
         val ktx = "boot".ktx()
         repeat(10) { ktx.v("BLOKADA", "*".repeat(it * 2)) }
         setRestartAppOnCrash()
-        Paper.init(this)
     }
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
+        Paper.init(this)
+
         val builder = CoreConfigurationBuilder(this)
         builder.setBuildConfigClass(BuildConfig::class.java).setReportFormat(StringFormat.JSON)
         builder.setLogcatArguments("-t", "600", "-v", "threadtime")
