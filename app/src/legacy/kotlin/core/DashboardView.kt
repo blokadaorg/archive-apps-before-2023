@@ -443,8 +443,7 @@ class DashboardView(
     private fun makeSectionName(section: DashboardSection, subsection: DashboardNavItem? = null): String {
         return if (subsection == null) context.getString(section.nameResId)
         else {
-            //"%s ⸬ %s".format(
-            "%s :: %s".format(
+            context.getString(R.string.panel_nav_header).format(
                     context.getString(section.nameResId),
                     context.getString(subsection.nameResId)
             )

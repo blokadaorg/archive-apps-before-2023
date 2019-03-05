@@ -1,6 +1,7 @@
 package core
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.view.View
@@ -12,6 +13,7 @@ import gs.obsolete.Sync
 import kotlinx.coroutines.experimental.runBlocking
 import org.blokada.R
 import tunnel.askTunnelPermission
+import tunnel.tunnelPermissionResult
 import java.lang.ref.WeakReference
 
 
@@ -42,6 +44,11 @@ class PanelActivity : Activity() {
 
     override fun onBackPressed() {
         if (!dashboardView.handleBackPressed()) super.onBackPressed()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        tunnelPermissionResult(Kontext.new("permission:vpn:result"), resultCode)
     }
 
     fun trai() {
