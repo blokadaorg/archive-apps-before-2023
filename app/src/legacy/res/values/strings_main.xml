@@ -206,4 +206,7 @@
     <string name="slot_telegram_title">Join us at Telegram!</string>
     <string name="slot_telegram_desc">Visit our Telegram channel for help or just to be part of our community.</string>
     <string name="slot_telegram_action">Open</string>
+
+    <string name="slot_dropped_share_title">Share to</string>
+    <string name="slot_dropped_share">I blocked %s ads thanks to %s!</string>
 </resources>

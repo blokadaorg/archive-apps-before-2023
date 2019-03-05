@@ -2,10 +2,10 @@ package core
 
 import android.content.Context
 import android.os.Handler
-import android.os.SystemClock
 import android.support.v4.view.ViewPager
 import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
+import android.view.KeyEvent
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -124,8 +124,11 @@ class DashboardView(
     private var openSection = 1
     private var scrolledView: View? = null
 
+    private var lastSubsectionTab = 0
+
     override fun onFinishInflate() {
         super.onFinishInflate()
+        isFocusable = true
 
         bg_pager.setOnClickListener { openSelectedSection() }
         setDragView(fg_drag)
@@ -237,7 +240,8 @@ class DashboardView(
         bg_nav.viewPager = bg_pager
         bg_nav.sleeping = true
         bg_nav.section = context.getText(sections[openSection].nameResId)
-        bg_pager.setCurrentItem(0)
+        lastSubsectionTab = 0
+        bg_pager.currentItem = 0
         bg_pager.offscreenPageLimit = 3
 //        fg_nav_primary.adapter = dashCardsAdapter
 //        fg_nav_primary.setItemTransitionTimeMillis(100)
@@ -279,6 +283,7 @@ class DashboardView(
 
             override fun onPageSelected(position: Int) {
                 openSection = position
+                lastSubsectionTab = 0
                 bg_nav.section = makeSectionName(sections[openSection])
                 sections.getOrNull(openSection)?.apply {
                     val icon = when (nameResId) {
@@ -438,7 +443,8 @@ class DashboardView(
     private fun makeSectionName(section: DashboardSection, subsection: DashboardNavItem? = null): String {
         return if (subsection == null) context.getString(section.nameResId)
         else {
-            "%s ⸬ %s".format(
+            //"%s ⸬ %s".format(
+            "%s :: %s".format(
                     context.getString(section.nameResId),
                     context.getString(subsection.nameResId)
             )
@@ -473,6 +479,7 @@ class DashboardView(
                         val section = sections[openSection].subsections[position]
                         fg_nav.section = makeSectionName(sections[openSection], section)
                         flashPlaceholder()
+                        lastSubsectionTab = position
                     }
                 })
                 fg_nav.viewPager = fg_pager
@@ -480,8 +487,9 @@ class DashboardView(
 //                fg_nav.sleeping = true
 
 //                mainDashCache.use(subsections.first().dash, context, fg_pager)
-//                updateScrollableView()
-                openDash = subsections.first().dash
+                updateScrollableView()
+                openDash = subsections[lastSubsectionTab].dash
+                fg_pager.currentItem = lastSubsectionTab
 
                 flashPlaceholder()
 
@@ -537,4 +545,43 @@ class DashboardView(
         }
     }
 
+    private var navMode = 0
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                when (sliding.panelState) {
+                    SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+                    else -> super.onKeyUp(keyCode, event)
+                }
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                when (sliding.panelState) {
+                    SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+                    else -> super.onKeyUp(keyCode, event)
+                }
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                when (sliding.panelState) {
+                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem - 1)
+                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem - 1)
+                    else -> super.onKeyUp(keyCode, event)
+                }
+                true
+            }
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                when (sliding.panelState) {
+                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem + 1)
+                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem + 1)
+                    else -> super.onKeyUp(keyCode, event)
+                }
+                true
+            }
+            else -> super.onKeyUp(keyCode, event)
+        }
+    }
 }

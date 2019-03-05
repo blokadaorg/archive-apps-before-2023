@@ -53,11 +53,23 @@
                 android:textStyle="bold"
                 tools:text="google.com" />
 
+            <View
+                android:id="@+id/unfolded_line_top"
+                android:background="@color/colorTextUnimportant"
+                android:layout_below="@id/unfolded_header"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/slot_padding"
+                android:layout_marginEnd="@dimen/slot_padding"
+                android:layout_marginTop="@dimen/slot_content_padding"
+                android:layout_marginBottom="@dimen/slot_content_padding"
+                />
+
             <EditText
                 android:id="@+id/unfolded_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/unfolded_header"
+                android:layout_below="@id/unfolded_line_top"
                 android:inputType="textUri"
                 android:padding="@dimen/slot_padding"
                 android:textSize="@dimen/slot_text_size"
@@ -83,11 +95,23 @@
                 android:textSize="@dimen/slot_text_size"
                 tools:text="additional information" />
 
+            <View
+                android:id="@+id/unfolded_line_bottom"
+                android:background="@color/colorTextUnimportant"
+                android:layout_below="@id/unfolded_detail"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginStart="@dimen/slot_padding"
+                android:layout_marginEnd="@dimen/slot_padding"
+                android:layout_marginTop="@dimen/slot_content_padding"
+                android:layout_marginBottom="@dimen/slot_content_padding"
+                />
+
             <ImageView
                 android:id="@+id/unfolded_info_icon"
                 android:layout_width="@dimen/slot_info_icon_size"
                 android:layout_height="@dimen/slot_info_icon_size"
-                android:layout_below="@id/unfolded_detail"
+                android:layout_below="@id/unfolded_line_bottom"
                 android:layout_gravity="start"
                 android:layout_margin="@dimen/slot_padding"
                 android:src="@drawable/ic_help_outline"
@@ -96,7 +120,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/unfolded_detail"
+                android:layout_below="@id/unfolded_line_bottom"
                 android:gravity="end"
                 android:orientation="horizontal">
 

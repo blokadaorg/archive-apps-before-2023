@@ -62,6 +62,7 @@ class MainApplication: Application(), KodeinAware {
         import(newPagesModule(this@MainApplication))
         import(newUpdateModule(this@MainApplication))
         import(newKeepAliveModule(this@MainApplication))
+        import(newBatteryModule(this@MainApplication))
         import(newAppModule(this@MainApplication), allowOverride = true)
         import(newFlavorModule(this@MainApplication), allowOverride = true)
         import(newBuildTypeModule(this@MainApplication), allowOverride = true)
