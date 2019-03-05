@@ -56,6 +56,7 @@
             android:name="core.PanelActivity"
             android:label="Blokada Panel"
             android:launchMode="singleTask"
+            android:configChanges="keyboard|keyboardHidden|navigation"
             android:theme="@style/BlokadaColors.Main.NoActionBar">
             <meta-data android:name="android.notch_support" android:value="true"/>
             <intent-filter>

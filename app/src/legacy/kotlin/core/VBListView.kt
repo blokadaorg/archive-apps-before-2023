@@ -21,7 +21,7 @@ import org.blokada.R
 class VBListView(
         ctx: Context,
         attributeSet: AttributeSet
-) : FrameLayout(ctx, attributeSet) {
+) : FrameLayout(ctx, attributeSet), Scrollable {
 
     var onItemRemove = { item: ViewBinder -> }
     var onEndReached = { }
@@ -133,6 +133,12 @@ class VBListView(
 //        lp.marginEnd = 0
 //        lp.marginStart = 0
 //        containerView.layoutParams = lp
+    }
+
+    override fun getScrollableView() = listView
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     class VerticalSpace(val height: Int): RecyclerView.ItemDecoration() {

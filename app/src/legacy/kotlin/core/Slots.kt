@@ -69,6 +69,7 @@ class AppStatusVB(
 
 class DroppedCountVB(
         private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.di().instance(),
         private val i18n: I18n = ktx.di().instance(),
         private val tunnelEvents: Tunnel = ktx.di().instance(),
         slotMutex: SlotMutex
@@ -86,7 +87,17 @@ class DroppedCountVB(
                     header = i18n.getString(R.string.slot_dropped_counter),
                     description = message,
                     info = i18n.getString(R.string.slot_dropped_counter_info),
-                    action1 = Slot.Action(i18n.getString(R.string.slot_action_share), view.ACTION_NONE),
+                    action1 = Slot.Action(i18n.getString(R.string.slot_action_share), {
+                        val shareIntent: Intent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, ctx.getString(R.string.slot_dropped_share,
+                                    Format.counter(tunnelEvents.tunnelDropCount()),
+                                    ctx.getString(R.string.branding_app_name_short)))
+                            type = "image/jpeg"
+                        }
+                        ctx.startActivity(Intent.createChooser(shareIntent,
+                                ctx.getText(R.string.slot_dropped_share_title)))
+                    }),
                     action2 = Slot.Action(i18n.getString(R.string.slot_dropped_action_clear), {
                         tunnelEvents.tunnelDropCount %= 0
                     })
@@ -177,6 +188,7 @@ class DomainForwarderVB(
         view.date = date
         view.content = Slot.Content(
             label = i18n.getString(R.string.dashboard_forwarded, domain),
+            header = i18n.getString(R.string.slot_forwarded_title),
             description = domain,
             detail = Format.date(date),
             info = i18n.getString(R.string.slot_desc_forward),
