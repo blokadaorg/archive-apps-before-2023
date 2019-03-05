@@ -32,19 +32,19 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     var sections = emptyList<DashboardSection>()
 
     sections += DashboardSection(
-            nameResId = R.string.dashboard_name_apps,
+            nameResId = R.string.panel_section_apps,
             subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_all, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_apps_system_name, AllAppsDashboardSectionVB(ktx.ctx, system = true))
+                    DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_apps_all, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
+                    DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_apps_system, AllAppsDashboardSectionVB(ktx.ctx, system = true))
             )
     )
 
     sections += DashboardSection(
-            nameResId = R.string.dashboard_name_explore,
+            nameResId = R.string.panel_section_home,
             subsections = listOf(
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
-                            nameResId = R.string.dashboard_name_start,
+                            nameResId = R.string.panel_section_home_start,
                             dash = StartViewBinder(ktx,
                                     currentAppVersion = BuildConfig.VERSION_CODE,
                                     afterWelcome = {}
@@ -52,7 +52,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                     ),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
-                            nameResId = R.string.dashboard_name_help,
+                            nameResId = R.string.panel_section_home_help,
                             dash = WebDash(LazyKodein(ktx.di), pages.help,
                                     reloadOnError = true, javascript = true)
                     ),
@@ -71,12 +71,12 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     )
 
     sections += DashboardSection(
-            nameResId = R.string.dashboard_name_ads,
+            nameResId = R.string.panel_section_ads,
             subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_lists, FiltersSectionVB(ktx)),
-                    DashboardNavItem(R.drawable.ic_block, R.string.dashboard_name_whitelist, WhitelistDashboardSectionVB(ktx)),
-                    DashboardNavItem(R.drawable.ic_apps, R.string.dashboard_log_name, AdsLogVB(ktx)),
-                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, StaticItemsListVB(listOf(
+                    DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_lists, FiltersSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_whitelist, WhitelistDashboardSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_ads_log, AdsLogVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(
                             FiltersListControlVB(ktx),
                             DownloadListsVB(ktx),
                             ListDownloadFrequencyVB(ktx),
@@ -86,10 +86,10 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     )
 
     sections += DashboardSection(
-            nameResId = R.string.dashboard_settings_name,
+            nameResId = R.string.panel_section_advanced,
             subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_server, R.string.dashboard_name_dns, DnsDashboardSection(ktx.ctx)),
-                    DashboardNavItem(R.drawable.ic_tune, R.string.dashboard_ads_settings_name, StaticItemsListVB(listOf(
+                    DashboardNavItem(R.drawable.ic_server, R.string.panel_section_advanced_dns, DnsDashboardSection(ktx.ctx)),
+                    DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(
                             DnsListControlVB(ktx),
                             StorageLocationVB(ktx),
                             NotificationsVB(ktx),

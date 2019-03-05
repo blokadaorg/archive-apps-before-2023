@@ -64,7 +64,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal"
-                    android:text="@string/main_start"
+                    android:text="@string/slot_start"
                     android:textColor="@color/colorText"
                     android:textSize="@dimen/dashboard_start_text_size" />
 
