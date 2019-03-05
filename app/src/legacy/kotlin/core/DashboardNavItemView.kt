@@ -73,8 +73,9 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
     sections += DashboardSection(
             nameResId = R.string.panel_section_ads,
             subsections = listOf(
-                    DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_lists, FiltersSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_blacklist, BlacklistDashboardSection(ktx)),
                     DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_whitelist, WhitelistDashboardSectionVB(ktx)),
+                    DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_lists, FiltersSectionVB(ktx)),
                     DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_ads_log, AdsLogVB(ktx)),
                     DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(
                             FiltersListControlVB(ktx),

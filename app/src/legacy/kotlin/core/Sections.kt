@@ -13,7 +13,7 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
 
     private val filtersUpdated = { filters: Collection<Filter> ->
         val items = filters.filter {
-            !it.whitelist && !it.hidden
+            !it.whitelist && !it.hidden && it.source.id != "single"
         }.sortedBy { it.priority }.map { FilterVB(it, ktx, slotMutex = openedView) }
         view?.set(listOf(NewFilterVB(ktx)) + items)
         Unit

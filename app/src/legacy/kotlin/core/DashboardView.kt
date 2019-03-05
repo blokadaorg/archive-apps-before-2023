@@ -544,43 +544,61 @@ class DashboardView(
         }
     }
 
-    private var navMode = 0
+    enum class NavMode { COLLAPSED, ANCHORED, OPENED, SLOT }
+    private var navMode = NavMode.COLLAPSED
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        return when (keyCode) {
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                when (sliding.panelState) {
-                    SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
-                    else -> super.onKeyUp(keyCode, event)
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                when (sliding.panelState) {
-                    SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-                    else -> super.onKeyUp(keyCode, event)
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                when (sliding.panelState) {
-                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem - 1)
-                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem - 1)
-                    else -> super.onKeyUp(keyCode, event)
-                }
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                when (sliding.panelState) {
-                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem + 1)
-                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem + 1)
-                    else -> super.onKeyUp(keyCode, event)
-                }
-                true
-            }
-            else -> super.onKeyUp(keyCode, event)
-        }
-    }
+    private val buttonsEnter = listOf(KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)
+    private val buttonsBack = listOf(KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK)
+
+//    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+//        when (navMode) {
+//            NavMode.COLLAPSED -> navigateDashboard(keyCode, event)
+//        }
+//        return true
+//    }
+//
+//    private fun navigateCollapsed(keyCode: Int) = when(keyCode) {
+//         in buttonsEnter -> {
+//            when (sliding.panelState) {
+//                SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+//                SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+//            }
+//        }
+//        in buttonsBack -> {
+//            when (sliding.panelState) {
+//                SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+//                SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+//            }
+//        }
+//    }
+//
+//    private fun navigateCollapsed(keyCode: Int) {
+//        when(keyCode) {
+//            in buttonsEnter -> {
+//                when (sliding.panelState) {
+//                    SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+//                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+//                }
+//            }
+//            in buttonsBack -> {
+//                when (sliding.panelState) {
+//                    SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+//                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+//                }
+//            }
+//            KeyEvent.KEYCODE_DPAD_LEFT -> {
+//                when (sliding.panelState) {
+//                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem - 1)
+//                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem - 1)
+//                }
+//            }
+//            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+//                when (sliding.panelState) {
+//                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem + 1)
+//                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem + 1)
+//                }
+//            }
+//        }
+//    }
 }

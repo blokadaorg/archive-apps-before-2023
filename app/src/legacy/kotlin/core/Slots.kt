@@ -201,6 +201,7 @@ class DomainForwarderVB(
                 )
                 tunnelManager.putFilter(ktx, f)
                 view.fold()
+                Toast.makeText(ktx.ctx, i18n.getString(R.string.panel_domain_blocked_toast), Toast.LENGTH_SHORT).show()
             }),
             action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), view.ACTION_NONE)
         )
@@ -237,6 +238,7 @@ class DomainBlockedVB(
                 )
                 tunnelManager.putFilter(ktx, f)
                 view.fold()
+                Toast.makeText(ktx.ctx, i18n.getString(R.string.panel_domain_forwarded_toast), Toast.LENGTH_SHORT).show()
             }),
             action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), view.ACTION_NONE)
         )
