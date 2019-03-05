@@ -230,9 +230,9 @@ class DashboardView(
 
         bg_pager.pages = sections.map {
             when (it.nameResId) {
-                R.string.dashboard_name_explore -> HomeDashboardSectionVB(context.ktx("dashboard-home"))
-                R.string.dashboard_settings_name -> AdvancedDashboardSectionVB(context)
-                R.string.dashboard_name_apps -> AppsDashboardSectionVB(context)
+                R.string.panel_section_home -> HomeDashboardSectionVB(context.ktx("dashboard-home"))
+                R.string.panel_section_advanced -> AdvancedDashboardSectionVB(context)
+                R.string.panel_section_apps -> AppsDashboardSectionVB(context)
                 else -> DashboardSectionVB(context.ktx("dashboard-section"), it)
             }
         }
@@ -287,9 +287,9 @@ class DashboardView(
                 bg_nav.section = makeSectionName(sections[openSection])
                 sections.getOrNull(openSection)?.apply {
                     val icon = when (nameResId) {
-                        R.string.dashboard_name_ads -> R.drawable.ic_blocked
-                        R.string.dashboard_name_apps -> R.drawable.ic_apps
-                        R.string.dashboard_settings_name -> R.drawable.ic_tune
+                        R.string.panel_section_ads -> R.drawable.ic_blocked
+                        R.string.panel_section_apps -> R.drawable.ic_apps
+                        R.string.panel_section_advanced -> R.drawable.ic_tune
                         else -> R.drawable.blokada
                     }
                     if (state != State.INACTIVE) {

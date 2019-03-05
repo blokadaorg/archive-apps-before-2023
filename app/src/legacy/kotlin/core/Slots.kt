@@ -123,10 +123,10 @@ class FiltersStatusVB(
     private val updatingFilters = {
         view?.apply {
             type = Slot.Type.INFO
-            val message = i18n.getString(R.string.slot_ruleset_updating)
+            val message = i18n.getString(R.string.panel_ruleset_updating)
             content = Slot.Content(
                     label = message,
-                    header = i18n.getString(R.string.slot_ruleset_header),
+                    header = i18n.getString(R.string.panel_ruleset),
                     description = message
             )
             date = Date()
@@ -150,9 +150,9 @@ class FiltersStatusVB(
         view?.apply {
             type = Slot.Type.COUNTER
             content = Slot.Content(
-                    label = i18n.getString(R.string.slot_ruleset_title, Format.counter(rules)),
-                    header = i18n.getString(R.string.slot_ruleset_header),
-                    description = i18n.getString(R.string.slot_desc_ruleset_built,
+                    label = i18n.getString(R.string.panel_ruleset_title, Format.counter(rules)),
+                    header = i18n.getString(R.string.panel_ruleset),
+                    description = i18n.getString(R.string.panel_ruleset_built,
                             Format.counter(rules), Format.counter(memory))
             )
             date = Date()
@@ -187,11 +187,11 @@ class DomainForwarderVB(
         view.type = Slot.Type.FORWARD
         view.date = date
         view.content = Slot.Content(
-            label = i18n.getString(R.string.dashboard_forwarded, domain),
+            label = i18n.getString(R.string.panel_domain_forwarded, domain),
             header = i18n.getString(R.string.slot_forwarded_title),
             description = domain,
             detail = Format.date(date),
-            info = i18n.getString(R.string.slot_desc_forward),
+            info = i18n.getString(R.string.panel_domain_forwarded_desc),
             action1 = Slot.Action(i18n.getString(R.string.slot_action_block), {
                 val f = Filter(
                         id(domain, whitelist = false),
@@ -223,11 +223,11 @@ class DomainBlockedVB(
         view.type = Slot.Type.BLOCK
         view.date = date
         view.content = Slot.Content(
-            label = i18n.getString(R.string.dashboard_blocked, domain),
+            label = i18n.getString(R.string.panel_domain_blocked, domain),
             header = i18n.getString(R.string.slot_blocked_title),
             description = domain,
             detail = Format.date(date),
-            info = i18n.getString(R.string.slot_desc_block),
+            info = i18n.getString(R.string.panel_domain_blocked_desc),
             action1 = Slot.Action(i18n.getString(R.string.slot_action_allow), {
                 val f = Filter(
                         id(domain, whitelist = true),
@@ -266,7 +266,7 @@ class FilterVB(
                 icon = ctx.getDrawable(R.drawable.ic_hexagon_multiple),
                 switched = filter.active,
                 detail = filter.source.source,
-                action2 = Slot.Action(i18n.getString(R.string.slot_action_delete), {
+                action2 = Slot.Action(i18n.getString(R.string.slot_action_remove), {
                     filters.removeFilter(ktx, filter)
                 }),
                 action3 = Slot.Action(i18n.getString(R.string.slot_action_author), {
@@ -739,10 +739,10 @@ class IntroVB(
     override fun attach(view: SlotView) {
         view.type = Slot.Type.INFO
         view.content = Slot.Content(
-                label = i18n.getBrandedString(R.string.main_intro_new),
-                header = i18n.getString(R.string.main_intro_new_header),
-                description = i18n.getString(R.string.main_intro_description),
-                info = i18n.getString(R.string.main_intro_info),
+                label = i18n.getBrandedString(R.string.slot_intro_new),
+                header = i18n.getString(R.string.slot_intro_new_header),
+                description = i18n.getString(R.string.slot_intro_desc),
+                info = i18n.getString(R.string.slot_intro_info),
                 action1 = view.ACTION_REMOVE
         )
         view.onRemove = onRemove

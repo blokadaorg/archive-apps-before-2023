@@ -183,7 +183,7 @@ class SlotView(
         onTap()
     })
 
-    val ACTION_REMOVE = Slot.Action(i18n.getString(R.string.slot_remove), {
+    val ACTION_REMOVE = Slot.Action(i18n.getString(R.string.slot_action_remove), {
         onRemove()
     })
 
@@ -419,7 +419,7 @@ class SlotView(
     }
 
     private fun actionNameToIcon(name: String) = when (name) {
-        i18n.getString(R.string.slot_remove) -> "⌫"
+        i18n.getString(R.string.slot_action_remove) -> "⌫"
         else -> name
     }
 }
