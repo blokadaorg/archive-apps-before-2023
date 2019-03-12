@@ -71,5 +71,6 @@
     <dimen name="slot_unread_size">4dp</dimen>
     <dimen name="slot_icon_size">32dp</dimen>
     <dimen name="slot_icon_margin">@dimen/slot_content_padding</dimen>
+    <dimen name="slot_focus_border_size">2dp</dimen>
 
 </resources>

@@ -6,7 +6,7 @@ import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 
-class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview) {
+class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview), Scrollable {
 
     private var view: VBListView? = null
     private val openedView = SlotMutex()
@@ -30,6 +30,9 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
         ktx.cancel(Events.FILTERS_CHANGED, filtersUpdated)
     }
 
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
 }
 
 class StaticItemsListVB(

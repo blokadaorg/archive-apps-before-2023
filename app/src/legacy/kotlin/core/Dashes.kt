@@ -281,7 +281,7 @@ class StartViewBinder(
         private val welcome: Welcome = ktx.di().instance(),
         private val currentAppVersion: Int,
         private val afterWelcome: () -> Unit
-) : ViewBinder {
+) : ViewBinder, Scrollable {
 
     private enum class Steps { WELCOME, CTA, UPDATED, MULTIPLE_APPS, OBSOLETE }
 
@@ -334,8 +334,10 @@ class StartViewBinder(
 
     private var whenPagesLoaded: IWhen? = null
     private var whenObsolete: IWhen? = null
+    private var view: View? = null
 
     override fun attach(view: View) {
+        this.view = view
         step = decide()
         url %= getUrl(step)
         web.onAttached {
@@ -352,6 +354,7 @@ class StartViewBinder(
     }
 
     override fun detach(view: View) {
+        this.view = null
         web.detach(view)
         pages.loaded.cancel(whenPagesLoaded)
         version.obsolete.cancel(whenObsolete)
@@ -359,10 +362,14 @@ class StartViewBinder(
 
     override val viewType = ViewTypeGenerator.get(this)
 
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
     private fun getInstalledBuilds(): List<String> {
-        return welcome.conflictingBuilds().map {
+        return welcome.conflictingBuilds().mapNotNull {
             if (isPackageInstalled(it)) it else null
-        }.filterNotNull()
+        }
     }
 
     private fun isPackageInstalled(appId: String): Boolean {

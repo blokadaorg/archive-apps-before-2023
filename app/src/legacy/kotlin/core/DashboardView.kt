@@ -16,7 +16,6 @@ import com.github.michaelbull.result.onSuccess
 import com.github.salomonbrys.kodein.instance
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import gs.environment.inject
-import gs.presentation.DashCache
 import gs.presentation.doAfter
 import org.blokada.R
 import tunnel.Events
@@ -24,7 +23,7 @@ import tunnel.Persistence
 import kotlin.math.max
 import kotlin.math.min
 
-
+typealias PanelState = SlidingUpPanelLayout.PanelState
 
 class DashboardView(
         ctx: Context,
@@ -50,13 +49,15 @@ class DashboardView(
     private val fg_nav_panel = findViewById<View>(R.id.fg_nav_panel)
     private val fg_nav = findViewById<DotsView>(R.id.fg_nav)
 
-    private enum class State { INACTIVE, ANCHORED, OPENED, DRAGGING }
+    var onSectionClosed = {}
 
-    private var state = State.INACTIVE
+    private enum class DashboardState { INACTIVE, ANCHORED, OPENED, DRAGGING }
+
+    private var state = DashboardState.INACTIVE
         set(value) {
             field = value
             when (value) {
-                State.INACTIVE -> {
+                DashboardState.INACTIVE -> {
                     bg_colors.onScroll(1f, openSection + 1, 0)
                     bg_nav.alpha = 0f
                     fg_logo_icon.alpha = 0f
@@ -72,8 +73,14 @@ class DashboardView(
                     lp.height = LayoutParams.MATCH_PARENT
                     lp.topMargin = 0
                     fg_drag.layoutParams = lp
+
+                    bg_off_logo.animate().alpha(1f).interpolator = inter
+                    animateStart()
+                    tun.enabled %= false
+
+                    navMode = NavMode.INACTIVE
                 }
-                State.ANCHORED -> {
+                DashboardState.ANCHORED -> {
                     bg_colors.onScroll(1f, 0, openSection + 1)
                     bg_nav.alpha = 1f
                     fg_logo_icon.alpha = 0.7f
@@ -89,8 +96,13 @@ class DashboardView(
                     lp.height = context.dpToPx(110)
                     lp.topMargin = context.dpToPx(90)
                     fg_drag.layoutParams = lp
+
+                    tun.enabled %= true
+                    onSectionClosed()
+
+                    navMode = NavMode.ANCHORED
                 }
-                State.OPENED -> {
+                DashboardState.OPENED -> {
                     bg_colors.onScroll(1f, 0, openSection + 1)
                     bg_nav.alpha = 0f
                     fg_logo_icon.alpha = 0f
@@ -105,9 +117,18 @@ class DashboardView(
                     lp.height = context.dpToPx(130)
                     lp.topMargin = 0
                     fg_drag.layoutParams = lp
-                }
-                State.DRAGGING -> {
 
+                    tun.enabled %= true
+                    bg_nav.visibility = GONE
+                    openSelectedSection()
+
+                    navMode = NavMode.OPENED
+                }
+                DashboardState.DRAGGING -> {
+                    bg_nav.visibility = VISIBLE
+                    closeSection()
+                    bg_off_logo.animate().alpha(0f).interpolator = inter
+                    stopAnimatingStart()
                 }
             }
         }
@@ -117,14 +138,15 @@ class DashboardView(
 
     private val sections by lazy { createDashboardSections(ctx.ktx("sections.create")) }
 
-    private val mainDashCache = DashCache()
     private var isOpen = false
     private var openDash: gs.presentation.ViewBinder? = null
+    private var openSlot: SlotView? = null
     private val inter = DecelerateInterpolator(2f)
     private var openSection = 1
     private var scrolledView: View? = null
 
     private var lastSubsectionTab = 0
+    private val ktx = "dashboard".ktx()
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -151,54 +173,24 @@ class DashboardView(
                     } else {
                         fg_nav_panel.alpha = max(0.7f, slideOffset)
                         bg_nav.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
-//                    fg_pager.alpha = min(1f, (slideOffset - anchorPoint) * 3)
                         bg_pager.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
                         fg_logo_icon.alpha = 0.7f - min(1f, (slideOffset - anchorPoint) * 0.5f)
                         bg_logo.alpha = (slideOffset - anchorPoint) / (1 - anchorPoint)
                     }
                 }
 
-                override fun onPanelStateChanged(panel: View, previousState: SlidingUpPanelLayout.PanelState, newState: SlidingUpPanelLayout.PanelState) {
-                    val ktx = context.ktx("dragstate")
-                    when (newState) {
-                        SlidingUpPanelLayout.PanelState.DRAGGING -> {
-                            bg_nav.visibility = VISIBLE
-//                        fg_nav_secondary.visibility = VISIBLE
-                            closeSection()
-//                        fg_nav_secondary.visibility = GONE
-//                        fg_nav_secondary.clearAll()
-                            bg_off_logo.animate().alpha(0f).interpolator = inter
-                            stopAnimatingStart()
-                            ktx.v("dragging")
-                            state = State.DRAGGING
-                        }
-                        SlidingUpPanelLayout.PanelState.ANCHORED -> {
-                            ktx.v("anchored")
-                            tun.enabled %= true
-                            onSectionClosed()
-                            state = State.ANCHORED
-                        }
-                        SlidingUpPanelLayout.PanelState.COLLAPSED -> {
-                            ktx.v("collapsed")
-                            bg_off_logo.animate().alpha(1f).interpolator = inter
-                            animateStart()
-                            tun.enabled %= false
-                            state = State.INACTIVE
-                        }
-                        SlidingUpPanelLayout.PanelState.EXPANDED -> {
-                            ktx.v("expanded")
-                            tun.enabled %= true
-                            bg_nav.visibility = GONE
-                            openSelectedSection()
-                            state = State.OPENED
-                        }
+                override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
+                    state = when (newState) {
+                        PanelState.DRAGGING -> DashboardState.DRAGGING
+                        PanelState.ANCHORED -> DashboardState.ANCHORED
+                        PanelState.COLLAPSED -> DashboardState.INACTIVE
+                        PanelState.EXPANDED -> DashboardState.OPENED
+                        else -> state
                     }
                 }
             })
         }
 
-
-        val ktx = "dashboard".ktx()
         ktx.on(Events.REQUEST) {
             bg_packets.addToHistory(it)
         }
@@ -206,8 +198,8 @@ class DashboardView(
         tunnelEvents.listeners.add(object : IEnabledStateActorListener {
             override fun startActivating() {
                 bg_packets.setTunnelState(TunnelState.ACTIVATING)
-                if (sliding.panelState == SlidingUpPanelLayout.PanelState.COLLAPSED) {
-                    sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+                if (sliding.panelState == PanelState.COLLAPSED) {
+                    sliding.panelState = PanelState.ANCHORED
                 }
             }
 
@@ -224,7 +216,7 @@ class DashboardView(
 
             override fun finishDeactivating() {
                 bg_packets.setTunnelState(TunnelState.INACTIVE)
-                sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
+                sliding.panelState = PanelState.COLLAPSED
             }
         })
 
@@ -243,38 +235,9 @@ class DashboardView(
         lastSubsectionTab = 0
         bg_pager.currentItem = 0
         bg_pager.offscreenPageLimit = 3
-//        fg_nav_primary.adapter = dashCardsAdapter
-//        fg_nav_primary.setItemTransitionTimeMillis(100)
-//        fg_nav_primary.setItemTransformer(ScaleTransformer.Builder().setMinScale(0.5f).build())
-//        fg_nav_primary.scrollToPosition(openSection)
-
-//        fg_nav_primary.addScrollStateChangeListener(object : DiscreteScrollView.ScrollStateChangeListener<ViewHolder> {
-//            override fun onScroll(scrollPosition: Float, currentPosition: Int, newPosition: Int, currentHolder: ViewHolder?, newCurrent: ViewHolder?) {
-//                bg_colors.onScroll(Math.abs(scrollPosition), currentPosition + 1, newPosition + 1)
-//            }
-//
-//            override fun onScrollStart(currentItemHolder: ViewHolder, adapterPosition: Int) {
-//                currentItemHolder.view.hideText()
-//                sections.getOrNull(adapterPosition)?.apply {
-//                    mainDashCache.detach(main.dash, fg_content)
-//                    updateScrollableView()
-//                }
-//            }
-//
-//            override fun onScrollEnd(currentItemHolder: ViewHolder, adapterPosition: Int) {
-//                openSection = adapterPosition
-//            }
-//        })
-
-//        fg_nav_primary.addOnItemChangedListener(object : DiscreteScrollView.OnItemChangedListener<ViewHolder> {
-//            override fun onCurrentItemChanged(viewHolder: ViewHolder?, adapterPosition: Int) {
-//                viewHolder?.apply { view.showText() }
-//            }
-//        })
 
         bg_pager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-            override fun onPageScrollStateChanged(state: Int) {
-            }
+            override fun onPageScrollStateChanged(state: Int) {}
 
             override fun onPageScrolled(position: Int, positionOffset: Float, posPixels: Int) {
                 val next = position + 1
@@ -292,7 +255,7 @@ class DashboardView(
                         R.string.panel_section_advanced -> R.drawable.ic_tune
                         else -> R.drawable.blokada
                     }
-                    if (state != State.INACTIVE) {
+                    if (state != DashboardState.INACTIVE) {
                         fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
                             fg_logo_icon.setImageResource(icon)
                             fg_logo_icon.animate().setDuration(200).alpha(0.7f)
@@ -315,19 +278,16 @@ class DashboardView(
 
         bg_packets.setTunnelState(tun.tunnelState())
         if (tun.tunnelState() !in listOf(TunnelState.DEACTIVATED, TunnelState.INACTIVE)) {
-            sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+            sliding.panelState = PanelState.ANCHORED
         } else {
             animateStart()
-            state = State.INACTIVE
+            sliding.panelState = PanelState.HIDDEN
         }
     }
 
     var notchPx: Int = 0
 
     private fun resize() {
-//        val layoutParams = fg_drag.layoutParams as FrameLayout.LayoutParams
-//        layoutParams.width = width * widthMultiplier
-//        fg_drag.layoutParams = layoutParams
         val percentHeight = resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size).toFloat() / height
         sliding.anchorPoint = percentHeight
 
@@ -371,8 +331,6 @@ class DashboardView(
         after()
     }
 
-    var onSectionClosed = {}
-
     private fun onCloseSection() {
         fg_pager.visibility = View.GONE
         fg_nav.visibility = View.GONE
@@ -382,14 +340,12 @@ class DashboardView(
 
     fun flashPlaceholder() {
         fg_nav.visibility = View.VISIBLE
-//        fg_nav_secondary.animate().setDuration(200).translationY(0f)
         hidePlaceholder.removeMessages(0)
         hidePlaceholder.sendEmptyMessageDelayed(0, showTime)
         showTime = max(2000L, showTime - 500L)
     }
 
     private val hidePlaceholder = Handler {
-//        fg_nav_secondary.animate().setDuration(500).translationY(500f)
         true
     }
 
@@ -399,8 +355,8 @@ class DashboardView(
             setOnClickListener {
                 when {
                     !isEnabled || !sliding.isTouchEnabled -> Unit
-                    sliding.panelState == SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-                    else -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
+                    sliding.panelState == PanelState.EXPANDED -> sliding.panelState = PanelState.ANCHORED
+                    else -> sliding.panelState = PanelState.EXPANDED
                 }
             }
         }
@@ -429,7 +385,7 @@ class DashboardView(
         openDash = null
 
         if (isOpen) {
-            sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
+            sliding.panelState = PanelState.ANCHORED
             return true
         }
         return false
@@ -479,126 +435,77 @@ class DashboardView(
                         fg_nav.section = makeSectionName(sections[openSection], section)
                         flashPlaceholder()
                         lastSubsectionTab = position
+                        openDash = subsections[lastSubsectionTab].dash
                     }
                 })
                 fg_nav.viewPager = fg_pager
-//                fg_nav_secondary.background = true
-//                fg_nav.sleeping = true
-
-//                mainDashCache.use(subsections.first().dash, context, fg_pager)
                 updateScrollableView()
                 openDash = subsections[lastSubsectionTab].dash
                 fg_pager.currentItem = lastSubsectionTab
 
                 flashPlaceholder()
-
-                if (subsections.isNotEmpty()) {
-//                    fg_nav_secondary.addItem(BottomNavigationItem(main.iconResId, main.nameResId))
-//                    subsections.forEach {
-//                        fg_nav_secondary.addItem(BottomNavigationItem(it.iconResId, it.nameResId))
-//                    }
-//                    fg_nav_secondary.initialise()
-//                    fg_nav_secondary.visibility = View.VISIBLE
-//                    fg_nav_secondary.animate().setDuration(200).alpha(1f)
-//                    fg_nav_secondary.setTabSelectedListener(object: BottomNavigationBar.OnTabSelectedListener {
-//                        override fun onTabReselected(position: Int) = Unit
-//
-//                        override fun onTabUnselected(position: Int) = Unit
-//
-//                        override fun onTabSelected(position: Int) {
-//                            when (position) {
-//                                0 -> {
-//                                    mainDashCache.use(main.dash, context, fg_content)
-//                                    updateScrollableView()
-//                                    openDash = main.dash
-//                                    fg_placeholder_title.text = context.getString(main.nameResId)
-//                                    fg_placeholder_icon.setImageResource(main.iconResId)
-//                                    flashPlaceholder()
-//                                }
-//                                else -> {
-//                                    subsections.getOrNull(position - 1)?.apply {
-//                                        mainDashCache.use(dash, context, fg_content)
-//                                        updateScrollableView()
-//                                        openDash = dash
-//                                        fg_placeholder_title.text = context.getString(nameResId)
-//                                        fg_placeholder_icon.setImageResource(iconResId)
-//                                        flashPlaceholder()
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    })
-                }
-            }
-
-            (openDash as? Scrollable)?.apply {
-                setOnScroll(
-                        onScrollDown = {
-                            //                            fg_nav_secondary.animate().setDuration(100).translationY(300f)
-                        },
-                        onScrollUp = {
-                            //                            fg_nav_secondary.animate().setDuration(100).translationY(0f)
-                        }
-                )
             }
         }
     }
 
-    enum class NavMode { COLLAPSED, ANCHORED, OPENED, SLOT }
-    private var navMode = NavMode.COLLAPSED
+    enum class NavMode { INACTIVE, ANCHORED, OPENED, SLOT }
+    private var navMode = NavMode.INACTIVE
 
     private val buttonsEnter = listOf(KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_DPAD_CENTER,
             KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)
     private val buttonsBack = listOf(KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK)
 
-//    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-//        when (navMode) {
-//            NavMode.COLLAPSED -> navigateDashboard(keyCode, event)
-//        }
-//        return true
-//    }
-//
-//    private fun navigateCollapsed(keyCode: Int) = when(keyCode) {
-//         in buttonsEnter -> {
-//            when (sliding.panelState) {
-//                SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-//                SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
-//            }
-//        }
-//        in buttonsBack -> {
-//            when (sliding.panelState) {
-//                SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-//                SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-//            }
-//        }
-//    }
-//
-//    private fun navigateCollapsed(keyCode: Int) {
-//        when(keyCode) {
-//            in buttonsEnter -> {
-//                when (sliding.panelState) {
-//                    SlidingUpPanelLayout.PanelState.COLLAPSED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-//                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.EXPANDED
-//                }
-//            }
-//            in buttonsBack -> {
-//                when (sliding.panelState) {
-//                    SlidingUpPanelLayout.PanelState.EXPANDED -> sliding.panelState = SlidingUpPanelLayout.PanelState.ANCHORED
-//                    SlidingUpPanelLayout.PanelState.ANCHORED -> sliding.panelState = SlidingUpPanelLayout.PanelState.COLLAPSED
-//                }
-//            }
-//            KeyEvent.KEYCODE_DPAD_LEFT -> {
-//                when (sliding.panelState) {
-//                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem - 1)
-//                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem - 1)
-//                }
-//            }
-//            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-//                when (sliding.panelState) {
-//                    SlidingUpPanelLayout.PanelState.EXPANDED -> fg_pager.setCurrentItem(fg_pager.currentItem + 1)
-//                    SlidingUpPanelLayout.PanelState.ANCHORED -> bg_pager.setCurrentItem(bg_pager.currentItem + 1)
-//                }
-//            }
-//        }
-//    }
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        when (navMode) {
+            NavMode.INACTIVE -> navigateInactive(keyCode)
+            NavMode.ANCHORED -> navigateAnchored(keyCode)
+            NavMode.OPENED -> navigateOpened(keyCode, event)
+            NavMode.SLOT -> navigateSlot(keyCode, event)
+        }
+        return true
+    }
+
+    private fun navigateInactive(keyCode: Int) {
+        if (keyCode in buttonsEnter) sliding.panelState = PanelState.ANCHORED
+    }
+
+    private fun navigateAnchored(keyCode: Int) {
+        when(keyCode) {
+            in buttonsEnter -> sliding.panelState = PanelState.EXPANDED
+            in buttonsBack -> sliding.panelState = PanelState.COLLAPSED
+            KeyEvent.KEYCODE_DPAD_LEFT -> bg_pager.currentItem = bg_pager.currentItem - 1
+            KeyEvent.KEYCODE_DPAD_RIGHT -> bg_pager.currentItem = bg_pager.currentItem + 1
+        }
+    }
+
+    private fun navigateOpened(keyCode: Int, event: KeyEvent?) {
+        when(keyCode) {
+            in buttonsEnter -> navMode = NavMode.SLOT
+            in buttonsBack -> sliding.panelState = PanelState.ANCHORED
+            KeyEvent.KEYCODE_DPAD_LEFT -> fg_pager.currentItem = fg_pager.currentItem - 1
+            KeyEvent.KEYCODE_DPAD_RIGHT -> fg_pager.currentItem = fg_pager.currentItem + 1
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                (openDash as? Scrollable)?.apply {
+                    this.getScrollableView().scrollBy(0, 40)
+                }
+            }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                (openDash as? Scrollable)?.apply {
+                    this.getScrollableView().scrollBy(0, -40)
+                }
+            }
+        }
+    }
+
+    private fun navigateSlot(keyCode: Int, event: KeyEvent?) {
+        when(keyCode) {
+            in buttonsBack -> sliding.panelState = PanelState.ANCHORED
+            else -> {
+                (openDash as? Scrollable)?.apply {
+                    this.getScrollableView().onKeyDown(keyCode, event)
+                    this.getScrollableView().onKeyUp(keyCode, event)
+                }
+            }
+        }
+    }
 }
