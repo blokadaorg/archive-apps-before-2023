@@ -31,6 +31,7 @@
     <color name="colorInactive">#b1b1b1</color>
     <color name="colorThumbStart">#fdfdfd</color>
     <color name="colorThumbEnd">#f5f5f5</color>
+    <color name="colorAccentTrans">#CCff5f00</color>
 
     <color name="switch_on">#04fc5c</color>
     <color name="switch_off">@color/colorTextUnimportant</color>

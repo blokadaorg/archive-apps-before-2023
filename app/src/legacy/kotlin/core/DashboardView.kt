@@ -16,6 +16,7 @@ import com.github.michaelbull.result.onSuccess
 import com.github.salomonbrys.kodein.instance
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import gs.environment.inject
+import gs.presentation.ViewBinder
 import gs.presentation.doAfter
 import org.blokada.R
 import tunnel.Events
@@ -436,11 +437,29 @@ class DashboardView(
                         flashPlaceholder()
                         lastSubsectionTab = position
                         openDash = subsections[lastSubsectionTab].dash
+                        (openDash as? ListSection)?.apply {
+                            setOnSelected {
+                                selectedListItem = it
+                                if (selectedListItem == null && navMode == NavMode.SLOT) {
+                                    sliding.panelState = PanelState.EXPANDED
+                                    navMode = NavMode.OPENED
+                                }
+                            }
+                        }
                     }
                 })
                 fg_nav.viewPager = fg_pager
                 updateScrollableView()
                 openDash = subsections[lastSubsectionTab].dash
+                (openDash as? ListSection)?.apply {
+                    setOnSelected {
+                        selectedListItem = it
+                        if (selectedListItem == null && navMode == NavMode.SLOT) {
+                            sliding.panelState = PanelState.EXPANDED
+                            navMode = NavMode.OPENED
+                        }
+                    }
+                }
                 fg_pager.currentItem = lastSubsectionTab
 
                 flashPlaceholder()
@@ -448,12 +467,10 @@ class DashboardView(
         }
     }
 
+    private var selectedListItem: ViewBinder? = null
+
     enum class NavMode { INACTIVE, ANCHORED, OPENED, SLOT }
     private var navMode = NavMode.INACTIVE
-
-    private val buttonsEnter = listOf(KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)
-    private val buttonsBack = listOf(KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK)
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
         when (navMode) {
@@ -480,18 +497,29 @@ class DashboardView(
 
     private fun navigateOpened(keyCode: Int, event: KeyEvent?) {
         when(keyCode) {
-            in buttonsEnter -> navMode = NavMode.SLOT
+            in buttonsEnter -> {
+                navMode = NavMode.SLOT
+                (selectedListItem as? Navigable)?.apply {
+                    enter()
+                    (openDash as? ListSection)?.apply {
+                        showSelected()
+                    }
+                }
+            }
             in buttonsBack -> sliding.panelState = PanelState.ANCHORED
             KeyEvent.KEYCODE_DPAD_LEFT -> fg_pager.currentItem = fg_pager.currentItem - 1
             KeyEvent.KEYCODE_DPAD_RIGHT -> fg_pager.currentItem = fg_pager.currentItem + 1
             KeyEvent.KEYCODE_DPAD_DOWN -> {
                 (openDash as? Scrollable)?.apply {
-                    this.getScrollableView().scrollBy(0, 40)
+//                    this.getScrollableView().scrollBy(0, 40)
+//                    this.getScrollableView().scrollBy(0, 40)
+                    scrollNext()
                 }
             }
             KeyEvent.KEYCODE_DPAD_UP -> {
                 (openDash as? Scrollable)?.apply {
-                    this.getScrollableView().scrollBy(0, -40)
+                    scrollPrevious()
+//                    this.getScrollableView().scrollBy(0, -40)
                 }
             }
         }
@@ -499,13 +527,28 @@ class DashboardView(
 
     private fun navigateSlot(keyCode: Int, event: KeyEvent?) {
         when(keyCode) {
-            in buttonsBack -> sliding.panelState = PanelState.ANCHORED
+            in buttonsBack + buttonsEnter -> {
+                sliding.panelState = PanelState.EXPANDED
+                navMode = NavMode.OPENED
+                (selectedListItem as? Navigable)?.apply {
+                    exit()
+                }
+            }
             else -> {
-                (openDash as? Scrollable)?.apply {
-                    this.getScrollableView().onKeyDown(keyCode, event)
-                    this.getScrollableView().onKeyUp(keyCode, event)
+                (selectedListItem as? Navigable)?.apply {
+                    when (keyCode) {
+                        KeyEvent.KEYCODE_DPAD_LEFT -> left()
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> right()
+                        KeyEvent.KEYCODE_DPAD_DOWN -> down()
+                        KeyEvent.KEYCODE_DPAD_UP -> up()
+                    }
                 }
             }
         }
     }
 }
+
+val buttonsEnter = listOf(KeyEvent.KEYCODE_BUTTON_SELECT, KeyEvent.KEYCODE_DPAD_CENTER,
+        KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)
+val buttonsBack = listOf(KeyEvent.KEYCODE_BUTTON_B, KeyEvent.KEYCODE_BACK)
+

@@ -18,23 +18,23 @@ class HomeDashboardSectionVB(
 
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
-    private val intro: IntroVB = IntroVB(ctx.ktx("InfoSlotVB"), slotMutex = openedView, onRemove = {
+    private val intro: IntroVB = IntroVB(ctx.ktx("InfoSlotVB"), onTap = slotMutex.openOneAtATime, onRemove = {
         items = items.subList(1, items.size)
         view?.set(items)
         introPersistence.write(true)
     })
 
-    private val batteryVB: BatteryVB = BatteryVB(ctx.ktx("BatteryVB"), slotMutex = openedView, onRemove = {
+    private val batteryVB: BatteryVB = BatteryVB(ctx.ktx("BatteryVB"), onTap = slotMutex.openOneAtATime, onRemove = {
         items = items.subList(0, items.size - 1)
         view?.set(items)
     })
 
     private var items = listOf<ViewBinder>(
-            AppStatusVB(ctx.ktx("AppStatusSlotVB"), slotMutex = openedView),
-            DroppedCountVB(ctx.ktx("DroppedCountSlotVB"), slotMutex = openedView),
-            HomeNotificationsVB(ctx.ktx("NotificationsVB"), slotMutex = openedView)
+            AppStatusVB(ctx.ktx("AppStatusSlotVB"), onTap = slotMutex.openOneAtATime),
+            DroppedCountVB(ctx.ktx("DroppedCountSlotVB"), onTap = slotMutex.openOneAtATime),
+            HomeNotificationsVB(ctx.ktx("NotificationsVB"), onTap = slotMutex.openOneAtATime)
     )
 
     override fun attach(view: View) {
@@ -45,7 +45,7 @@ class HomeDashboardSectionVB(
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
     }
 
 }

@@ -2,20 +2,56 @@ package core
 
 import android.view.View
 import gs.presentation.LayoutViewBinder
+import gs.presentation.ViewBinder
 import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 
-class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview), Scrollable {
+internal class SlotMutex {
+
+    private var openedView: SlotView? = null
+
+    val openOneAtATime = { view: SlotView ->
+        val opened = openedView
+        when {
+            opened == null || !opened.isUnfolded() -> {
+                openedView = view
+                view.unfold()
+            }
+            opened.isUnfolded() -> {
+                opened.fold()
+                view.onClose()
+            }
+        }
+    }
+
+    fun detach() {
+        openedView = null
+    }
+}
+
+interface ListSection {
+    fun setOnSelected(listener: (item: ViewBinder?) -> Unit)
+    fun showSelected()
+}
+
+class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview), Scrollable,
+    ListSection {
+
+    override fun showSelected() {
+        view?.showSelected()
+    }
 
     private var view: VBListView? = null
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
+    private var listener: (ViewBinder?) -> Unit = {}
 
     private val filtersUpdated = { filters: Collection<Filter> ->
         val items = filters.filter {
             !it.whitelist && !it.hidden && it.source.id != "single"
-        }.sortedBy { it.priority }.map { FilterVB(it, ktx, slotMutex = openedView) }
+        }.sortedBy { it.priority }.map { FilterVB(it, ktx, onTap = slotMutex.openOneAtATime) }
         view?.set(listOf(NewFilterVB(ktx)) + items)
+        listener(null)
         Unit
     }
 
@@ -26,13 +62,21 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         ktx.cancel(Events.FILTERS_CHANGED, filtersUpdated)
     }
 
     override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
 
     override fun getScrollableView() = view!!
+
+    override fun scrollNext() { view?.scrollNext() }
+    override fun scrollPrevious() { view?.scrollPrevious() }
+
+    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
 }
 
 class StaticItemsListVB(
@@ -43,7 +87,7 @@ class StaticItemsListVB(
     private val slotMutex = SlotMutex()
 
     init {
-        items.forEach { it.slotMutex = slotMutex }
+        items.forEach { it.onTap = slotMutex.openOneAtATime }
     }
 
     override fun attach(view: View) {
@@ -53,6 +97,6 @@ class StaticItemsListVB(
     }
 
     override fun detach(view: View) {
-        slotMutex.view = null
+        slotMutex.detach()
     }
 }

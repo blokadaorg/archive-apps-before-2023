@@ -43,13 +43,13 @@ class Slot {
     )
 }
 
-/**
- * SlotMutex is used to make sure only one slot in a list can be openedat a time. It is optional.
- */
-data class SlotMutex(internal var view: SlotView? = null)
+internal val defaultOnTap = { view: SlotView ->
+    if (view.isUnfolded()) view.fold()
+    else view.unfold()
+}
 
-abstract class SlotVB(internal var slotMutex: SlotMutex = SlotMutex())
-    : LayoutViewBinder(R.layout.slotview), Stepable {
+abstract class SlotVB(internal var onTap: (SlotView) -> Unit = defaultOnTap)
+    : LayoutViewBinder(R.layout.slotview), Stepable, Navigable {
 
     abstract fun attach(view: SlotView)
     open fun detach(view: SlotView) = Unit
@@ -59,19 +59,7 @@ abstract class SlotVB(internal var slotMutex: SlotMutex = SlotMutex())
     override fun attach(view: View) {
         view as SlotView
         this.view = view
-        view.onTap = {
-            val openedView = slotMutex.view
-            when {
-                openedView == null || !openedView.isUnfolded() -> {
-                    slotMutex.view = view
-                    view.unfold()
-                }
-                openedView.isUnfolded() -> {
-                    openedView.fold()
-                    view.onClose()
-                }
-            }
-        }
+        view.onTap = { onTap(view) }
         attach(view)
     }
 
@@ -79,12 +67,33 @@ abstract class SlotVB(internal var slotMutex: SlotMutex = SlotMutex())
         view as SlotView
         view.unbind()
         this.view = null
-        slotMutex.view = null
         detach(view)
     }
 
     override fun focus() = view?.unfold() ?: Unit
 
+    override fun enter() {
+        view?.onTap?.invoke()
+    }
+
+    override fun exit() {
+        view?.fold()
+    }
+
+    override fun up() {
+    }
+
+    override fun down() {
+        view?.performAction(2)
+    }
+
+    override fun left() {
+        view?.performAction(3)
+    }
+
+    override fun right() {
+        view?.performAction(1)
+    }
 }
 
 class SlotView(
@@ -402,6 +411,18 @@ class SlotView(
     }
 
     fun unbind() = timeRefreshHandler.removeMessages(0)
+
+    fun performAction(index: Int) {
+        val action = when (index) {
+            1 -> content?.action1
+            2 -> content?.action2
+            3 -> content?.action3
+            else -> null
+        }
+
+        if (action != null) action.callback.invoke()
+        else if (index == 1) action1View.callOnClick()
+    }
 
     private val timeRefreshHandler = Handler {
         if (date != null) {

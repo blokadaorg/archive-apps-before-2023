@@ -6,6 +6,7 @@ import com.github.michaelbull.result.getOr
 import com.github.salomonbrys.kodein.instance
 import gs.environment.ComponentProvider
 import gs.presentation.LayoutViewBinder
+import gs.presentation.ViewBinder
 import org.blokada.R
 import tunnel.Events
 import tunnel.Persistence
@@ -14,15 +15,16 @@ import tunnel.Request
 class AdsLogVB(
         val ktx: AndroidKontext,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : LayoutViewBinder(R.layout.vblistview) {
+) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
 
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
     private val items = mutableListOf<SlotVB>()
     private var nextBatch = 0
     private var firstItem: Request? = null
+    private var listener: (ViewBinder?) -> Unit = {}
 
     private val request = { it: Request ->
         if (it != firstItem) {
@@ -30,6 +32,7 @@ class AdsLogVB(
             items.add(0, dash)
             view?.add(dash, 0)
             firstItem = it
+            listener(null)
         }
         Unit
     }
@@ -55,7 +58,7 @@ class AdsLogVB(
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         view as VBListView
         view.onEndReached = {}
         ktx.cancel(Events.REQUEST, request)
@@ -76,7 +79,23 @@ class AdsLogVB(
 
     private fun requestToVB(it: Request): SlotVB {
         return if (it.blocked)
-            DomainBlockedVB(it.domain, it.time, ktx, alternative = true, slotMutex = openedView) else
-            DomainForwarderVB(it.domain, it.time, ktx, alternative = true, slotMutex = openedView)
+            DomainBlockedVB(it.domain, it.time, ktx, alternative = true, onTap = slotMutex.openOneAtATime) else
+            DomainForwarderVB(it.domain, it.time, ktx, alternative = true, onTap = slotMutex.openOneAtATime)
+    }
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun scrollNext() { view?.scrollNext() }
+    override fun scrollPrevious() { view?.scrollPrevious() }
+
+    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun showSelected() {
+        view?.showSelected()
     }
 }

@@ -10,11 +10,11 @@ class BlacklistDashboardSection(val ktx: AndroidKontext) : LayoutViewBinder(R.la
 
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { !it.whitelist && !it.hidden && it.source.id == "single" }.map {
-            FilterVB(it, ktx, slotMutex = openedView)
+            FilterVB(it, ktx, onTap = slotMutex.openOneAtATime)
         }.apply { view?.set(this) }
         Unit
     }
@@ -26,7 +26,7 @@ class BlacklistDashboardSection(val ktx: AndroidKontext) : LayoutViewBinder(R.la
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
     }
 

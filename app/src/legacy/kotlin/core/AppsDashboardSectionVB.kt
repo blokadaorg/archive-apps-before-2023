@@ -15,13 +15,13 @@ class AppsDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.vblis
     private val filterManager by lazy { ktx.di().instance<tunnel.Main>() }
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { it.source.id == "app" }
                 .filter { it.active }
                 .map {
-            HomeAppVB(it, ktx, slotMutex = openedView)
+            HomeAppVB(it, ktx, onTap = slotMutex.openOneAtATime)
         }.apply { view?.set(this) }
         Unit
     }
@@ -32,7 +32,7 @@ class AppsDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.vblis
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
     }
 

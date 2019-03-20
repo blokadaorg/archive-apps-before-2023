@@ -108,8 +108,19 @@ interface Scrollable {
             onScrollStopped: () -> Unit = {}
     )
     fun getScrollableView(): View
+    fun scrollNext() {}
+    fun scrollPrevious() {}
 }
 
 interface Stepable {
     fun focus()
+}
+
+interface Navigable {
+    fun up()
+    fun down()
+    fun left()
+    fun right()
+    fun enter()
+    fun exit()
 }

@@ -27,9 +27,8 @@ class PacketsView(
     private val barrierPaint: Paint
     private val items = mutableListOf<Request>()
 
-    val color = resources.getColor(R.color.colorAccent)
-    val color2 = resources.getColor(R.color.colorBackgroundThird)
-    val color3 = resources.getColor(R.color.colorActive)
+    val color = resources.getColor(R.color.colorActive)
+    val color3 = resources.getColor(R.color.colorAccent)
 
     private var on = false
 

@@ -3,12 +3,15 @@ package core
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
+import android.os.Handler
 import android.support.constraint.ConstraintLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.AttributeSet
+import android.view.KeyEvent
 import android.view.View
+import android.view.View.OnKeyListener
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import gs.presentation.ViewBinder
@@ -16,15 +19,19 @@ import org.blokada.R
 
 
 
-
-
 class VBListView(
         ctx: Context,
         attributeSet: AttributeSet
-) : FrameLayout(ctx, attributeSet), Scrollable {
+) : FrameLayout(ctx, attributeSet), Scrollable, ListSection {
+
+    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+        onItemSelect = listener
+        if (adapter.selectedItem != -1) listener(items[adapter.selectedItem])
+    }
 
     var onItemRemove = { item: ViewBinder -> }
     var onEndReached = { }
+    var onItemSelect = { item: ViewBinder -> }
 
     init {
         inflate(context, R.layout.vblistview_content, this)
@@ -47,7 +54,30 @@ class VBListView(
         })
     }
 
+    override fun scrollNext() {
+        adapter.tryMoveSelection(1)
+    }
+
+    override fun scrollPrevious() {
+        adapter.tryMoveSelection(-1)
+    }
+
+    private val scroll = Handler {
+        if (adapter.selectedItem != -1) listView.smoothScrollToPosition(adapter.selectedItem)
+        true
+    }
+
+    override fun showSelected() {
+        val lastVisible = layoutManager.findLastCompletelyVisibleItemPosition()
+        if (adapter.selectedItem >= lastVisible - 1)
+            listView.smoothScrollBy(0, 200)
+//        scroll.sendEmptyMessageDelayed(0, 1500)
+    }
+
     private val adapter = object : RecyclerView.Adapter<ListerViewHolder>() {
+
+        var selectedItem = -1
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListerViewHolder {
             val creator = viewCreators[viewType]!!
             val view = creator.createView(context, parent)
@@ -59,11 +89,63 @@ class VBListView(
             oldDash.detach(holder.view)
             val dash = items[position]
             dash.attach(holder.view)
+            if (position == selectedItem) {
+                holder.view.setBackgroundResource(R.drawable.bg_focused)
+                onItemSelect(dash)
+            } else {
+                holder.view.background = null
+            }
         }
 
         override fun onViewRecycled(holder: ListerViewHolder) = holder.creator.detach(holder.view)
         override fun getItemCount() = items.size
         override fun getItemViewType(position: Int) = items[position].viewType
+
+        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+            super.onAttachedToRecyclerView(recyclerView)
+
+            recyclerView.setOnKeyListener(OnKeyListener { v, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (isConfirmButton(event)) {
+                        if (event.flags and KeyEvent.FLAG_LONG_PRESS == KeyEvent.FLAG_LONG_PRESS) {
+                            recyclerView.getViewHolder(selectedItem)?.itemView?.performLongClick()
+                        } else event.startTracking()
+                        return@OnKeyListener true
+                    } else {
+                        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                            return@OnKeyListener tryMoveSelection(1)
+                        } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                            return@OnKeyListener tryMoveSelection(-1)
+                        }
+                    }
+                } else if (event.action == KeyEvent.ACTION_UP && isConfirmButton(event)
+                        && event.flags and KeyEvent.FLAG_LONG_PRESS != KeyEvent.FLAG_LONG_PRESS) {
+                    recyclerView.getViewHolder(selectedItem)?.itemView?.performClick()
+                    return@OnKeyListener true
+                }
+                false
+            })
+        }
+
+        private fun RecyclerView.getViewHolder(position: Int) = if (position == -1) null
+            else findViewHolderForAdapterPosition(position)
+
+        fun tryMoveSelection(direction: Int): Boolean {
+            val nextSelectItem = selectedItem + direction
+
+            if (nextSelectItem in 0..(itemCount - 1)) {
+                notifyItemChanged(selectedItem)
+                selectedItem = nextSelectItem
+                notifyItemChanged(selectedItem)
+                listView.scrollToPosition(selectedItem)
+                return true
+            }
+
+            return false
+        }
+
+        private fun isConfirmButton(event: KeyEvent) = event.keyCode in buttonsEnter
+
     }
 
     private val touchHelper = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.END) {

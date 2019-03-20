@@ -26,8 +26,8 @@ class AppStatusVB(
         private val i18n: I18n = ktx.di().instance(),
         private val tunnelEvents: EnabledStateActor = ktx.di().instance(),
         private val s: Tunnel = ktx.di().instance(),
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private val appStateChanged = { statusResId: Int, actionResId: Int ->
         view?.apply {
@@ -72,8 +72,8 @@ class DroppedCountVB(
         private val ctx: Context = ktx.di().instance(),
         private val i18n: I18n = ktx.di().instance(),
         private val tunnelEvents: Tunnel = ktx.di().instance(),
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private var droppedCountListener: IWhen? = null
 
@@ -114,8 +114,8 @@ class DroppedCountVB(
 class FiltersStatusVB(
         private val ktx: AndroidKontext,
         private val i18n: I18n = ktx.di().instance(),
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private var rules: Int = 0
     private var memory: Int = 0
@@ -180,8 +180,8 @@ class DomainForwarderVB(
         private val i18n: I18n = ktx.di().instance(),
         private val tunnelManager: tunnel.Main = ktx.di().instance(),
         private val alternative: Boolean = false,
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.FORWARD
@@ -217,8 +217,8 @@ class DomainBlockedVB(
         private val i18n: I18n = ktx.di().instance(),
         private val tunnelManager: tunnel.Main = ktx.di().instance(),
         private val alternative: Boolean = false,
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.BLOCK
@@ -253,8 +253,8 @@ class FilterVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
-        slotMutex: SlotMutex
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         val name = filter.customName ?: i18n.localisedOrNull("filters_${filter.id}_name") ?: sourceToName(ctx, filter.source)
@@ -293,8 +293,8 @@ class DownloadListsVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -355,8 +355,8 @@ class ListDownloadFrequencyVB(
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
         private val device: Device = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -388,8 +388,8 @@ class DownloadOnWifiVB(
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
         private val device: Device = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -533,8 +533,8 @@ class HomeAppVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.APP
@@ -560,8 +560,8 @@ class AppVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private val actionWhitelist = Slot.Action(i18n.getString(R.string.slot_allapp_whitelist), {
         val filter = Filter(
@@ -643,8 +643,8 @@ class DnsChoiceVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val dns: Dns = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -692,8 +692,8 @@ class ActiveDnsVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val dns: Dns = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private var dnsServersChanged: IWhen? = null
 
@@ -735,8 +735,8 @@ class IntroVB(
         private val ktx: AndroidKontext,
         private val i18n: I18n = ktx.di().instance(),
         private val onRemove: () -> Unit,
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.INFO
@@ -757,8 +757,8 @@ class StartOnBootVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val tun: Tunnel = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -778,8 +778,8 @@ class KeepAliveVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val keepAlive: KeepAlive = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -800,8 +800,8 @@ class WatchdogVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val device: Device = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -821,8 +821,8 @@ class PowersaveVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -845,8 +845,8 @@ class DnsFallbackVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -869,8 +869,8 @@ class ReportVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -893,8 +893,8 @@ class HomeNotificationsVB(
         private val ktx: AndroidKontext,
         private val i18n: I18n = ktx.di().instance(),
         private val ui: UiState = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private var listener: IWhen? = null
 
@@ -921,8 +921,8 @@ class NotificationsVB(
         private val ktx: AndroidKontext,
         private val i18n: I18n = ktx.di().instance(),
         private val ui: UiState = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -941,8 +941,8 @@ class DnsListControlVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val dns: Dns = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -970,8 +970,8 @@ class FiltersListControlVB(
         private val filters: Filters = ktx.di().instance(),
         private val translations: g11n.Main = ktx.di().instance(),
         private val tunnel: tunnel.Main = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
@@ -1006,8 +1006,8 @@ class StorageLocationVB(
         private val activity: ComponentProvider<android.app.Activity> = ktx.di().instance(),
         private val filters: tunnel.Main = ktx.di().instance(),
         private val device: Device = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private val actionExternal = Slot.Action(i18n.getString(R.string.slot_action_external), {
         ktx.v("set persistence path", getExternalPath())
@@ -1060,8 +1060,8 @@ class UpdateVB(
         private val repo: Repo = ktx.di().instance(),
         private val ver: Version = ktx.di().instance(),
         private val updater: UpdateCoordinator = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     private var listener: IWhen? = null
     private var clickCounter = 0
@@ -1125,8 +1125,8 @@ class TelegramVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val pages: Pages = ktx.di().instance(),
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.INFO

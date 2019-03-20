@@ -78,10 +78,10 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                     DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_lists, FiltersSectionVB(ktx)),
                     DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_ads_log, AdsLogVB(ktx)),
                     DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(
-                            FiltersListControlVB(ktx),
-                            DownloadListsVB(ktx),
-                            ListDownloadFrequencyVB(ktx),
-                            DownloadOnWifiVB(ktx)
+                            FiltersListControlVB(ktx, onTap = defaultOnTap),
+                            DownloadListsVB(ktx, onTap = defaultOnTap),
+                            ListDownloadFrequencyVB(ktx, onTap = defaultOnTap),
+                            DownloadOnWifiVB(ktx, onTap = defaultOnTap)
                     )))
             )
     )
@@ -91,15 +91,15 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
             subsections = listOf(
                     DashboardNavItem(R.drawable.ic_server, R.string.panel_section_advanced_dns, DnsDashboardSection(ktx.ctx)),
                     DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(
-                            DnsListControlVB(ktx),
-                            StorageLocationVB(ktx),
-                            NotificationsVB(ktx),
-                            StartOnBootVB(ktx),
-                            KeepAliveVB(ktx),
-                            WatchdogVB(ktx),
-                            PowersaveVB(ktx),
-                            DnsFallbackVB(ktx),
-                            ReportVB(ktx)
+                            DnsListControlVB(ktx, onTap = defaultOnTap),
+                            StorageLocationVB(ktx, onTap = defaultOnTap),
+                            NotificationsVB(ktx, onTap = defaultOnTap),
+                            StartOnBootVB(ktx, onTap = defaultOnTap),
+                            KeepAliveVB(ktx, onTap = defaultOnTap),
+                            WatchdogVB(ktx, onTap = defaultOnTap),
+                            PowersaveVB(ktx, onTap = defaultOnTap),
+                            DnsFallbackVB(ktx, onTap = defaultOnTap),
+                            ReportVB(ktx, onTap = defaultOnTap)
                     ))),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_earth,

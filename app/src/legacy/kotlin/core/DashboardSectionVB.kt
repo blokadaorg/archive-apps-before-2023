@@ -32,7 +32,7 @@ class DashboardSectionVB(
     }
 
     private val displayingEntries = mutableListOf<String>()
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
     private val items = mutableListOf<SlotVB>()
 
@@ -40,8 +40,8 @@ class DashboardSectionVB(
         if (!displayingEntries.contains(it.domain)) {
             displayingEntries.add(it.domain)
             val dash = if (it.blocked)
-                DomainBlockedVB(it.domain, it.time, ktx, slotMutex = openedView) else
-                DomainForwarderVB(it.domain, it.time, ktx, slotMutex = openedView)
+                DomainBlockedVB(it.domain, it.time, ktx, onTap = slotMutex.openOneAtATime) else
+                DomainForwarderVB(it.domain, it.time, ktx, onTap = slotMutex.openOneAtATime)
             items.add(dash)
             view?.add(dash)
             trimListIfNecessary()
@@ -67,7 +67,7 @@ class DashboardSectionVB(
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         displayingEntries.clear()
         ktx.cancel(Events.REQUEST, request)
     }

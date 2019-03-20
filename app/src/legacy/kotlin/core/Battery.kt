@@ -48,8 +48,8 @@ class BatteryVB(
         private val i18n: I18n = ktx.di().instance(),
         private val battery: Battery = ktx.di().instance(),
         private val onRemove: () -> Unit = {},
-        slotMutex: SlotMutex = SlotMutex()
-) : SlotVB(slotMutex) {
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
 
     override fun attach(view: SlotView) {
         view.type = Slot.Type.INFO

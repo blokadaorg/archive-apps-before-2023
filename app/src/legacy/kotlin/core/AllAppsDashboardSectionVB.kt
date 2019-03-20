@@ -16,7 +16,7 @@ class AllAppsDashboardSectionVB(val ctx: Context, val system: Boolean) : LayoutV
     private val filterManager by lazy { ktx.di().instance<tunnel.Main>() }
     private var view: VBListView? = null
 
-    private val openedView = SlotMutex()
+    private val slotMutex = SlotMutex()
 
     private var updateApps = { filters: Collection<Filter> ->
         Unit
@@ -31,13 +31,13 @@ class AllAppsDashboardSectionVB(val ctx: Context, val system: Boolean) : LayoutV
         filters.apps.refresh()
         getApps = filters.apps.doOnUiWhenSet().then {
             filters.apps().filter { it.system == system }.map {
-                AppVB(it, ktx)
+                AppVB(it, ktx, onTap = slotMutex.openOneAtATime)
             }.apply { view.set(this) }
         }
     }
 
     override fun detach(view: View) {
-        openedView.view = null
+        slotMutex.detach()
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
         filters.apps.cancel(getApps)
     }
