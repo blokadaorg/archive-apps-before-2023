@@ -1,7 +1,9 @@
 package core
 
 import android.app.Activity
+import android.app.UiModeManager
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Build
 import android.support.annotation.RequiresApi
 import android.view.View
@@ -67,10 +69,15 @@ class PanelActivity : Activity() {
             val displayCutout = window.decorView.rootWindowInsets.displayCutout
             dashboardView.notchPx = displayCutout.safeInsetTop
         } catch (e: Throwable) {
-            dashboardView.notchPx = resources.getDimensionPixelSize(R.dimen.dashboard_notch_inset)
+            if (!isAndroidTV())
+                dashboardView.notchPx = resources.getDimensionPixelSize(R.dimen.dashboard_notch_inset)
         }
     }
 
+    private fun isAndroidTV(): Boolean {
+        val uiModeManager = getSystemService(UI_MODE_SERVICE) as UiModeManager
+        return uiModeManager.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
+    }
 }
 
 val modalManager = ModalManager()

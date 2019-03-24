@@ -14,7 +14,7 @@ class HomeDashboardSectionVB(
         val ctx: Context = ktx.ctx,
         val battery: Battery = ktx.di().instance(),
         val introPersistence: BasicPersistence<Boolean> = BasicPersistence(LazyKodein(ktx.di), "intro_vb")
-) : LayoutViewBinder(R.layout.vblistview) {
+) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
 
     private var view: VBListView? = null
 
@@ -48,4 +48,19 @@ class HomeDashboardSectionVB(
         slotMutex.detach()
     }
 
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
+
+    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
+    }
 }

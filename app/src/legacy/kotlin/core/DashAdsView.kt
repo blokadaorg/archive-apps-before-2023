@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.AbsListView
 import android.widget.FrameLayout
 import filter.AFilterListView
+import gs.presentation.ViewBinder
 import io.codetail.widget.RevealFrameLayout
 import org.blokada.R
 
@@ -101,6 +102,14 @@ interface Backable {
     fun handleBackPressed(): Boolean
 }
 
+interface ListSection {
+    fun setOnSelected(listener: (item: ViewBinder?) -> Unit)
+    fun scrollToSelected()
+    fun selectNext() {}
+    fun selectPrevious() {}
+    fun unselect() {}
+}
+
 interface Scrollable {
     fun setOnScroll(
             onScrollDown: () -> Unit = {},
@@ -108,8 +117,6 @@ interface Scrollable {
             onScrollStopped: () -> Unit = {}
     )
     fun getScrollableView(): View
-    fun scrollNext() {}
-    fun scrollPrevious() {}
 }
 
 interface Stepable {

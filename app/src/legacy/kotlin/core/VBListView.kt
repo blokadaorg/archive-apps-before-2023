@@ -31,7 +31,7 @@ class VBListView(
 
     var onItemRemove = { item: ViewBinder -> }
     var onEndReached = { }
-    var onItemSelect = { item: ViewBinder -> }
+    var onItemSelect = { item: ViewBinder? -> }
 
     init {
         inflate(context, R.layout.vblistview_content, this)
@@ -54,12 +54,21 @@ class VBListView(
         })
     }
 
-    override fun scrollNext() {
+    override fun selectNext() {
         adapter.tryMoveSelection(1)
     }
 
-    override fun scrollPrevious() {
+    override fun selectPrevious() {
         adapter.tryMoveSelection(-1)
+    }
+
+    override fun unselect() {
+        val old = adapter.selectedItem
+        if (old != -1) {
+            adapter.selectedItem = -1
+            adapter.notifyItemChanged(old)
+            onItemSelect(null)
+        }
     }
 
     private val scroll = Handler {
@@ -67,7 +76,7 @@ class VBListView(
         true
     }
 
-    override fun showSelected() {
+    override fun scrollToSelected() {
         val lastVisible = layoutManager.findLastCompletelyVisibleItemPosition()
         if (adapter.selectedItem >= lastVisible - 1)
             listView.smoothScrollBy(0, 200)

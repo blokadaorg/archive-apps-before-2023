@@ -8,10 +8,10 @@
     <dimen name="dashboard_logo_margin_top">12dp</dimen>
     <dimen name="dashboard_pager_margin_bottom">110dp</dimen>
     <dimen name="dashboard_panel_anchor_size">80dp</dimen>
-    <dimen name="dashboard_panel_margin_top">92dp</dimen>
-    <dimen name="dashboard_panel_margin_bottom">-92dp</dimen>
+    <dimen name="dashboard_panel_margin_top">62dp</dimen>
+    <dimen name="dashboard_panel_margin_bottom">-62dp</dimen>
     <dimen name="dashboard_fg_pager_margin_top">76dp</dimen>
-    <dimen name="dashboard_fg_logo_margin_top">120dp</dimen>
+    <dimen name="dashboard_fg_logo_margin_top">90dp</dimen>
     <dimen name="dashboard_nav_align_end_width">820dp</dimen>
 
     <dimen name="dots_padding_sides">2dp</dimen>

@@ -30,17 +30,9 @@ internal class SlotMutex {
     }
 }
 
-interface ListSection {
-    fun setOnSelected(listener: (item: ViewBinder?) -> Unit)
-    fun showSelected()
-}
 
 class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview), Scrollable,
     ListSection {
-
-    override fun showSelected() {
-        view?.showSelected()
-    }
 
     private var view: VBListView? = null
     private val slotMutex = SlotMutex()
@@ -70,12 +62,17 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
 
     override fun getScrollableView() = view!!
 
-    override fun scrollNext() { view?.scrollNext() }
-    override fun scrollPrevious() { view?.scrollPrevious() }
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
 
     override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
     }
 }
 

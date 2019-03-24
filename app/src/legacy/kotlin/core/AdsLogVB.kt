@@ -87,15 +87,15 @@ class AdsLogVB(
 
     override fun getScrollableView() = view!!
 
-    override fun scrollNext() { view?.scrollNext() }
-    override fun scrollPrevious() { view?.scrollPrevious() }
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
 
     override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
     }
 
-    override fun showSelected() {
-        view?.showSelected()
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
     }
 }

@@ -263,6 +263,16 @@ class DashboardView(
                         }
                     }
                 }
+                val section = bg_pager.pages.getOrNull(openSection)
+                (section as? ListSection)?.apply {
+                    setOnSelected {
+                        selectedListItem = it
+                        if (selectedListItem == null && navMode == NavMode.SLOT) {
+                            sliding.panelState = PanelState.ANCHORED
+                            navMode = NavMode.ANCHORED
+                        }
+                    }
+                }
             }
         })
 
@@ -284,17 +294,24 @@ class DashboardView(
             animateStart()
             sliding.panelState = PanelState.HIDDEN
         }
+
+        bg_start.setOnClickListener {
+            sliding.panelState = PanelState.ANCHORED
+        }
     }
 
     var notchPx: Int = 0
 
     private fun resize() {
-        val percentHeight = resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size).toFloat() / height
+        val percentHeight = (resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size)).toFloat() / height
         sliding.anchorPoint = percentHeight
 
         bg_logo.addToTopMargin(notchPx)
         bg_pager.addToTopMargin(notchPx)
         fg_pager.addToTopMargin(notchPx)
+        fg_logo_icon.addToTopMargin(notchPx)
+        fg_nav_panel.addToTopMargin(0 - notchPx)
+        fg_nav_panel.addToBottomMargin(0 - notchPx)
         bg_nav.addToTopMargin(notchPx)
         fg_nav.addToTopMargin(notchPx)
 
@@ -311,6 +328,16 @@ class DashboardView(
         }.onFailure {
             val lp = layoutParams as FrameLayout.LayoutParams
             lp.topMargin += size
+        }
+    }
+
+    private fun View.addToBottomMargin(size: Int) {
+        Result.of {
+            val lp = layoutParams as RelativeLayout.LayoutParams
+            lp.bottomMargin += size
+        }.onFailure {
+            val lp = layoutParams as FrameLayout.LayoutParams
+            lp.bottomMargin += size
         }
     }
 
@@ -488,10 +515,44 @@ class DashboardView(
 
     private fun navigateAnchored(keyCode: Int) {
         when(keyCode) {
-            in buttonsEnter -> sliding.panelState = PanelState.EXPANDED
-            in buttonsBack -> sliding.panelState = PanelState.COLLAPSED
+            in buttonsEnter -> {
+                if (selectedListItem is Navigable) {
+                    navMode = NavMode.SLOT
+                    (selectedListItem as? Navigable)?.apply {
+                        enter()
+                        val section = bg_pager.pages.getOrNull(openSection)
+                        (section as? ListSection)?.apply {
+                            scrollToSelected()
+                        }
+                    }
+                } else {
+                    sliding.panelState = PanelState.EXPANDED
+                }
+            }
+            in buttonsBack -> {
+                if (selectedListItem != null) {
+                    val section = bg_pager.pages.getOrNull(openSection)
+                    (section as? ListSection)?.apply {
+                        unselect()
+                    }
+                } else {
+                    sliding.panelState = PanelState.COLLAPSED
+                }
+            }
             KeyEvent.KEYCODE_DPAD_LEFT -> bg_pager.currentItem = bg_pager.currentItem - 1
             KeyEvent.KEYCODE_DPAD_RIGHT -> bg_pager.currentItem = bg_pager.currentItem + 1
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                val section = bg_pager.pages.getOrNull(openSection)
+                (section as? ListSection)?.apply {
+                    selectNext()
+                }
+            }
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                val section = bg_pager.pages.getOrNull(openSection)
+                (section as? ListSection)?.apply {
+                    selectPrevious()
+                }
+            }
         }
     }
 
@@ -502,7 +563,7 @@ class DashboardView(
                 (selectedListItem as? Navigable)?.apply {
                     enter()
                     (openDash as? ListSection)?.apply {
-                        showSelected()
+                        scrollToSelected()
                     }
                 }
             }
@@ -510,16 +571,13 @@ class DashboardView(
             KeyEvent.KEYCODE_DPAD_LEFT -> fg_pager.currentItem = fg_pager.currentItem - 1
             KeyEvent.KEYCODE_DPAD_RIGHT -> fg_pager.currentItem = fg_pager.currentItem + 1
             KeyEvent.KEYCODE_DPAD_DOWN -> {
-                (openDash as? Scrollable)?.apply {
-//                    this.getScrollableView().scrollBy(0, 40)
-//                    this.getScrollableView().scrollBy(0, 40)
-                    scrollNext()
+                (openDash as? ListSection)?.apply {
+                    selectNext()
                 }
             }
             KeyEvent.KEYCODE_DPAD_UP -> {
-                (openDash as? Scrollable)?.apply {
-                    scrollPrevious()
-//                    this.getScrollableView().scrollBy(0, -40)
+                (openDash as? ListSection)?.apply {
+                    selectPrevious()
                 }
             }
         }
