@@ -40,6 +40,7 @@ class VBListView(
     private val listView = findViewById<RecyclerView>(R.id.list)
     private val containerView = findViewById<ConstraintLayout>(R.id.container)
     private var layoutManager = LinearLayoutManager(context)
+    private var alternativeMode = false
 
     init {
         listView.addItemDecoration(VerticalSpace(context.dpToPx(6)))
@@ -77,10 +78,24 @@ class VBListView(
     }
 
     override fun scrollToSelected() {
-        val lastVisible = layoutManager.findLastCompletelyVisibleItemPosition()
-        if (adapter.selectedItem >= lastVisible - 1)
-            listView.smoothScrollBy(0, 200)
-//        scroll.sendEmptyMessageDelayed(0, 1500)
+        if (alternativeMode) {
+            val lastVisible = layoutManager.findLastCompletelyVisibleItemPosition()
+            if (adapter.selectedItem >= lastVisible - 1)
+                listView.smoothScrollBy(0, 200)
+        } else {
+            val firstVisible = layoutManager.findFirstCompletelyVisibleItemPosition()
+            if (adapter.selectedItem <= firstVisible + 1)
+                listView.smoothScrollBy(0, -200)
+        }
+        handlerek.sendEmptyMessageDelayed(0, 800)
+    }
+
+    val handlerek = Handler {
+        listView.smoothScrollToPosition(adapter.selectedItem)
+//        val firstVisible = layoutManager.findFirstCompletelyVisibleItemPosition()
+//        if (adapter.selectedItem <= firstVisible + 1)
+//            listView.smoothScrollBy(0, -200)
+        true
     }
 
     private val adapter = object : RecyclerView.Adapter<ListerViewHolder>() {
@@ -106,7 +121,7 @@ class VBListView(
             }
         }
 
-        override fun onViewRecycled(holder: ListerViewHolder) = holder.creator.detach(holder.view)
+//        override fun onViewRecycled(holder: ListerViewHolder) = holder.creator.detach(holder.view)
         override fun getItemCount() = items.size
         override fun getItemViewType(position: Int) = items[position].viewType
 
@@ -217,6 +232,7 @@ class VBListView(
     }
 
     fun enableAlternativeMode() {
+        alternativeMode = true
         layoutManager = LinearLayoutManager(context)
         listView.layoutManager = layoutManager
 

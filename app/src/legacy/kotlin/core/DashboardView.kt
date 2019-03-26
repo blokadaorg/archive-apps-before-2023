@@ -258,7 +258,7 @@ class DashboardView(
                     }
                     if (state != DashboardState.INACTIVE) {
                         fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
-                            fg_logo_icon.setImageResource(icon)
+//                            fg_logo_icon.setImageResource(icon)
                             fg_logo_icon.animate().setDuration(200).alpha(0.7f)
                         }
                     }
@@ -275,6 +275,17 @@ class DashboardView(
                 }
             }
         })
+
+        val section = bg_pager.pages.getOrNull(openSection)
+        (section as? ListSection)?.apply {
+            setOnSelected {
+                selectedListItem = it
+                if (selectedListItem == null && navMode == NavMode.SLOT) {
+                    sliding.panelState = PanelState.ANCHORED
+                    navMode = NavMode.ANCHORED
+                }
+            }
+        }
 
         bg_pager.currentItem = openSection
         bg_nav.section = makeSectionName(sections[openSection])
@@ -310,10 +321,9 @@ class DashboardView(
         bg_pager.addToTopMargin(notchPx)
         fg_pager.addToTopMargin(notchPx)
         fg_logo_icon.addToTopMargin(notchPx)
-        fg_nav_panel.addToTopMargin(0 - notchPx)
-        fg_nav_panel.addToBottomMargin(0 - notchPx)
         bg_nav.addToTopMargin(notchPx)
         fg_nav.addToTopMargin(notchPx)
+        setNavPanelMargins()
 
         if (width >= resources.getDimensionPixelSize(R.dimen.dashboard_nav_align_end_width)) {
             bg_nav.alignEnd()
@@ -339,6 +349,12 @@ class DashboardView(
             val lp = layoutParams as FrameLayout.LayoutParams
             lp.bottomMargin += size
         }
+    }
+
+    private fun setNavPanelMargins() {
+        val lp = fg_nav_panel.layoutParams as FrameLayout.LayoutParams
+        lp.bottomMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_bottom) - notchPx
+        lp.topMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_top) - notchPx
     }
 
     private fun animateStart() {
@@ -496,7 +512,7 @@ class DashboardView(
 
     private var selectedListItem: ViewBinder? = null
 
-    enum class NavMode { INACTIVE, ANCHORED, OPENED, SLOT }
+    enum class NavMode { INACTIVE, ANCHORED, OPENED, SLOT, BG_SLOT }
     private var navMode = NavMode.INACTIVE
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -505,6 +521,7 @@ class DashboardView(
             NavMode.ANCHORED -> navigateAnchored(keyCode)
             NavMode.OPENED -> navigateOpened(keyCode, event)
             NavMode.SLOT -> navigateSlot(keyCode, event)
+            NavMode.BG_SLOT -> navigateSlot(keyCode, event)
         }
         return true
     }
@@ -517,7 +534,7 @@ class DashboardView(
         when(keyCode) {
             in buttonsEnter -> {
                 if (selectedListItem is Navigable) {
-                    navMode = NavMode.SLOT
+                    navMode = NavMode.BG_SLOT
                     (selectedListItem as? Navigable)?.apply {
                         enter()
                         val section = bg_pager.pages.getOrNull(openSection)
@@ -586,8 +603,12 @@ class DashboardView(
     private fun navigateSlot(keyCode: Int, event: KeyEvent?) {
         when(keyCode) {
             in buttonsBack + buttonsEnter -> {
-                sliding.panelState = PanelState.EXPANDED
-                navMode = NavMode.OPENED
+                if (navMode == NavMode.SLOT) {
+                    sliding.panelState = PanelState.EXPANDED
+                    navMode = NavMode.OPENED
+                } else {
+                    navMode = NavMode.ANCHORED
+                }
                 (selectedListItem as? Navigable)?.apply {
                     exit()
                 }
