@@ -42,6 +42,7 @@ class HomeDashboardSectionVB(
         if (!battery.isWhitelisted()) items += batteryVB
         this.view = view as VBListView
         view.set(items)
+        view.setOnSelected(listener)
     }
 
     override fun detach(view: View) {
@@ -56,7 +57,10 @@ class HomeDashboardSectionVB(
     override fun selectPrevious() { view?.selectPrevious() }
     override fun unselect() { view?.unselect() }
 
+    private var listener: (item: ViewBinder?) -> Unit = {}
+
     override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+        this.listener = listener
         view?.setOnSelected(listener)
     }
 

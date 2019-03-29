@@ -50,148 +50,166 @@ class DashboardView(
     private val fg_nav_panel = findViewById<View>(R.id.fg_nav_panel)
     private val fg_nav = findViewById<DotsView>(R.id.fg_nav)
 
+    var notchPx: Int = 0
     var onSectionClosed = {}
 
-    private enum class DashboardState { INACTIVE, ANCHORED, OPENED, DRAGGING }
-
-    private var state = DashboardState.INACTIVE
-        set(value) {
-            field = value
-            when (value) {
-                DashboardState.INACTIVE -> {
-                    bg_colors.onScroll(1f, openSection + 1, 0)
-                    bg_nav.alpha = 0f
-                    fg_logo_icon.alpha = 0f
-                    bg_start.alpha = 1f
-                    bg_logo.alpha = 0f
-                    bg_off_logo.alpha = 1f
-                    bg_packets.alpha = 0f
-                    fg_pager.alpha = 0f
-                    bg_pager.alpha = 0f
-                    bg_pager.visibility = View.GONE
-
-                    val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-                    lp.height = LayoutParams.MATCH_PARENT
-                    lp.topMargin = 0
-                    fg_drag.layoutParams = lp
-
-                    bg_off_logo.animate().alpha(1f).interpolator = inter
-                    animateStart()
-                    tun.enabled %= false
-
-                    navMode = NavMode.INACTIVE
-                }
-                DashboardState.ANCHORED -> {
-                    bg_colors.onScroll(1f, 0, openSection + 1)
-                    bg_nav.alpha = 1f
-                    fg_logo_icon.alpha = 0.7f
-                    bg_start.alpha = 0f
-                    bg_logo.alpha = 0f
-                    bg_off_logo.alpha = 0f
-                    bg_packets.alpha = 1f
-                    fg_pager.alpha = 0f
-                    bg_pager.visibility = View.VISIBLE
-                    bg_pager.alpha = 1f
-
-                    val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-                    lp.height = context.dpToPx(110)
-                    lp.topMargin = context.dpToPx(90)
-                    fg_drag.layoutParams = lp
-
-                    tun.enabled %= true
-                    onSectionClosed()
-
-                    navMode = NavMode.ANCHORED
-                }
-                DashboardState.OPENED -> {
-                    bg_colors.onScroll(1f, 0, openSection + 1)
-                    bg_nav.alpha = 0f
-                    fg_logo_icon.alpha = 0f
-                    bg_start.alpha = 0f
-                    bg_logo.alpha = 1f
-                    bg_off_logo.alpha = 0f
-                    bg_packets.alpha = 1f
-                    fg_pager.alpha = 1f
-                    bg_pager.alpha = 0f
-
-                    val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-                    lp.height = context.dpToPx(130)
-                    lp.topMargin = 0
-                    fg_drag.layoutParams = lp
-
-                    tun.enabled %= true
-                    bg_nav.visibility = GONE
-                    openSelectedSection()
-
-                    navMode = NavMode.OPENED
-                }
-                DashboardState.DRAGGING -> {
-                    bg_nav.visibility = VISIBLE
-                    closeSection()
-                    bg_off_logo.animate().alpha(0f).interpolator = inter
-                    stopAnimatingStart()
-                }
-            }
-        }
+    private val ktx = ctx.ktx("dashboard")
 
     private val tunnelEvents by lazy { ctx.inject().instance<EnabledStateActor>() }
     private val tun by lazy { ctx.inject().instance<Tunnel>() }
 
-    private val sections by lazy { createDashboardSections(ctx.ktx("sections.create")) }
-
-    private var isOpen = false
-    private var openDash: gs.presentation.ViewBinder? = null
-    private var openSlot: SlotView? = null
     private val inter = DecelerateInterpolator(2f)
-    private var openSection = 1
     private var scrolledView: View? = null
 
     private var lastSubsectionTab = 0
-    private val ktx = "dashboard".ktx()
+
+
+    private val model by lazy {
+        DashboardNavigationModel(
+                createDashboardSections(ktx),
+                onOn = { sectionIndex ->
+                    setOn(sectionIndex + 1)
+//                    tun.enabled %= true
+                },
+                onOff = { sectionIndex ->
+                    setOff(sectionIndex + 1)
+//                    tun.enabled %= false
+                },
+                onMenuOpened = { section, sectionIndex, menu ->
+                    setMenu(sectionIndex + 1)
+                    openSelectedSection()
+                },
+                onMenuClosed = { sectionIndex ->
+                    setOn(sectionIndex)
+                },
+                onSectionChanged = { section ->
+                    setMainSectionLabelAndMenuIcon(section)
+                }
+        )
+    }
 
     override fun onFinishInflate() {
         super.onFinishInflate()
-        isFocusable = true
+        setupParentContainer()
+        setupSlidingPanel()
+        setupBg()
+        setupExternalEventListeners()
+        adjustMargins()
 
-        bg_pager.setOnClickListener { openSelectedSection() }
-        setDragView(fg_drag)
+//        val section = bg_pager.pages.getOrNull(openSection)
+//        (section as? ListSection)?.apply {
+//            setOnSelected {
+//                selectedListItem = it
+//                if (selectedListItem == null && navMode == NavMode.SLOT) {
+//                    sliding.panelState = PanelState.ANCHORED
+//                    navMode = NavMode.ANCHORED
+//                }
+//            }
+//        }
+    }
 
-        sliding.apply {
-            panelHeight = context.dpToPx(128)
-            shadowHeight = 0
-            isOverlayed = true
+    private fun setOff(fromColorIndex: Int) {
+        bg_colors.onScroll(1f, fromColorIndex, 0)
+        bg_nav.alpha = 0f
+        fg_logo_icon.alpha = 0f
+        bg_start.alpha = 1f
+        bg_logo.alpha = 0f
+        bg_off_logo.alpha = 1f
+        bg_packets.alpha = 0f
+        fg_pager.alpha = 0f
+        bg_pager.alpha = 0f
+        bg_pager.visibility = View.GONE
 
-            addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
-                override fun onPanelSlide(panel: View?, slideOffset: Float) {
-                    if (slideOffset < anchorPoint) {
-                        val ratio = slideOffset / anchorPoint
-                        bg_colors.onScroll(1 - ratio, openSection + 1, 0)
-                        bg_nav.alpha = min(1f, ratio)
-                        bg_start.alpha = 1 - min(1f, ratio)
-                        bg_packets.alpha = min(1f, ratio)
-                        bg_pager.alpha = min(1f, ratio)
-                        fg_logo_icon.alpha = min(0.7f, ratio)
-                    } else {
-                        fg_nav_panel.alpha = max(0.7f, slideOffset)
-                        bg_nav.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
-                        bg_pager.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
-                        fg_logo_icon.alpha = 0.7f - min(1f, (slideOffset - anchorPoint) * 0.5f)
-                        bg_logo.alpha = (slideOffset - anchorPoint) / (1 - anchorPoint)
-                    }
-                }
+        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
+        lp.height = LayoutParams.MATCH_PARENT
+        lp.topMargin = 0
+        fg_drag.layoutParams = lp
 
-                override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
-                    state = when (newState) {
-                        PanelState.DRAGGING -> DashboardState.DRAGGING
-                        PanelState.ANCHORED -> DashboardState.ANCHORED
-                        PanelState.COLLAPSED -> DashboardState.INACTIVE
-                        PanelState.EXPANDED -> DashboardState.OPENED
-                        else -> state
-                    }
-                }
-            })
+        bg_off_logo.animate().alpha(1f).interpolator = inter
+        animateStart()
+
+        sliding.panelState = PanelState.HIDDEN
+    }
+
+    private fun setOn(toColorIndex: Int) {
+        bg_colors.onScroll(1f, 0, toColorIndex)
+        bg_nav.alpha = 1f
+        fg_logo_icon.alpha = 0.7f
+        bg_start.alpha = 0f
+        bg_logo.alpha = 0f
+        bg_off_logo.alpha = 0f
+        bg_packets.alpha = 1f
+        fg_pager.alpha = 0f
+        bg_pager.visibility = View.VISIBLE
+        bg_pager.alpha = 1f
+
+        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
+        lp.height = context.dpToPx(110)
+        lp.topMargin = context.dpToPx(90)
+        fg_drag.layoutParams = lp
+
+        sliding.panelState = PanelState.ANCHORED
+    }
+
+    private fun setMenu(toColorIndex: Int) {
+        bg_colors.onScroll(1f, 0, toColorIndex)
+        bg_nav.alpha = 0f
+        fg_logo_icon.alpha = 0f
+        bg_start.alpha = 0f
+        bg_logo.alpha = 1f
+        bg_off_logo.alpha = 0f
+        bg_packets.alpha = 1f
+        fg_pager.alpha = 1f
+        bg_pager.alpha = 0f
+
+        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
+        lp.height = context.dpToPx(130)
+        lp.topMargin = 0
+        fg_drag.layoutParams = lp
+
+        bg_nav.visibility = GONE
+        sliding.panelState = PanelState.EXPANDED
+    }
+
+    private fun setDragging() {
+        bg_nav.visibility = VISIBLE
+//        closeSection()
+        // onclosesection
+        bg_off_logo.animate().alpha(0f).interpolator = inter
+        stopAnimatingStart()
+    }
+
+    private fun setMainSectionLabelAndMenuIcon(section: DashboardSection) {
+        bg_nav.section = makeSectionName(section)
+        section.run {
+            val icon = when (nameResId) {
+                R.string.panel_section_ads -> R.drawable.ic_blocked
+                R.string.panel_section_apps -> R.drawable.ic_apps
+                R.string.panel_section_advanced -> R.drawable.ic_tune
+                else -> R.drawable.blokada
+            }
+            fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
+//                fg_logo_icon.setImageResource(icon)
+                fg_logo_icon.animate().setDuration(200).alpha(0.7f)
+            }
         }
 
+    }
+
+    fun later() {
+        val section = bg_pager.pages.getOrNull(openSection)
+        (section as? ListSection)?.apply {
+            setOnSelected {
+                selectedListItem = it
+                if (selectedListItem == null && navMode == NavMode.SLOT) {
+                    sliding.panelState = PanelState.ANCHORED
+                    navMode = NavMode.ANCHORED
+                }
+            }
+        }
+    }
+
+    fun setupExternalEventListeners() {
         ktx.on(Events.REQUEST) {
             bg_packets.addToHistory(it)
         }
@@ -199,9 +217,7 @@ class DashboardView(
         tunnelEvents.listeners.add(object : IEnabledStateActorListener {
             override fun startActivating() {
                 bg_packets.setTunnelState(TunnelState.ACTIVATING)
-                if (sliding.panelState == PanelState.COLLAPSED) {
-                    sliding.panelState = PanelState.ANCHORED
-                }
+                model.tunnelActivating()
             }
 
             override fun finishActivating() {
@@ -217,11 +233,63 @@ class DashboardView(
 
             override fun finishDeactivating() {
                 bg_packets.setTunnelState(TunnelState.INACTIVE)
-                sliding.panelState = PanelState.COLLAPSED
+                model.tunnelDeactivated()
             }
         })
 
-        bg_pager.pages = sections.map {
+        if (tun.tunnelState() !in listOf(TunnelState.DEACTIVATED, TunnelState.INACTIVE)) {
+            model.tunnelActivating()
+        } else {
+            model.tunnelDeactivated()
+        }
+    }
+
+    fun setupParentContainer() {
+        isFocusable = true
+        setDragView(fg_drag)
+    }
+
+    fun setupSlidingPanel() {
+        sliding.apply {
+            panelHeight = context.dpToPx(128)
+            shadowHeight = 0
+            isOverlayed = true
+
+            addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+                override fun onPanelSlide(panel: View?, slideOffset: Float) {
+                    if (slideOffset < anchorPoint) {
+                        val ratio = slideOffset / anchorPoint
+                        bg_colors.onScroll(1 - ratio, model.getOpenedSectionIndex() + 1, 0)
+                        bg_nav.alpha = min(1f, ratio)
+                        bg_start.alpha = 1 - min(1f, ratio)
+                        bg_packets.alpha = min(1f, ratio)
+                        bg_pager.alpha = min(1f, ratio)
+                        fg_logo_icon.alpha = min(0.7f, ratio)
+                    } else {
+                        fg_nav_panel.alpha = max(0.7f, slideOffset)
+                        bg_nav.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
+                        bg_pager.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
+                        fg_logo_icon.alpha = 0.7f - min(1f, (slideOffset - anchorPoint) * 0.5f)
+                        bg_logo.alpha = (slideOffset - anchorPoint) / (1 - anchorPoint)
+                    }
+                }
+
+                override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
+                    when (newState) {
+                        PanelState.DRAGGING -> model.panelDragging()
+                        PanelState.ANCHORED -> model.panelAnchored()
+                        PanelState.COLLAPSED -> model.panelCollapsed()
+                        PanelState.EXPANDED -> model.panelExpanded()
+                    }
+                }
+            })
+        }
+    }
+
+    fun setupBg() {
+        bg_pager.setOnClickListener { openSelectedSection() }
+
+        bg_pager.pages = model.sections.map {
             when (it.nameResId) {
                 R.string.panel_section_home -> HomeDashboardSectionVB(context.ktx("dashboard-home"))
                 R.string.panel_section_advanced -> AdvancedDashboardSectionVB(context)
@@ -232,7 +300,7 @@ class DashboardView(
 
         bg_nav.viewPager = bg_pager
         bg_nav.sleeping = true
-        bg_nav.section = context.getText(sections[openSection].nameResId)
+
         lastSubsectionTab = 0
         bg_pager.currentItem = 0
         bg_pager.offscreenPageLimit = 3
@@ -246,72 +314,30 @@ class DashboardView(
             }
 
             override fun onPageSelected(position: Int) {
-                openSection = position
+                model.mainViewPagerSwiped(position)
                 lastSubsectionTab = 0
-                bg_nav.section = makeSectionName(sections[openSection])
-                sections.getOrNull(openSection)?.apply {
-                    val icon = when (nameResId) {
-                        R.string.panel_section_ads -> R.drawable.ic_blocked
-                        R.string.panel_section_apps -> R.drawable.ic_apps
-                        R.string.panel_section_advanced -> R.drawable.ic_tune
-                        else -> R.drawable.blokada
-                    }
-                    if (state != DashboardState.INACTIVE) {
-                        fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
-//                            fg_logo_icon.setImageResource(icon)
-                            fg_logo_icon.animate().setDuration(200).alpha(0.7f)
-                        }
-                    }
-                }
-                val section = bg_pager.pages.getOrNull(openSection)
-                (section as? ListSection)?.apply {
-                    setOnSelected {
-                        selectedListItem = it
-                        if (selectedListItem == null && navMode == NavMode.SLOT) {
-                            sliding.panelState = PanelState.ANCHORED
-                            navMode = NavMode.ANCHORED
-                        }
-                    }
-                }
             }
         })
 
-        val section = bg_pager.pages.getOrNull(openSection)
-        (section as? ListSection)?.apply {
-            setOnSelected {
-                selectedListItem = it
-                if (selectedListItem == null && navMode == NavMode.SLOT) {
-                    sliding.panelState = PanelState.ANCHORED
-                    navMode = NavMode.ANCHORED
-                }
-            }
-        }
-
-        bg_pager.currentItem = openSection
-        bg_nav.section = makeSectionName(sections[openSection])
-
-        var resized = false
-        viewTreeObserver.addOnGlobalLayoutListener {
-            if (!resized) {
-                resize()
-                resized = true
-            }
+        model.getOpenedSection()?.run {
+            bg_nav.section = context.getText(nameResId)
+            bg_pager.currentItem = model.getOpenedSectionIndex()
         }
 
         bg_packets.setTunnelState(tun.tunnelState())
-        if (tun.tunnelState() !in listOf(TunnelState.DEACTIVATED, TunnelState.INACTIVE)) {
-            sliding.panelState = PanelState.ANCHORED
-        } else {
-            animateStart()
-            sliding.panelState = PanelState.HIDDEN
-        }
 
         bg_start.setOnClickListener {
             sliding.panelState = PanelState.ANCHORED
         }
     }
 
-    var notchPx: Int = 0
+    fun adjustMargins() {
+        viewTreeObserver.addOnGlobalLayoutListener(::resize)
+        // For one time resize callback
+        viewTreeObserver.addOnGlobalLayoutListener {
+            viewTreeObserver.removeOnGlobalLayoutListener(::resize)
+        }
+    }
 
     private fun resize() {
         val percentHeight = (resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size)).toFloat() / height
@@ -393,7 +419,7 @@ class DashboardView(
         true
     }
 
-    fun setDragView(dragView: View?) {
+    private fun setDragView(dragView: View?) {
         sliding.setDragView(dragView)
         dragView?.apply {
             setOnClickListener {
@@ -423,22 +449,7 @@ class DashboardView(
         sliding.setScrollableView(scrolledView)
     }
 
-    override fun handleBackPressed(): Boolean {
-        val dash = openDash
-        if (dash is Backable && dash.handleBackPressed()) return true
-        openDash = null
-
-        if (isOpen) {
-            sliding.panelState = PanelState.ANCHORED
-            return true
-        }
-        return false
-    }
-
-    private fun closeSection() {
-        isOpen = false
-        onCloseSection()
-    }
+    override fun handleBackPressed() = model.backPressed()
 
     private fun makeSectionName(section: DashboardSection, subsection: DashboardNavItem? = null): String {
         return if (subsection == null) context.getString(section.nameResId)
@@ -450,84 +461,79 @@ class DashboardView(
         }
     }
 
-    private fun openSelectedSection() {
-        isOpen = true
+    fun hideNav() {
         bg_nav.animate().setDuration(200).alpha(0f).doAfter {
             bg_nav.visibility = View.GONE
         }
-
-        sections.getOrNull(openSection)?.apply {
-            fg_nav.section = makeSectionName(sections[openSection], subsections.firstOrNull())
-        }
-
-        onOpenSection {
-            sections.getOrNull(openSection)?.apply {
-
-                fg_pager.pages = subsections.map {
-                    it.dash
-                }
-
-                fg_pager.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
-                    override fun onPageScrollStateChanged(state: Int) {
-                    }
-
-                    override fun onPageScrolled(position: Int, positionOffset: Float, posPixels: Int) {
-                    }
-
-                    override fun onPageSelected(position: Int) {
-                        val section = sections[openSection].subsections[position]
-                        fg_nav.section = makeSectionName(sections[openSection], section)
-                        flashPlaceholder()
-                        lastSubsectionTab = position
-                        openDash = subsections[lastSubsectionTab].dash
-                        (openDash as? ListSection)?.apply {
-                            setOnSelected {
-                                selectedListItem = it
-                                if (selectedListItem == null && navMode == NavMode.SLOT) {
-                                    sliding.panelState = PanelState.EXPANDED
-                                    navMode = NavMode.OPENED
-                                }
-                            }
-                        }
-                    }
-                })
-                fg_nav.viewPager = fg_pager
-                updateScrollableView()
-                openDash = subsections[lastSubsectionTab].dash
-                (openDash as? ListSection)?.apply {
-                    setOnSelected {
-                        selectedListItem = it
-                        if (selectedListItem == null && navMode == NavMode.SLOT) {
-                            sliding.panelState = PanelState.EXPANDED
-                            navMode = NavMode.OPENED
-                        }
-                    }
-                }
-                fg_pager.currentItem = lastSubsectionTab
-
-                flashPlaceholder()
-            }
-        }
     }
 
-    private var selectedListItem: ViewBinder? = null
+    fun setupMenu() {
+        fg_pager.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
+            override fun onPageScrollStateChanged(state: Int) {
+            }
 
-    enum class NavMode { INACTIVE, ANCHORED, OPENED, SLOT, BG_SLOT }
-    private var navMode = NavMode.INACTIVE
+            override fun onPageScrolled(position: Int, positionOffset: Float, posPixels: Int) {
+            }
+
+            override fun onPageSelected(position: Int) {
+                model.menuViewPagerSwiped(position)
+                lastSubsectionTab = position
+                updateScrollableView()
+//                openDash = subsections[lastSubsectionTab].dash
+//                (openDash as? ListSection)?.apply {
+//                    setOnSelected {
+//                        selectedListItem = it
+//                        if (selectedListItem == null && navMode == NavMode.SLOT) {
+//                            sliding.panelState = PanelState.EXPANDED
+//                            navMode = NavMode.OPENED
+//                        }
+//                    }
+//                }
+            }
+        })
+
+        fg_nav.viewPager = fg_pager
+    }
+
+    fun setMenuNav(section: DashboardSection, subsection: DashboardNavItem) {
+        fg_nav.section = makeSectionName(section, subsection)
+        fg_pager.pages = section.subsections.map {
+            it.dash
+        }
+        fg_pager.currentItem = lastSubsectionTab
+        flashPlaceholder()
+
+//        openDash = subsections[lastSubsectionTab].dash
+//        (openDash as? ListSection)?.apply {
+//            setOnSelected {
+//                selectedListItem = it
+//                if (selectedListItem == null && navMode == NavMode.SLOT) {
+//                    sliding.panelState = PanelState.EXPANDED
+//                    navMode = NavMode.OPENED
+//                }
+//            }
+//        }
+    }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        when (navMode) {
-            NavMode.INACTIVE -> navigateInactive(keyCode)
-            NavMode.ANCHORED -> navigateAnchored(keyCode)
-            NavMode.OPENED -> navigateOpened(keyCode, event)
-            NavMode.SLOT -> navigateSlot(keyCode, event)
-            NavMode.BG_SLOT -> navigateSlot(keyCode, event)
+        when(keyCode) {
+            in buttonsEnter -> model.selectKey()
+            in buttonsBack -> model.backPressed()
+            KeyEvent.KEYCODE_DPAD_LEFT -> model.leftKey()
+            KeyEvent.KEYCODE_DPAD_RIGHT -> model.rightKey()
+            KeyEvent.KEYCODE_DPAD_UP -> model.upKey()
+            KeyEvent.KEYCODE_DPAD_DOWN -> model.downKey()
         }
         return true
     }
 
-    private fun navigateInactive(keyCode: Int) {
-        if (keyCode in buttonsEnter) sliding.panelState = PanelState.ANCHORED
+    fun getCurrent
+    fun toggleItem(item: Navigable) {
+        item.enter()
+        val section = bg_pager.pages.getOrNull(openSection)
+        (section as? ListSection)?.apply {
+            scrollToSelected()
+        }
     }
 
     private fun navigateAnchored(keyCode: Int) {
@@ -536,11 +542,6 @@ class DashboardView(
                 if (selectedListItem is Navigable) {
                     navMode = NavMode.BG_SLOT
                     (selectedListItem as? Navigable)?.apply {
-                        enter()
-                        val section = bg_pager.pages.getOrNull(openSection)
-                        (section as? ListSection)?.apply {
-                            scrollToSelected()
-                        }
                     }
                 } else {
                     sliding.panelState = PanelState.EXPANDED
