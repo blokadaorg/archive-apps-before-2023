@@ -7,7 +7,6 @@ import android.view.View
 import android.widget.AbsListView
 import android.widget.FrameLayout
 import filter.AFilterListView
-import gs.presentation.ViewBinder
 import io.codetail.widget.RevealFrameLayout
 import org.blokada.R
 
@@ -103,7 +102,7 @@ interface Backable {
 }
 
 interface ListSection {
-    fun setOnSelected(listener: (item: ViewBinder?) -> Unit)
+    fun setOnSelected(listener: (item: SlotVB?) -> Unit)
     fun scrollToSelected()
     fun selectNext() {}
     fun selectPrevious() {}

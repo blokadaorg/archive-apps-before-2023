@@ -16,7 +16,6 @@ import com.github.michaelbull.result.onSuccess
 import com.github.salomonbrys.kodein.instance
 import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import gs.environment.inject
-import gs.presentation.ViewBinder
 import gs.presentation.doAfter
 import org.blokada.R
 import tunnel.Events
@@ -63,27 +62,31 @@ class DashboardView(
 
     private var lastSubsectionTab = 0
 
-
     private val model by lazy {
         DashboardNavigationModel(
                 createDashboardSections(ktx),
-                onOn = { sectionIndex ->
+                onTurnedOn = { sectionIndex ->
                     setOn(sectionIndex + 1)
-//                    tun.enabled %= true
+                    tun.enabled %= true
                 },
-                onOff = { sectionIndex ->
+                onTurnedOff = { sectionIndex ->
                     setOff(sectionIndex + 1)
-//                    tun.enabled %= false
+                    tun.enabled %= false
                 },
-                onMenuOpened = { section, sectionIndex, menu ->
+                onMenuOpened = { section, sectionIndex, menu, menuIndex ->
                     setMenu(sectionIndex + 1)
-                    openSelectedSection()
+                    onOpenSection {  }
+                    setMenuNav(section, section.subsections[sectionIndex])
+//                    hideNav()
+                    fg_pager.currentItem = menuIndex
                 },
                 onMenuClosed = { sectionIndex ->
                     setOn(sectionIndex)
+                    onCloseSection()
                 },
-                onSectionChanged = { section ->
+                onSectionChanged = { section, sectionIndex ->
                     setMainSectionLabelAndMenuIcon(section)
+                    bg_pager.currentItem = sectionIndex
                 }
         )
     }
@@ -94,18 +97,8 @@ class DashboardView(
         setupSlidingPanel()
         setupBg()
         setupExternalEventListeners()
+        setupMenu()
         adjustMargins()
-
-//        val section = bg_pager.pages.getOrNull(openSection)
-//        (section as? ListSection)?.apply {
-//            setOnSelected {
-//                selectedListItem = it
-//                if (selectedListItem == null && navMode == NavMode.SLOT) {
-//                    sliding.panelState = PanelState.ANCHORED
-//                    navMode = NavMode.ANCHORED
-//                }
-//            }
-//        }
     }
 
     private fun setOff(fromColorIndex: Int) {
@@ -173,10 +166,9 @@ class DashboardView(
 
     private fun setDragging() {
         bg_nav.visibility = VISIBLE
-//        closeSection()
-        // onclosesection
         bg_off_logo.animate().alpha(0f).interpolator = inter
         stopAnimatingStart()
+        model.panelAnchored()
     }
 
     private fun setMainSectionLabelAndMenuIcon(section: DashboardSection) {
@@ -196,20 +188,7 @@ class DashboardView(
 
     }
 
-    fun later() {
-        val section = bg_pager.pages.getOrNull(openSection)
-        (section as? ListSection)?.apply {
-            setOnSelected {
-                selectedListItem = it
-                if (selectedListItem == null && navMode == NavMode.SLOT) {
-                    sliding.panelState = PanelState.ANCHORED
-                    navMode = NavMode.ANCHORED
-                }
-            }
-        }
-    }
-
-    fun setupExternalEventListeners() {
+    private fun setupExternalEventListeners() {
         ktx.on(Events.REQUEST) {
             bg_packets.addToHistory(it)
         }
@@ -244,12 +223,12 @@ class DashboardView(
         }
     }
 
-    fun setupParentContainer() {
+    private fun setupParentContainer() {
         isFocusable = true
         setDragView(fg_drag)
     }
 
-    fun setupSlidingPanel() {
+    private fun setupSlidingPanel() {
         sliding.apply {
             panelHeight = context.dpToPx(128)
             shadowHeight = 0
@@ -276,7 +255,7 @@ class DashboardView(
 
                 override fun onPanelStateChanged(panel: View, previousState: PanelState, newState: PanelState) {
                     when (newState) {
-                        PanelState.DRAGGING -> model.panelDragging()
+                        PanelState.DRAGGING -> setDragging()
                         PanelState.ANCHORED -> model.panelAnchored()
                         PanelState.COLLAPSED -> model.panelCollapsed()
                         PanelState.EXPANDED -> model.panelExpanded()
@@ -286,17 +265,10 @@ class DashboardView(
         }
     }
 
-    fun setupBg() {
-        bg_pager.setOnClickListener { openSelectedSection() }
+    private fun setupBg() {
+//        bg_pager.setOnClickListener { openSelectedSection() }
 
-        bg_pager.pages = model.sections.map {
-            when (it.nameResId) {
-                R.string.panel_section_home -> HomeDashboardSectionVB(context.ktx("dashboard-home"))
-                R.string.panel_section_advanced -> AdvancedDashboardSectionVB(context)
-                R.string.panel_section_apps -> AppsDashboardSectionVB(context)
-                else -> DashboardSectionVB(context.ktx("dashboard-section"), it)
-            }
-        }
+        bg_pager.pages = model.sections.map { it.dash }
 
         bg_nav.viewPager = bg_pager
         bg_nav.sleeping = true
@@ -319,7 +291,7 @@ class DashboardView(
             }
         })
 
-        model.getOpenedSection()?.run {
+        model.getOpenedSection().run {
             bg_nav.section = context.getText(nameResId)
             bg_pager.currentItem = model.getOpenedSectionIndex()
         }
@@ -331,7 +303,7 @@ class DashboardView(
         }
     }
 
-    fun adjustMargins() {
+    private fun adjustMargins() {
         viewTreeObserver.addOnGlobalLayoutListener(::resize)
         // For one time resize callback
         viewTreeObserver.addOnGlobalLayoutListener {
@@ -367,16 +339,6 @@ class DashboardView(
         }
     }
 
-    private fun View.addToBottomMargin(size: Int) {
-        Result.of {
-            val lp = layoutParams as RelativeLayout.LayoutParams
-            lp.bottomMargin += size
-        }.onFailure {
-            val lp = layoutParams as FrameLayout.LayoutParams
-            lp.bottomMargin += size
-        }
-    }
-
     private fun setNavPanelMargins() {
         val lp = fg_nav_panel.layoutParams as FrameLayout.LayoutParams
         lp.bottomMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_bottom) - notchPx
@@ -408,7 +370,7 @@ class DashboardView(
 
     private var showTime = 3000L
 
-    fun flashPlaceholder() {
+    private fun flashPlaceholder() {
         fg_nav.visibility = View.VISIBLE
         hidePlaceholder.removeMessages(0)
         hidePlaceholder.sendEmptyMessageDelayed(0, showTime)
@@ -467,7 +429,7 @@ class DashboardView(
         }
     }
 
-    fun setupMenu() {
+    private fun setupMenu() {
         fg_pager.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
             }
@@ -479,16 +441,6 @@ class DashboardView(
                 model.menuViewPagerSwiped(position)
                 lastSubsectionTab = position
                 updateScrollableView()
-//                openDash = subsections[lastSubsectionTab].dash
-//                (openDash as? ListSection)?.apply {
-//                    setOnSelected {
-//                        selectedListItem = it
-//                        if (selectedListItem == null && navMode == NavMode.SLOT) {
-//                            sliding.panelState = PanelState.EXPANDED
-//                            navMode = NavMode.OPENED
-//                        }
-//                    }
-//                }
             }
         })
 
@@ -502,17 +454,6 @@ class DashboardView(
         }
         fg_pager.currentItem = lastSubsectionTab
         flashPlaceholder()
-
-//        openDash = subsections[lastSubsectionTab].dash
-//        (openDash as? ListSection)?.apply {
-//            setOnSelected {
-//                selectedListItem = it
-//                if (selectedListItem == null && navMode == NavMode.SLOT) {
-//                    sliding.panelState = PanelState.EXPANDED
-//                    navMode = NavMode.OPENED
-//                }
-//            }
-//        }
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
@@ -525,106 +466,6 @@ class DashboardView(
             KeyEvent.KEYCODE_DPAD_DOWN -> model.downKey()
         }
         return true
-    }
-
-    fun getCurrent
-    fun toggleItem(item: Navigable) {
-        item.enter()
-        val section = bg_pager.pages.getOrNull(openSection)
-        (section as? ListSection)?.apply {
-            scrollToSelected()
-        }
-    }
-
-    private fun navigateAnchored(keyCode: Int) {
-        when(keyCode) {
-            in buttonsEnter -> {
-                if (selectedListItem is Navigable) {
-                    navMode = NavMode.BG_SLOT
-                    (selectedListItem as? Navigable)?.apply {
-                    }
-                } else {
-                    sliding.panelState = PanelState.EXPANDED
-                }
-            }
-            in buttonsBack -> {
-                if (selectedListItem != null) {
-                    val section = bg_pager.pages.getOrNull(openSection)
-                    (section as? ListSection)?.apply {
-                        unselect()
-                    }
-                } else {
-                    sliding.panelState = PanelState.COLLAPSED
-                }
-            }
-            KeyEvent.KEYCODE_DPAD_LEFT -> bg_pager.currentItem = bg_pager.currentItem - 1
-            KeyEvent.KEYCODE_DPAD_RIGHT -> bg_pager.currentItem = bg_pager.currentItem + 1
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                val section = bg_pager.pages.getOrNull(openSection)
-                (section as? ListSection)?.apply {
-                    selectNext()
-                }
-            }
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                val section = bg_pager.pages.getOrNull(openSection)
-                (section as? ListSection)?.apply {
-                    selectPrevious()
-                }
-            }
-        }
-    }
-
-    private fun navigateOpened(keyCode: Int, event: KeyEvent?) {
-        when(keyCode) {
-            in buttonsEnter -> {
-                navMode = NavMode.SLOT
-                (selectedListItem as? Navigable)?.apply {
-                    enter()
-                    (openDash as? ListSection)?.apply {
-                        scrollToSelected()
-                    }
-                }
-            }
-            in buttonsBack -> sliding.panelState = PanelState.ANCHORED
-            KeyEvent.KEYCODE_DPAD_LEFT -> fg_pager.currentItem = fg_pager.currentItem - 1
-            KeyEvent.KEYCODE_DPAD_RIGHT -> fg_pager.currentItem = fg_pager.currentItem + 1
-            KeyEvent.KEYCODE_DPAD_DOWN -> {
-                (openDash as? ListSection)?.apply {
-                    selectNext()
-                }
-            }
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                (openDash as? ListSection)?.apply {
-                    selectPrevious()
-                }
-            }
-        }
-    }
-
-    private fun navigateSlot(keyCode: Int, event: KeyEvent?) {
-        when(keyCode) {
-            in buttonsBack + buttonsEnter -> {
-                if (navMode == NavMode.SLOT) {
-                    sliding.panelState = PanelState.EXPANDED
-                    navMode = NavMode.OPENED
-                } else {
-                    navMode = NavMode.ANCHORED
-                }
-                (selectedListItem as? Navigable)?.apply {
-                    exit()
-                }
-            }
-            else -> {
-                (selectedListItem as? Navigable)?.apply {
-                    when (keyCode) {
-                        KeyEvent.KEYCODE_DPAD_LEFT -> left()
-                        KeyEvent.KEYCODE_DPAD_RIGHT -> right()
-                        KeyEvent.KEYCODE_DPAD_DOWN -> down()
-                        KeyEvent.KEYCODE_DPAD_UP -> up()
-                    }
-                }
-            }
-        }
     }
 }
 

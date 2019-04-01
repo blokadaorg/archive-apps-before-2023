@@ -16,6 +16,7 @@ import org.blokada.R
 
 data class DashboardSection(
         val nameResId: Int,
+        val dash: gs.presentation.ViewBinder,
         val subsections: List<DashboardNavItem> = emptyList()
 )
 
@@ -33,6 +34,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
 
     sections += DashboardSection(
             nameResId = R.string.panel_section_apps,
+            dash = AppsDashboardSectionVB(ktx.ctx),
             subsections = listOf(
                     DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_apps_all, AllAppsDashboardSectionVB(ktx.ctx, system = false)),
                     DashboardNavItem(R.drawable.ic_apps, R.string.panel_section_apps_system, AllAppsDashboardSectionVB(ktx.ctx, system = true))
@@ -41,6 +43,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
 
     sections += DashboardSection(
             nameResId = R.string.panel_section_home,
+            dash = HomeDashboardSectionVB(ktx),
             subsections = listOf(
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
@@ -72,6 +75,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
 
     sections += DashboardSection(
             nameResId = R.string.panel_section_ads,
+            dash = AdsDashboardSectionVB(ktx),
             subsections = listOf(
                     DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_blacklist, BlacklistDashboardSection(ktx)),
                     DashboardNavItem(R.drawable.ic_block, R.string.panel_section_ads_whitelist, WhitelistDashboardSectionVB(ktx)),
@@ -88,6 +92,7 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
 
     sections += DashboardSection(
             nameResId = R.string.panel_section_advanced,
+            dash = AdvancedDashboardSectionVB(ktx.ctx),
             subsections = listOf(
                     DashboardNavItem(R.drawable.ic_server, R.string.panel_section_advanced_dns, DnsDashboardSection(ktx.ctx)),
                     DashboardNavItem(R.drawable.ic_tune, R.string.panel_section_ads_settings, StaticItemsListVB(listOf(

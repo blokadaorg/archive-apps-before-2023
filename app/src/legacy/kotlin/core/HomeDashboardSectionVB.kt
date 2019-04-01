@@ -57,9 +57,9 @@ class HomeDashboardSectionVB(
     override fun selectPrevious() { view?.selectPrevious() }
     override fun unselect() { view?.unselect() }
 
-    private var listener: (item: ViewBinder?) -> Unit = {}
+    private var listener: (item: SlotVB?) -> Unit = {}
 
-    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
     }

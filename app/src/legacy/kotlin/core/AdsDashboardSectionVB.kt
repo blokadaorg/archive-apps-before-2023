@@ -12,9 +12,8 @@ import tunnel.Events
 import tunnel.Request
 import kotlin.math.max
 
-class DashboardSectionVB(
+class AdsDashboardSectionVB(
         val ktx: AndroidKontext,
-        val section: DashboardSection,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
 ) : LayoutViewBinder(R.layout.vblistview) {
 

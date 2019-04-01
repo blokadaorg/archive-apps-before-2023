@@ -24,14 +24,14 @@ class VBListView(
         attributeSet: AttributeSet
 ) : FrameLayout(ctx, attributeSet), Scrollable, ListSection {
 
-    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
         onItemSelect = listener
-        if (adapter.selectedItem != -1) listener(items[adapter.selectedItem])
+        if (adapter.selectedItem != -1) listener(items[adapter.selectedItem] as SlotVB)
     }
 
     var onItemRemove = { item: ViewBinder -> }
     var onEndReached = { }
-    var onItemSelect = { item: ViewBinder? -> }
+    var onItemSelect = { item: SlotVB? -> }
 
     init {
         inflate(context, R.layout.vblistview_content, this)
@@ -115,7 +115,7 @@ class VBListView(
             dash.attach(holder.view)
             if (position == selectedItem) {
                 holder.view.setBackgroundResource(R.drawable.bg_focused)
-                onItemSelect(dash)
+                onItemSelect(dash as SlotVB)
             } else {
                 holder.view.background = null
             }

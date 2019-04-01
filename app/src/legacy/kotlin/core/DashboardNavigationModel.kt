@@ -5,101 +5,268 @@ import gs.presentation.ViewBinder
 
 internal class DashboardNavigationModel(
         val sections: List<DashboardSection>,
-        val onOn: (Int) -> Unit = {},
-        val onOff: (Int) -> Unit = {},
-        val onSectionChanged: (DashboardSection) -> Unit = {},
-        val onMenuOpened: (DashboardSection, Int, ViewBinder) -> Unit = { _, _ -> },
+        val onTurnedOn: (Int) -> Unit = {},
+        val onTurnedOff: (Int) -> Unit = {},
+        val onSectionChanged: (DashboardSection, sectionIndex: Int) -> Unit = { _, _ -> },
+        val onMenuOpened: (DashboardSection, sectionIndex: Int, ViewBinder, menuIndex: Int) -> Unit = { _, _, _, _ -> },
         val onMenuClosed: (Int) -> Unit = {},
-        val onToggleItem: (Navigable) -> Unit = {}
+        val onSlotAction: (SlotVB, actionIndex: Int) -> Unit = { _, _ -> }
 ) {
 
     private var on = false
 
-    private var sectionIndex: Int = 1
-    private var section: DashboardSection = sections[sectionIndex]
+    private var sectionIndex = 1
+    private var section = sections[sectionIndex]
 
-    private var openedMenu: ViewBinder? = null
-    private var selectedItem: SlotVB? = null
+    private var menuIndex = 0
+    private var menuOpened: ViewBinder? = null
 
-    fun panelDragging() {
+    private var slotSelected: SlotVB? = null
+    private var slotOpened = false
 
+    init {
+        setNewSection(section)
     }
 
     fun panelAnchored() {
-
+        when {
+            !on -> {
+                on = true
+                onTurnedOn(sectionIndex)
+            }
+            else -> {
+                setNewMenu(null)
+            }
+        }
     }
 
     fun panelCollapsed() {
-
+        if (on) {
+            on = false
+            onTurnedOff(sectionIndex)
+        }
     }
 
     fun panelExpanded() {
-
+        if (menuOpened == null) {
+            val menu = section.subsections[menuIndex].dash
+            setNewMenu(menu)
+        }
     }
 
     fun mainViewPagerSwiped(position: Int) {
-
+        if (position != sectionIndex) {
+            sectionIndex = position
+            setNewSection(sections[sectionIndex])
+        }
     }
 
     fun menuViewPagerSwiped(position: Int) {
-
-
+        if (position != menuIndex) {
+            menuIndex = position
+            val menu = section.subsections[menuIndex].dash
+            setNewMenu(menu)
+        }
     }
 
     fun tunnelActivating() {
-
+        if (!on) {
+            on = true
+            onTurnedOn(sectionIndex)
+        }
     }
 
     fun tunnelDeactivated() {
+        if (on) {
+            on = false
+            onTurnedOff(sectionIndex)
+        }
+    }
 
+    fun selectKey() {
+        val item = slotSelected
+        when {
+            !on -> {
+                on = true
+                onTurnedOn(sectionIndex)
+            }
+            item is Navigable && !slotOpened -> {
+                setSlotOpened(true)
+            }
+            item is Navigable -> {
+                setSlotOpened(false)
+            }
+            menuOpened == null -> {
+                val menu = section.subsections[menuIndex].dash
+                setNewMenu(menu)
+            }
+        }
     }
 
     fun backPressed(): Boolean {
-
-        val dash = openDash
-        if (dash is Backable && dash.handleBackPressed()) return true
-        openDash = null
-
-        if (isOpen) {
-            sliding.panelState = PanelState.ANCHORED
-            return true
+        val item = slotSelected
+        val menu = menuOpened
+        return when {
+            item is Navigable && slotOpened -> {
+                setSlotOpened(false)
+                true
+            }
+            item is Navigable -> {
+                setSlotUnselected()
+                true
+            }
+            menu is Backable && menu.handleBackPressed() -> {
+                true
+            }
+            menu != null -> {
+                setNewMenu(null)
+                true
+            }
+            else -> {
+                false
+            }
         }
     }
 
     fun leftKey() {
-
+        val item = slotSelected
+        val menu = menuOpened
+        when {
+            item != null -> onSlotAction(item, 3)
+            menu != null && menuIndex > 0 -> {
+                menuIndex--
+                val newMenu = section.subsections[menuIndex].dash
+                setNewMenu(newMenu)
+            }
+            sectionIndex > 0 -> {
+                sectionIndex--
+                val newSection = sections[sectionIndex]
+                onSectionChanged(newSection, sectionIndex)
+                section = newSection
+            }
+        }
     }
 
     fun rightKey() {
-
+        val item = slotSelected
+        val menu = menuOpened
+        when {
+            item != null -> onSlotAction(item, 1)
+            menu != null && menuIndex < section.subsections.size - 1 -> {
+                menuIndex++
+                val newMenu = section.subsections[menuIndex].dash
+                setNewMenu(newMenu)
+            }
+            sectionIndex < sections.size - 1 -> {
+                sectionIndex++
+                val newSection = sections[sectionIndex]
+                onSectionChanged(newSection, sectionIndex)
+                section = newSection
+            }
+        }
     }
 
     fun upKey() {
-
+        val item = slotSelected
+        val menu = menuOpened
+        when {
+            item != null -> onSlotAction(item, 0)
+            menu != null -> {
+                (menu as? ListSection)?.apply {
+                    selectPrevious()
+                }
+            }
+            else -> {
+                (section.dash as? ListSection)?.apply {
+                    selectPrevious()
+                }
+            }
+        }
     }
 
     fun downKey() {
-
-    }
-
-    fun selectKey() {
-        val item = selectedItem
+        val item = slotSelected
+        val menu = menuOpened
         when {
-            !on -> onOn(sectionIndex)
-            item is Navigable -> onToggleItem(item)
+            item != null -> onSlotAction(item, 2)
+            menu != null -> {
+                (menu as? ListSection)?.apply {
+                    selectNext()
+                }
+            }
+            else -> {
+                (section.dash as? ListSection)?.apply {
+                    selectNext()
+                }
+            }
         }
     }
 
-    fun getOpenedSection() = {
-        val m = mode
-        when(m) {
-            Mode.Off -> null
-            is Mode.On -> m.section
-            is Mode.Menu -> m.section
-            is Mode.Item -> m.section
-            is Mode.MenuItem -> m.section
+    private fun setNewMenu(menu: ViewBinder?) {
+        if (menu != null) {
+            menuOpened = menu
+            slotOpened = false
+            slotSelected = null
+            (menu as? ListSection)?.run {
+                setOnSelected { slot ->
+                    slotSelected = slot
+                    slotOpened = slot != null
+                }
+            }
+            onMenuOpened(section, sectionIndex, menu, menuIndex)
+        } else {
+            menuOpened = null
+            onMenuClosed(sectionIndex)
         }
-    }()
+    }
+
+    private fun setNewSection(section: DashboardSection) {
+        this.section = section
+        slotOpened = false
+        slotSelected = null
+        (section.dash as? ListSection)?.run {
+            setOnSelected { slot ->
+                slotSelected = slot
+                slotOpened = slot != null
+            }
+        }
+        onSectionChanged(section, sectionIndex)
+    }
+
+    private fun setSlotOpened(opened: Boolean) {
+        slotOpened = opened
+        if (opened) {
+            slotSelected?.enter()
+            val menu = menuOpened
+            if (menu != null) {
+                (menu as? ListSection)?.run {
+                    scrollToSelected()
+                }
+            } else {
+                (section.dash as? ListSection)?.run {
+                    scrollToSelected()
+                }
+            }
+        } else {
+            slotSelected?.exit()
+        }
+    }
+
+    private fun setSlotUnselected() {
+        val menu = menuOpened
+        if (menu != null) {
+            (menu as? ListSection)?.run {
+                unselect()
+            }
+        } else {
+            (section.dash as? ListSection)?.run {
+                unselect()
+            }
+        }
+        slotSelected = null
+    }
+
+    fun getOpenedSection() = section
 
     fun getOpenedSectionIndex() = {
         val section = getOpenedSection()
@@ -108,4 +275,5 @@ internal class DashboardNavigationModel(
             else -> sections.indexOf(section)
         }
     }()
+
 }

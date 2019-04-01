@@ -2,7 +2,6 @@ package core
 
 import android.view.View
 import gs.presentation.LayoutViewBinder
-import gs.presentation.ViewBinder
 import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
@@ -36,7 +35,7 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
 
     private var view: VBListView? = null
     private val slotMutex = SlotMutex()
-    private var listener: (ViewBinder?) -> Unit = {}
+    private var listener: (SlotVB?) -> Unit = {}
 
     private val filtersUpdated = { filters: Collection<Filter> ->
         val items = filters.filter {
@@ -66,7 +65,7 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
     override fun selectPrevious() { view?.selectPrevious() }
     override fun unselect() { view?.unselect() }
 
-    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
     }

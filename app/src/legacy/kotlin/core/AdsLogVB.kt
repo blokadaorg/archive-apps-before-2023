@@ -6,7 +6,6 @@ import com.github.michaelbull.result.getOr
 import com.github.salomonbrys.kodein.instance
 import gs.environment.ComponentProvider
 import gs.presentation.LayoutViewBinder
-import gs.presentation.ViewBinder
 import org.blokada.R
 import tunnel.Events
 import tunnel.Persistence
@@ -24,7 +23,7 @@ class AdsLogVB(
     private val items = mutableListOf<SlotVB>()
     private var nextBatch = 0
     private var firstItem: Request? = null
-    private var listener: (ViewBinder?) -> Unit = {}
+    private var listener: (SlotVB?) -> Unit = {}
 
     private val request = { it: Request ->
         if (it != firstItem) {
@@ -90,7 +89,7 @@ class AdsLogVB(
     override fun selectNext() { view?.selectNext() }
     override fun selectPrevious() { view?.selectPrevious() }
 
-    override fun setOnSelected(listener: (item: ViewBinder?) -> Unit) {
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
     }
