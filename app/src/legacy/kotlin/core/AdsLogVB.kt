@@ -97,4 +97,8 @@ class AdsLogVB(
     override fun scrollToSelected() {
         view?.scrollToSelected()
     }
+
+    override fun unselect() {
+        view?.unselect()
+    }
 }

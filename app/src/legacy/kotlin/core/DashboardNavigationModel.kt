@@ -9,8 +9,7 @@ internal class DashboardNavigationModel(
         val onTurnedOff: (Int) -> Unit = {},
         val onSectionChanged: (DashboardSection, sectionIndex: Int) -> Unit = { _, _ -> },
         val onMenuOpened: (DashboardSection, sectionIndex: Int, ViewBinder, menuIndex: Int) -> Unit = { _, _, _, _ -> },
-        val onMenuClosed: (Int) -> Unit = {},
-        val onSlotAction: (SlotVB, actionIndex: Int) -> Unit = { _, _ -> }
+        val onMenuClosed: (Int) -> Unit = {}
 ) {
 
     private var on = false
@@ -132,15 +131,21 @@ internal class DashboardNavigationModel(
         val item = slotSelected
         val menu = menuOpened
         when {
-            item != null -> onSlotAction(item, 3)
-            menu != null && menuIndex > 0 -> {
-                menuIndex--
-                val newMenu = section.subsections[menuIndex].dash
-                setNewMenu(newMenu)
+            item is Navigable && slotOpened -> {
+                item.left()
+                setSlotOpened(false)
+            }
+            menu != null -> {
+                if (menuIndex > 0) {
+                    menuIndex--
+                    val newMenu = section.subsections[menuIndex].dash
+                    setNewMenu(newMenu)
+                }
             }
             sectionIndex > 0 -> {
                 sectionIndex--
                 val newSection = sections[sectionIndex]
+                setNewSection(newSection)
                 onSectionChanged(newSection, sectionIndex)
                 section = newSection
             }
@@ -151,15 +156,21 @@ internal class DashboardNavigationModel(
         val item = slotSelected
         val menu = menuOpened
         when {
-            item != null -> onSlotAction(item, 1)
-            menu != null && menuIndex < section.subsections.size - 1 -> {
-                menuIndex++
-                val newMenu = section.subsections[menuIndex].dash
-                setNewMenu(newMenu)
+            item is Navigable && slotOpened -> {
+                item.right()
+                setSlotOpened(false)
+            }
+            menu != null -> {
+                if (menuIndex < section.subsections.size - 1) {
+                    menuIndex++
+                    val newMenu = section.subsections[menuIndex].dash
+                    setNewMenu(newMenu)
+                }
             }
             sectionIndex < sections.size - 1 -> {
                 sectionIndex++
                 val newSection = sections[sectionIndex]
+                setNewSection(newSection)
                 onSectionChanged(newSection, sectionIndex)
                 section = newSection
             }
@@ -170,7 +181,10 @@ internal class DashboardNavigationModel(
         val item = slotSelected
         val menu = menuOpened
         when {
-            item != null -> onSlotAction(item, 0)
+            item is Navigable && slotOpened -> {
+                item.up()
+                setSlotOpened(false)
+            }
             menu != null -> {
                 (menu as? ListSection)?.apply {
                     selectPrevious()
@@ -188,7 +202,10 @@ internal class DashboardNavigationModel(
         val item = slotSelected
         val menu = menuOpened
         when {
-            item != null -> onSlotAction(item, 2)
+            item is Navigable && slotOpened -> {
+                item.down()
+                setSlotOpened(false)
+            }
             menu != null -> {
                 (menu as? ListSection)?.apply {
                     selectNext()
@@ -210,7 +227,7 @@ internal class DashboardNavigationModel(
             (menu as? ListSection)?.run {
                 setOnSelected { slot ->
                     slotSelected = slot
-                    slotOpened = slot != null
+                    slotOpened = false
                 }
             }
             onMenuOpened(section, sectionIndex, menu, menuIndex)
@@ -227,7 +244,7 @@ internal class DashboardNavigationModel(
         (section.dash as? ListSection)?.run {
             setOnSelected { slot ->
                 slotSelected = slot
-                slotOpened = slot != null
+                slotOpened = false
             }
         }
         onSectionChanged(section, sectionIndex)

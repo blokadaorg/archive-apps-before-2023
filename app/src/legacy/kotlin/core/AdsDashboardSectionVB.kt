@@ -15,7 +15,7 @@ import kotlin.math.max
 class AdsDashboardSectionVB(
         val ktx: AndroidKontext,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : LayoutViewBinder(R.layout.vblistview) {
+) : LayoutViewBinder(R.layout.vblistview), ListSection {
 
     private var view: VBListView? = null
 
@@ -44,6 +44,7 @@ class AdsDashboardSectionVB(
             items.add(dash)
             view?.add(dash)
             trimListIfNecessary()
+            listener(null)
         }
         Unit
     }
@@ -71,4 +72,21 @@ class AdsDashboardSectionVB(
         ktx.cancel(Events.REQUEST, request)
     }
 
+    private var listener: (SlotVB?) -> Unit = {}
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
+    }
+
+    override fun unselect() {
+        view?.unselect()
+    }
 }

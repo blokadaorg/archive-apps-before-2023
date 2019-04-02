@@ -66,25 +66,30 @@ class DashboardView(
         DashboardNavigationModel(
                 createDashboardSections(ktx),
                 onTurnedOn = { sectionIndex ->
+                    ktx.v("onTurnedOn")
                     setOn(sectionIndex + 1)
                     tun.enabled %= true
                 },
                 onTurnedOff = { sectionIndex ->
+                    ktx.v("onTurnedOff")
                     setOff(sectionIndex + 1)
                     tun.enabled %= false
                 },
                 onMenuOpened = { section, sectionIndex, menu, menuIndex ->
+                    ktx.v("onMenuOpened")
                     setMenu(sectionIndex + 1)
                     onOpenSection {  }
-                    setMenuNav(section, section.subsections[sectionIndex])
+                    setMenuNav(section, section.subsections[menuIndex])
 //                    hideNav()
                     fg_pager.currentItem = menuIndex
                 },
                 onMenuClosed = { sectionIndex ->
+                    ktx.v("onMenuClosed")
                     setOn(sectionIndex)
                     onCloseSection()
                 },
                 onSectionChanged = { section, sectionIndex ->
+                    ktx.v("onSectionChanged")
                     setMainSectionLabelAndMenuIcon(section)
                     bg_pager.currentItem = sectionIndex
                 }
@@ -102,6 +107,7 @@ class DashboardView(
     }
 
     private fun setOff(fromColorIndex: Int) {
+        ktx.v("setOff")
         bg_colors.onScroll(1f, fromColorIndex, 0)
         bg_nav.alpha = 0f
         fg_logo_icon.alpha = 0f
@@ -125,6 +131,7 @@ class DashboardView(
     }
 
     private fun setOn(toColorIndex: Int) {
+        ktx.v("setOn")
         bg_colors.onScroll(1f, 0, toColorIndex)
         bg_nav.alpha = 1f
         fg_logo_icon.alpha = 0.7f
@@ -145,6 +152,7 @@ class DashboardView(
     }
 
     private fun setMenu(toColorIndex: Int) {
+        ktx.v("setMenu")
         bg_colors.onScroll(1f, 0, toColorIndex)
         bg_nav.alpha = 0f
         fg_logo_icon.alpha = 0f
@@ -165,10 +173,11 @@ class DashboardView(
     }
 
     private fun setDragging() {
+        ktx.v("setDragging")
         bg_nav.visibility = VISIBLE
         bg_off_logo.animate().alpha(0f).interpolator = inter
         stopAnimatingStart()
-        model.panelAnchored()
+//        model.panelAnchored()
     }
 
     private fun setMainSectionLabelAndMenuIcon(section: DashboardSection) {
@@ -303,15 +312,15 @@ class DashboardView(
         }
     }
 
+    private var adjusted = false
     private fun adjustMargins() {
-        viewTreeObserver.addOnGlobalLayoutListener(::resize)
-        // For one time resize callback
-        viewTreeObserver.addOnGlobalLayoutListener {
-            viewTreeObserver.removeOnGlobalLayoutListener(::resize)
-        }
+        if (!adjusted) viewTreeObserver.addOnGlobalLayoutListener(::resize)
     }
 
     private fun resize() {
+        if (adjusted) return
+        adjusted = true
+        ktx.v("resize")
         val percentHeight = (resources.getDimensionPixelSize(R.dimen.dashboard_panel_anchor_size)).toFloat() / height
         sliding.anchorPoint = percentHeight
 
@@ -358,14 +367,16 @@ class DashboardView(
     }
 
     private fun onOpenSection(after: () -> Unit) {
+        ktx.v("onopensection")
         fg_pager.visibility = View.VISIBLE
         fg_nav.visibility = View.VISIBLE
         after()
     }
 
     private fun onCloseSection() {
+        ktx.v("onclosesection")
         fg_pager.visibility = View.GONE
-        fg_nav.visibility = View.GONE
+        fg_nav.visibility = View.INVISIBLE
     }
 
     private var showTime = 3000L
@@ -424,6 +435,7 @@ class DashboardView(
     }
 
     fun hideNav() {
+        ktx.v("hidenav")
         bg_nav.animate().setDuration(200).alpha(0f).doAfter {
             bg_nav.visibility = View.GONE
         }
@@ -448,11 +460,17 @@ class DashboardView(
     }
 
     fun setMenuNav(section: DashboardSection, subsection: DashboardNavItem) {
+        ktx.v("setmenunav ${section.nameResId} ${subsection.nameResId}")
         fg_nav.section = makeSectionName(section, subsection)
-        fg_pager.pages = section.subsections.map {
+
+        val newPages = section.subsections.map {
             it.dash
         }
-        fg_pager.currentItem = lastSubsectionTab
+
+        if (newPages != fg_pager.pages) {
+            fg_pager.pages = newPages
+        }
+
         flashPlaceholder()
     }
 
