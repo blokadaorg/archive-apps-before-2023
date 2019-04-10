@@ -73,6 +73,8 @@ class DotsView(
                 else -> Unit
             }
             override fun onPageSelected(position: Int) {
+                sleepingAnimationHandler.removeMessages(WAKE)
+                sleepingAnimationHandler.sendEmptyMessage(WAKE)
                 sleepingAnimationHandler.removeMessages(SLEEP)
                 sleepingAnimationHandler.sendEmptyMessageDelayed(SLEEP, FALL_MS)
                 Unit

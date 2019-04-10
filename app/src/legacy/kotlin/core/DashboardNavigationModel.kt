@@ -247,6 +247,7 @@ internal class DashboardNavigationModel(
                 slotOpened = false
             }
         }
+        menuIndex = 0
         onSectionChanged(section, sectionIndex)
     }
 

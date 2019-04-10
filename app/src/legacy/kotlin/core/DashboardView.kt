@@ -119,15 +119,15 @@ class DashboardView(
         bg_pager.alpha = 0f
         bg_pager.visibility = View.GONE
 
-        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-        lp.height = LayoutParams.MATCH_PARENT
-        lp.topMargin = 0
-        fg_drag.layoutParams = lp
+//        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
+//        lp.height = LayoutParams.MATCH_PARENT
+//        lp.topMargin = 0
+//        fg_drag.layoutParams = lp
 
         bg_off_logo.animate().alpha(1f).interpolator = inter
         animateStart()
 
-        sliding.panelState = PanelState.HIDDEN
+        sliding.panelState = PanelState.COLLAPSED
     }
 
     private fun setOn(toColorIndex: Int) {
@@ -173,10 +173,10 @@ class DashboardView(
     }
 
     private fun setDragging() {
-        ktx.v("setDragging")
-        bg_nav.visibility = VISIBLE
-        bg_off_logo.animate().alpha(0f).interpolator = inter
-        stopAnimatingStart()
+//        ktx.v("setDragging")
+//        bg_nav.visibility = VISIBLE
+//        bg_off_logo.animate().alpha(0f).interpolator = inter
+//        stopAnimatingStart()
 //        model.panelAnchored()
     }
 
