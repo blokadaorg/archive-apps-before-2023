@@ -47,7 +47,6 @@ class DashboardView(
     private val fg_pager = findViewById<VBPagesView>(R.id.fg_pager)
     private val fg_drag = findViewById<View>(R.id.fg_drag)
     private val fg_nav_panel = findViewById<View>(R.id.fg_nav_panel)
-    private val fg_nav = findViewById<DotsView>(R.id.fg_nav)
 
     var notchPx: Int = 0
     var onSectionClosed = {}
@@ -80,7 +79,6 @@ class DashboardView(
                     setMenu(sectionIndex + 1)
                     onOpenSection {  }
                     setMenuNav(section, section.subsections[menuIndex])
-//                    hideNav()
                     fg_pager.currentItem = menuIndex
                 },
                 onMenuClosed = { sectionIndex ->
@@ -119,15 +117,16 @@ class DashboardView(
         bg_pager.alpha = 0f
         bg_pager.visibility = View.GONE
 
-//        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-//        lp.height = LayoutParams.MATCH_PARENT
-//        lp.topMargin = 0
-//        fg_drag.layoutParams = lp
+        val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
+        lp.height = LayoutParams.MATCH_PARENT
+        lp.topMargin = 0
+        fg_drag.layoutParams = lp
 
         bg_off_logo.animate().alpha(1f).interpolator = inter
         animateStart()
 
-        sliding.panelState = PanelState.COLLAPSED
+        if (sliding.panelState != PanelState.COLLAPSED)
+            sliding.panelState = PanelState.COLLAPSED
     }
 
     private fun setOn(toColorIndex: Int) {
@@ -148,13 +147,13 @@ class DashboardView(
         lp.topMargin = context.dpToPx(90)
         fg_drag.layoutParams = lp
 
-        sliding.panelState = PanelState.ANCHORED
+        if (sliding.panelState != PanelState.ANCHORED)
+            sliding.panelState = PanelState.ANCHORED
     }
 
     private fun setMenu(toColorIndex: Int) {
         ktx.v("setMenu")
         bg_colors.onScroll(1f, 0, toColorIndex)
-        bg_nav.alpha = 0f
         fg_logo_icon.alpha = 0f
         bg_start.alpha = 0f
         bg_logo.alpha = 1f
@@ -168,8 +167,8 @@ class DashboardView(
         lp.topMargin = 0
         fg_drag.layoutParams = lp
 
-        bg_nav.visibility = GONE
-        sliding.panelState = PanelState.EXPANDED
+        if (sliding.panelState != PanelState.EXPANDED)
+            sliding.panelState = PanelState.EXPANDED
     }
 
     private fun setDragging() {
@@ -248,14 +247,12 @@ class DashboardView(
                     if (slideOffset < anchorPoint) {
                         val ratio = slideOffset / anchorPoint
                         bg_colors.onScroll(1 - ratio, model.getOpenedSectionIndex() + 1, 0)
-                        bg_nav.alpha = min(1f, ratio)
                         bg_start.alpha = 1 - min(1f, ratio)
                         bg_packets.alpha = min(1f, ratio)
                         bg_pager.alpha = min(1f, ratio)
                         fg_logo_icon.alpha = min(0.7f, ratio)
                     } else {
                         fg_nav_panel.alpha = max(0.7f, slideOffset)
-                        bg_nav.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
                         bg_pager.alpha = 1 - min(1f, (slideOffset - anchorPoint) * 3)
                         fg_logo_icon.alpha = 0.7f - min(1f, (slideOffset - anchorPoint) * 0.5f)
                         bg_logo.alpha = (slideOffset - anchorPoint) / (1 - anchorPoint)
@@ -329,12 +326,10 @@ class DashboardView(
         fg_pager.addToTopMargin(notchPx)
         fg_logo_icon.addToTopMargin(notchPx)
         bg_nav.addToTopMargin(notchPx)
-        fg_nav.addToTopMargin(notchPx)
         setNavPanelMargins()
 
         if (width >= resources.getDimensionPixelSize(R.dimen.dashboard_nav_align_end_width)) {
             bg_nav.alignEnd()
-            fg_nav.alignEnd()
         }
     }
 
@@ -368,21 +363,26 @@ class DashboardView(
 
     private fun onOpenSection(after: () -> Unit) {
         ktx.v("onopensection")
+        bg_nav.viewPager = fg_pager
+        bg_nav.sleeping = false
         fg_pager.visibility = View.VISIBLE
-        fg_nav.visibility = View.VISIBLE
         after()
     }
 
     private fun onCloseSection() {
         ktx.v("onclosesection")
+        model.getOpenedSection().run {
+            bg_nav.section = context.getText(nameResId)
+            bg_nav.viewPager = bg_pager
+            bg_nav.sleeping = true
+        }
+
         fg_pager.visibility = View.GONE
-        fg_nav.visibility = View.INVISIBLE
     }
 
     private var showTime = 3000L
 
     private fun flashPlaceholder() {
-        fg_nav.visibility = View.VISIBLE
         hidePlaceholder.removeMessages(0)
         hidePlaceholder.sendEmptyMessageDelayed(0, showTime)
         showTime = max(2000L, showTime - 500L)
@@ -434,13 +434,6 @@ class DashboardView(
         }
     }
 
-    fun hideNav() {
-        ktx.v("hidenav")
-        bg_nav.animate().setDuration(200).alpha(0f).doAfter {
-            bg_nav.visibility = View.GONE
-        }
-    }
-
     private fun setupMenu() {
         fg_pager.setOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
@@ -455,13 +448,11 @@ class DashboardView(
                 updateScrollableView()
             }
         })
-
-        fg_nav.viewPager = fg_pager
     }
 
     fun setMenuNav(section: DashboardSection, subsection: DashboardNavItem) {
         ktx.v("setmenunav ${section.nameResId} ${subsection.nameResId}")
-        fg_nav.section = makeSectionName(section, subsection)
+        bg_nav.section = makeSectionName(section, subsection)
 
         val newPages = section.subsections.map {
             it.dash

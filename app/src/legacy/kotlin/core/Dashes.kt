@@ -281,7 +281,7 @@ class StartViewBinder(
         private val welcome: Welcome = ktx.di().instance(),
         private val currentAppVersion: Int,
         private val afterWelcome: () -> Unit
-) : ViewBinder, Scrollable {
+) : ViewBinder, Scrollable, ListSection {
 
     private enum class Steps { WELCOME, CTA, UPDATED, MULTIPLE_APPS, OBSOLETE }
 
@@ -365,6 +365,14 @@ class StartViewBinder(
     override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
 
     override fun getScrollableView() = view!!
+
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) = web.setOnSelected(listener)
+
+    override fun scrollToSelected() = web.scrollToSelected()
+
+    override fun selectNext() = web.selectNext()
+
+    override fun selectPrevious() = web.selectPrevious()
 
     private fun getInstalledBuilds(): List<String> {
         return welcome.conflictingBuilds().mapNotNull {

@@ -35,7 +35,10 @@ class DotsView(
     var viewPager: ViewPager? = null
         set(value) {
             field = value
-            value?.apply { dotsView.setViewPager(this) }
+            value?.apply {
+                dotsView.setViewPager(this)
+                this.currentItem = this.currentItem
+            }
         }
 
     var sleeping = false

@@ -35,7 +35,6 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
 
     private var view: VBListView? = null
     private val slotMutex = SlotMutex()
-    private var listener: (SlotVB?) -> Unit = {}
 
     private val filtersUpdated = { filters: Collection<Filter> ->
         val items = filters.filter {
@@ -65,6 +64,7 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
     override fun selectPrevious() { view?.selectPrevious() }
     override fun unselect() { view?.unselect() }
 
+    private var listener: (SlotVB?) -> Unit = {}
     override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
         this.listener = listener
         view?.setOnSelected(listener)
@@ -77,7 +77,7 @@ class FiltersSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vbli
 
 class StaticItemsListVB(
         private val items: List<SlotVB>
-) : LayoutViewBinder(R.layout.vblistview) {
+) : LayoutViewBinder(R.layout.vblistview), ListSection, Scrollable {
 
     private var view: VBListView? = null
     private val slotMutex = SlotMutex()
@@ -94,5 +94,23 @@ class StaticItemsListVB(
 
     override fun detach(view: View) {
         slotMutex.detach()
+    }
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
+
+    private var listener: (SlotVB?) -> Unit = {}
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
     }
 }

@@ -15,7 +15,7 @@ import kotlin.math.max
 class AdsDashboardSectionVB(
         val ktx: AndroidKontext,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : LayoutViewBinder(R.layout.vblistview), ListSection {
+) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
 
     private var view: VBListView? = null
 
@@ -71,6 +71,10 @@ class AdsDashboardSectionVB(
         displayingEntries.clear()
         ktx.cancel(Events.REQUEST, request)
     }
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
 
     private var listener: (SlotVB?) -> Unit = {}
 

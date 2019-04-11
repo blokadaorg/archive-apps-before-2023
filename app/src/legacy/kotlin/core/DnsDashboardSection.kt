@@ -7,7 +7,8 @@ import gs.presentation.LayoutViewBinder
 import gs.property.IWhen
 import org.blokada.R
 
-class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistview) {
+class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistview),
+    ListSection, Scrollable {
 
     private val ktx = ctx.ktx("DnsDashboard")
     private val filters by lazy { ktx.di().instance<Filters>() }
@@ -34,4 +35,21 @@ class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistvi
         dns.choices.cancel(get)
     }
 
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
+
+    private var listener: (SlotVB?) -> Unit = {}
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
+    }
 }

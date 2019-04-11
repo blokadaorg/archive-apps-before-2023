@@ -12,7 +12,9 @@ import android.view.ViewGroup
 import android.webkit.*
 import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.with
+import core.ListSection
 import core.Scrollable
+import core.SlotVB
 import gs.environment.Environment
 import gs.environment.Journal
 import gs.environment.LazyProvider
@@ -30,7 +32,7 @@ class WebDash(
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
         private val provider: LazyProvider<View> = xx().with("webview").instance()
-): CallbackViewBinder, Scrollable {
+): CallbackViewBinder, Scrollable, ListSection {
 
     override val viewType = 43
 
@@ -38,6 +40,20 @@ class WebDash(
 
     override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) {
     }
+
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) = Unit
+
+    override fun scrollToSelected() = Unit
+
+    override fun selectNext() {
+        webView?.scrollBy(0, 100)
+    }
+
+    override fun selectPrevious() {
+        webView?.scrollBy(0, -100)
+    }
+
+    override fun unselect() = Unit
 
     override fun createView(ctx: Context, parent: ViewGroup): View {
         var v = provider.get()

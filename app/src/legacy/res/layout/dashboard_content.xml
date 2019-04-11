@@ -145,16 +145,6 @@
                 android:src="@drawable/blokada"
                 android:tint="@color/colorText" />
 
-            <core.DotsView
-                android:id="@+id/fg_nav"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="top"
-                android:layout_marginTop="@dimen/dashboard_nav_margin_top"
-                android:clickable="false"
-                android:focusable="false"
-                android:visibility="gone" />
-
         </FrameLayout>
     </com.sothree.slidinguppanel.SlidingUpPanelLayout>
 </FrameLayout>

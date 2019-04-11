@@ -6,7 +6,8 @@ import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 
-class WhitelistDashboardSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview) {
+class WhitelistDashboardSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview),
+    ListSection, Scrollable {
 
     private var view: VBListView? = null
 
@@ -30,4 +31,21 @@ class WhitelistDashboardSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
     }
 
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
+
+    private var listener: (SlotVB?) -> Unit = {}
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
+        this.listener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
+    }
 }

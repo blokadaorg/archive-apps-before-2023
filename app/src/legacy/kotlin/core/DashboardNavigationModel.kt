@@ -13,6 +13,7 @@ internal class DashboardNavigationModel(
 ) {
 
     private var on = false
+    private var firstEventSent = false
 
     private var sectionIndex = 1
     private var section = sections[sectionIndex]
@@ -71,13 +72,15 @@ internal class DashboardNavigationModel(
     fun tunnelActivating() {
         if (!on) {
             on = true
+            firstEventSent = true
             onTurnedOn(sectionIndex)
         }
     }
 
     fun tunnelDeactivated() {
-        if (on) {
+        if (on || !firstEventSent) {
             on = false
+            firstEventSent = true
             onTurnedOff(sectionIndex)
         }
     }
