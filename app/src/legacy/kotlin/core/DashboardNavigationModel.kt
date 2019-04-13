@@ -9,7 +9,11 @@ internal class DashboardNavigationModel(
         val onTurnedOff: (Int) -> Unit = {},
         val onSectionChanged: (DashboardSection, sectionIndex: Int) -> Unit = { _, _ -> },
         val onMenuOpened: (DashboardSection, sectionIndex: Int, ViewBinder, menuIndex: Int) -> Unit = { _, _, _, _ -> },
-        val onMenuClosed: (Int) -> Unit = {}
+        val onMenuClosed: (Int) -> Unit = {},
+        val onTurnOn: () -> Unit = {},
+        val onTurnOff: () -> Unit = {},
+        val onOpenMenu: () -> Unit = {},
+        val onCloseMenu: () -> Unit = {}
 ) {
 
     private var on = false
@@ -25,7 +29,22 @@ internal class DashboardNavigationModel(
     private var slotOpened = false
 
     init {
-        setNewSection(section)
+        (section.dash as? ListSection)?.run {
+            setOnSelected { slot ->
+                slotSelected = slot
+                slotOpened = false
+            }
+        }
+    }
+
+    fun inflateFinished() {
+        if (on) {
+            onTurnOn()
+            onTurnedOn(sectionIndex)
+        } else {
+            onTurnOff()
+            onTurnedOff(sectionIndex)
+        }
     }
 
     fun panelAnchored() {
@@ -81,7 +100,7 @@ internal class DashboardNavigationModel(
         if (on || !firstEventSent) {
             on = false
             firstEventSent = true
-            onTurnedOff(sectionIndex)
+            onTurnOff()
         }
     }
 
@@ -89,8 +108,7 @@ internal class DashboardNavigationModel(
         val item = slotSelected
         when {
             !on -> {
-                on = true
-                onTurnedOn(sectionIndex)
+                onTurnOn()
             }
             item is Navigable && !slotOpened -> {
                 setSlotOpened(true)
@@ -99,8 +117,7 @@ internal class DashboardNavigationModel(
                 setSlotOpened(false)
             }
             menuOpened == null -> {
-                val menu = section.subsections[menuIndex].dash
-                setNewMenu(menu)
+                onOpenMenu()
             }
         }
     }
@@ -121,7 +138,7 @@ internal class DashboardNavigationModel(
                 true
             }
             menu != null -> {
-                setNewMenu(null)
+                onCloseMenu()
                 true
             }
             else -> {

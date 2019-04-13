@@ -83,15 +83,27 @@ class DashboardView(
                 },
                 onMenuClosed = { sectionIndex ->
                     ktx.v("onMenuClosed")
-                    setOn(sectionIndex)
+                    setOn(sectionIndex + 1)
                     onCloseSection()
                 },
                 onSectionChanged = { section, sectionIndex ->
                     ktx.v("onSectionChanged")
                     setMainSectionLabelAndMenuIcon(section)
                     bg_pager.currentItem = sectionIndex
+                },
+                onTurnOn = {
+                    sliding.panelState = PanelState.ANCHORED
+                },
+                onTurnOff = {
+                    sliding.panelState = PanelState.COLLAPSED
+                },
+                onOpenMenu = {
+                    sliding.panelState = PanelState.EXPANDED
+                },
+                onCloseMenu = {
+                    sliding.panelState = PanelState.ANCHORED
                 }
-        )
+            )
     }
 
     override fun onFinishInflate() {
@@ -124,9 +136,6 @@ class DashboardView(
 
         bg_off_logo.animate().alpha(1f).interpolator = inter
         animateStart()
-
-        if (sliding.panelState != PanelState.COLLAPSED)
-            sliding.panelState = PanelState.COLLAPSED
     }
 
     private fun setOn(toColorIndex: Int) {
@@ -143,12 +152,10 @@ class DashboardView(
         bg_pager.alpha = 1f
 
         val lp = fg_drag.layoutParams as FrameLayout.LayoutParams
-        lp.height = context.dpToPx(110)
-        lp.topMargin = context.dpToPx(90)
+        lp.height = resources.getDimensionPixelSize(R.dimen.dashboard_fg_drag_height)
+        lp.topMargin = resources.getDimensionPixelSize(R.dimen.dashboard_fg_drag_margin_top)
         fg_drag.layoutParams = lp
-
-        if (sliding.panelState != PanelState.ANCHORED)
-            sliding.panelState = PanelState.ANCHORED
+        stopAnimatingStart()
     }
 
     private fun setMenu(toColorIndex: Int) {
@@ -166,17 +173,10 @@ class DashboardView(
         lp.height = context.dpToPx(130)
         lp.topMargin = 0
         fg_drag.layoutParams = lp
-
-        if (sliding.panelState != PanelState.EXPANDED)
-            sliding.panelState = PanelState.EXPANDED
     }
 
     private fun setDragging() {
-//        ktx.v("setDragging")
-//        bg_nav.visibility = VISIBLE
-//        bg_off_logo.animate().alpha(0f).interpolator = inter
-//        stopAnimatingStart()
-//        model.panelAnchored()
+        fg_pager.alpha = 0f
     }
 
     private fun setMainSectionLabelAndMenuIcon(section: DashboardSection) {
@@ -189,7 +189,7 @@ class DashboardView(
                 else -> R.drawable.blokada
             }
             fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
-//                fg_logo_icon.setImageResource(icon)
+                fg_logo_icon.setImageResource(icon)
                 fg_logo_icon.animate().setDuration(200).alpha(0.7f)
             }
         }
@@ -238,7 +238,7 @@ class DashboardView(
 
     private fun setupSlidingPanel() {
         sliding.apply {
-            panelHeight = context.dpToPx(128)
+            panelHeight = resources.getDimensionPixelSize(R.dimen.dashboard_panel_height)
             shadowHeight = 0
             isOverlayed = true
 
@@ -323,14 +323,15 @@ class DashboardView(
 
         bg_logo.addToTopMargin(notchPx)
         bg_pager.addToTopMargin(notchPx)
+        bg_nav.addToTopMargin(notchPx)
         fg_pager.addToTopMargin(notchPx)
         fg_logo_icon.addToTopMargin(notchPx)
-        bg_nav.addToTopMargin(notchPx)
         setNavPanelMargins()
 
         if (width >= resources.getDimensionPixelSize(R.dimen.dashboard_nav_align_end_width)) {
             bg_nav.alignEnd()
         }
+        model.inflateFinished()
     }
 
     private fun View.addToTopMargin(size: Int) {
@@ -346,7 +347,7 @@ class DashboardView(
     private fun setNavPanelMargins() {
         val lp = fg_nav_panel.layoutParams as FrameLayout.LayoutParams
         lp.bottomMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_bottom) - notchPx
-        lp.topMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_top) - notchPx
+        lp.topMargin = resources.getDimensionPixelSize(R.dimen.dashboard_panel_margin_top) + notchPx
     }
 
     private fun animateStart() {
