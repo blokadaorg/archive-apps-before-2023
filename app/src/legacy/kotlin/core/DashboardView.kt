@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.DecelerateInterpolator
@@ -77,9 +78,9 @@ class DashboardView(
                 onMenuOpened = { section, sectionIndex, menu, menuIndex ->
                     ktx.v("onMenuOpened")
                     setMenu(sectionIndex + 1)
-                    onOpenSection {  }
                     setMenuNav(section, section.subsections[menuIndex])
                     fg_pager.currentItem = menuIndex
+                    onOpenSection {  }
                 },
                 onMenuClosed = { sectionIndex ->
                     ktx.v("onMenuClosed")
@@ -234,6 +235,7 @@ class DashboardView(
     private fun setupParentContainer() {
         isFocusable = true
         setDragView(fg_drag)
+        descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
     }
 
     private fun setupSlidingPanel() {
@@ -372,6 +374,10 @@ class DashboardView(
 
     private fun onCloseSection() {
         ktx.v("onclosesection")
+
+        // Workaround for wrong dots
+//        bg_pager.pages = model.sections.map { it.dash }
+
         model.getOpenedSection().run {
             bg_nav.section = context.getText(nameResId)
             bg_nav.viewPager = bg_pager

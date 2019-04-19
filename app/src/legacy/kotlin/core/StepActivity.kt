@@ -9,13 +9,19 @@ import tunnel.FilterSourceDescriptor
 
 class StepActivity : Activity() {
 
+    companion object {
+        const val EXTRA_WHITELIST = "whitelist"
+    }
+
     private val stepView by lazy { findViewById<VBStepView>(R.id.view) }
     private val ktx = ktx("StepActivity")
+    private var whitelist: Boolean = false
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.vbstepview)
 
+        whitelist = intent.getBooleanExtra(EXTRA_WHITELIST, false)
 
         val nameVB = EnterNameVB(ktx, accepted = {
             name = it
@@ -52,6 +58,7 @@ class StepActivity : Activity() {
                         id = sourceToId(it),
                         source = it,
                         active = true,
+                        whitelist = whitelist,
                         customName = name
                 )
             }.apply {

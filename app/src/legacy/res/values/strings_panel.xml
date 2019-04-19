@@ -27,7 +27,7 @@
     <string name="panel_ruleset">Filters counter</string>
     <string name="panel_ruleset_title">Filters now have %s rules.</string>
     <string name="panel_ruleset_updating">Updating filters...</string>
-    <string name="panel_ruleset_built">Filters are now configured with &lt;b&gt;%s&lt;/b&gt; rules. Up to &lt;b&gt;%s&lt;/b&gt; rules can fit into your device memory overall.</string>
+    <string name="panel_ruleset_built">Filters are now configured with &lt;b&gt;%s&lt;/b&gt; rules. Up to &lt;b&gt;%s&lt;/b&gt; rules can fit into your device memory overall. Remember, this is just an estimate and subject to change depending on other apps on your device, so you should stay well below this limit to be safe.</string>
 
     <string name="panel_nav_header">%1$s :: %2$s</string>
 
@@ -44,10 +44,10 @@
     <string name="slot_start">swipe up to start</string>
     <string name="slot_intro_new">Welcome to %s! Tap here for intro.</string>
     <string name="slot_intro_new_header">How to use the new UI?</string>
-    <string name="slot_intro_desc">You can tap on any item, like this one, to open it up perform actions on it. For example, this item can be removed once you are done with it. &lt;br/&gt;&lt;br/&gt;You are currently on the Home section. Swipe left or right for additional sections. Each of them has its own bottom menu - open it by swiping up. &lt;br/&gt;&lt;br/&gt;Go ahead and explore the app now!</string>
+    <string name="slot_intro_desc">You can tap on any item, like this one, to open it up and perform actions on it. For example, this item can be removed once you are done with it. &lt;br/&gt;&lt;br/&gt;You are currently in the Home section. Swipe left or right for additional sections. Each of them has its own bottom menu - open it by swiping up. &lt;br/&gt;&lt;br/&gt;Go ahead and explore the app now!</string>
     <string name="slot_intro_info">Psst... Some items have the question mark icon on them. Tapping it will display a short help message, like this one!</string>
 
-    <string name="slot_new_filter">Add new list</string>
+    <string name="slot_new_filter">Add new</string>
     <string name="slot_unset">unset</string>
     <string name="slot_set">set</string>
     <string name="slot_invalid">invalid</string>

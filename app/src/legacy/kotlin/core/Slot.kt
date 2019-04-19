@@ -80,19 +80,25 @@ abstract class SlotVB(internal var onTap: (SlotView) -> Unit = defaultOnTap)
         view?.fold()
     }
 
-    override fun up() {
+    override fun up() = Unit
+
+    override fun down() = scheduleAction(2)
+
+    override fun left() = scheduleAction(3)
+
+    override fun right() = scheduleAction(1)
+
+    private val ACTION_DELAY_MS = 900L
+    private val actionPerformHandler = Handler {
+        (it.obj as? SlotView)?.performAction(it.what)
+        true
     }
 
-    override fun down() {
-        view?.performAction(2)
-    }
-
-    override fun left() {
-        view?.performAction(3)
-    }
-
-    override fun right() {
-        view?.performAction(1)
+    private fun scheduleAction(action: Int) {
+        val msg = actionPerformHandler.obtainMessage()
+        msg.obj = view
+        msg.what = action
+        actionPerformHandler.sendMessageDelayed(msg, ACTION_DELAY_MS)
     }
 }
 

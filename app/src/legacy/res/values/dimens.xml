@@ -40,7 +40,7 @@
     <dimen name="dashboard_start_text_size">@dimen/default_text_size</dimen>
     <dimen name="dashboard_start_icon_size">24dp</dimen>
     <dimen name="dashboard_start_icon_margin_top">12dp</dimen>
-    <dimen name="dashboard_start_icon_margin_bottom">48dp</dimen>
+    <dimen name="dashboard_start_icon_margin_bottom">64dp</dimen>
     <dimen name="dashboard_pager_margin_top">0dp</dimen>
     <dimen name="dashboard_nav_margin_top">0dp</dimen>
     <dimen name="dashboard_fg_pager_margin">8dp</dimen>

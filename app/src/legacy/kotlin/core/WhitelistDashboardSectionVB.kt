@@ -16,7 +16,7 @@ class WhitelistDashboardSectionVB(val ktx: AndroidKontext) : LayoutViewBinder(R.
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { it.whitelist && !it.hidden && it.source.id != "app" }.map {
             FilterVB(it, ktx, onTap = slotMutex.openOneAtATime)
-        }.apply { view?.set(this) }
+        }.apply { view?.set(listOf(NewFilterVB(ktx, whitelist = true)) + this) }
         Unit
     }
 

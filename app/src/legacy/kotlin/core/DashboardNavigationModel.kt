@@ -152,8 +152,8 @@ internal class DashboardNavigationModel(
         val menu = menuOpened
         when {
             item is Navigable && slotOpened -> {
-                item.left()
                 setSlotOpened(false)
+                item.left()
             }
             menu != null -> {
                 if (menuIndex > 0) {
@@ -177,8 +177,8 @@ internal class DashboardNavigationModel(
         val menu = menuOpened
         when {
             item is Navigable && slotOpened -> {
-                item.right()
                 setSlotOpened(false)
+                item.right()
             }
             menu != null -> {
                 if (menuIndex < section.subsections.size - 1) {
@@ -202,8 +202,8 @@ internal class DashboardNavigationModel(
         val menu = menuOpened
         when {
             item is Navigable && slotOpened -> {
-                item.up()
                 setSlotOpened(false)
+                item.up()
             }
             menu != null -> {
                 (menu as? ListSection)?.apply {
@@ -223,8 +223,8 @@ internal class DashboardNavigationModel(
         val menu = menuOpened
         when {
             item is Navigable && slotOpened -> {
-                item.down()
                 setSlotOpened(false)
+                item.down()
             }
             menu != null -> {
                 (menu as? ListSection)?.apply {

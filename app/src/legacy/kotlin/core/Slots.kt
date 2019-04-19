@@ -153,7 +153,7 @@ class FiltersStatusVB(
                     label = i18n.getString(R.string.panel_ruleset_title, Format.counter(rules)),
                     header = i18n.getString(R.string.panel_ruleset),
                     description = i18n.getString(R.string.panel_ruleset_built,
-                            Format.counter(rules), Format.counter(memory))
+                            Format.counter(rules), Format.counter(memory, round = true))
             )
             date = Date()
         }
@@ -411,6 +411,7 @@ class DownloadOnWifiVB(
 
 class NewFilterVB(
         private val ktx: AndroidKontext,
+        private val whitelist: Boolean = false,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val modal: ModalManager = modalManager
@@ -422,7 +423,9 @@ class NewFilterVB(
         view.content = Slot.Content(i18n.getString(R.string.slot_new_filter))
         view.onTap = {
             modal.openModal()
-            ctx.startActivity(Intent(ctx, StepActivity::class.java))
+            ctx.startActivity(Intent(ctx, StepActivity::class.java).apply {
+                putExtra(StepActivity.EXTRA_WHITELIST, whitelist)
+            })
         }
     }
 

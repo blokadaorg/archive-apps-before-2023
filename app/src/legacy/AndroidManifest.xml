@@ -20,6 +20,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/branding_app_name"
         android:supportsRtl="true"
+        android:networkSecurityConfig="@xml/whitelist_blokada"
         android:installLocation="internalOnly"
         tools:replace="android:label">
         <meta-data android:name="android.notch_support" android:value="true"/>

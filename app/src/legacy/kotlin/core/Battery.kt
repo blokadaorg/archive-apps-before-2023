@@ -31,6 +31,7 @@ class Battery(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val intent = Intent().apply {
                 action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             ctx.startActivity(intent)
         }

@@ -16,7 +16,7 @@ class BlacklistDashboardSection(val ktx: AndroidKontext) : LayoutViewBinder(R.la
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { !it.whitelist && !it.hidden && it.source.id == "single" }.map {
             FilterVB(it, ktx, onTap = slotMutex.openOneAtATime)
-        }.apply { view?.set(this) }
+        }.apply { view?.set(listOf(NewFilterVB(ktx)) + this) }
         Unit
     }
 

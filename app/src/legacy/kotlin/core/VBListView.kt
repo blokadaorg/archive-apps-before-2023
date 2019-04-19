@@ -227,6 +227,7 @@ class VBListView(
         this.items.clear()
         this.items.addAll(items)
         items.forEach { viewCreators[it.viewType] = it }
+        unselect()
         adapter.notifyDataSetChanged()
 //        listView.smoothScrollToPosition(items.size - 1)
     }

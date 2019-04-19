@@ -23,11 +23,13 @@ class HomeDashboardSectionVB(
     private val intro: IntroVB = IntroVB(ctx.ktx("InfoSlotVB"), onTap = slotMutex.openOneAtATime, onRemove = {
         items = items.subList(1, items.size)
         view?.set(items)
+        slotMutex.detach()
         introPersistence.write(true)
     })
 
     private val batteryVB: BatteryVB = BatteryVB(ctx.ktx("BatteryVB"), onTap = slotMutex.openOneAtATime, onRemove = {
         items = items.subList(0, items.size - 1)
+        slotMutex.detach()
         view?.set(items)
     })
 

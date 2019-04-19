@@ -37,7 +37,6 @@ class DotsView(
             field = value
             value?.apply {
                 dotsView.setViewPager(this)
-                this.currentItem = this.currentItem
             }
         }
 
@@ -90,6 +89,7 @@ class DotsView(
     private fun deactivateSleeping() = viewPager?.apply {
         pagerListener?.apply { removeOnPageChangeListener(this) }
         pagerListener = null
+        sleepingAnimationHandler.removeMessages(SLEEP)
         sleepingAnimationHandler.sendEmptyMessage(WAKE)
     }
 
