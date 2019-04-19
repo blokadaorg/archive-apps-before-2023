@@ -2,12 +2,10 @@ package core
 
 import android.app.Activity
 import android.graphics.Point
-import android.view.View
 import com.github.michaelbull.result.onSuccess
 import com.github.salomonbrys.kodein.instance
 import gs.environment.ComponentProvider
-import gs.presentation.LayoutViewBinder
-import org.blokada.R
+import gs.presentation.ListViewBinder
 import tunnel.Events
 import tunnel.Request
 import kotlin.math.max
@@ -15,9 +13,7 @@ import kotlin.math.max
 class AdsDashboardSectionVB(
         val ktx: AndroidKontext,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
-
-    private var view: VBListView? = null
+) : ListViewBinder() {
 
     private val screenHeight: Int by lazy {
         val point = Point()
@@ -44,7 +40,7 @@ class AdsDashboardSectionVB(
             items.add(dash)
             view?.add(dash)
             trimListIfNecessary()
-            listener(null)
+            onSelectedListener(null)
         }
         Unit
     }
@@ -58,39 +54,16 @@ class AdsDashboardSectionVB(
         }
     }
 
-    override fun attach(view: View) {
-        this.view = view as VBListView
+    override fun attach(view: VBListView) {
         tunnel.Persistence.request.load(0).onSuccess {
             it.forEach(request)
         }
         ktx.on(Events.REQUEST, request)
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
         displayingEntries.clear()
         ktx.cancel(Events.REQUEST, request)
-    }
-
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    private var listener: (SlotVB?) -> Unit = {}
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
-
-    override fun unselect() {
-        view?.unselect()
     }
 }

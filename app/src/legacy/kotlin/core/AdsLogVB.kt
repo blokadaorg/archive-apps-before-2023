@@ -1,12 +1,10 @@
 package core
 
 import android.app.Activity
-import android.view.View
 import com.github.michaelbull.result.getOr
 import com.github.salomonbrys.kodein.instance
 import gs.environment.ComponentProvider
-import gs.presentation.LayoutViewBinder
-import org.blokada.R
+import gs.presentation.ListViewBinder
 import tunnel.Events
 import tunnel.Persistence
 import tunnel.Request
@@ -14,9 +12,7 @@ import tunnel.Request
 class AdsLogVB(
         val ktx: AndroidKontext,
         val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
-
-    private var view: VBListView? = null
+) : ListViewBinder() {
 
     private val slotMutex = SlotMutex()
 
@@ -31,13 +27,12 @@ class AdsLogVB(
             items.add(0, dash)
             view?.add(dash, 0)
             firstItem = it
-            listener(null)
+            onSelectedListener(null)
         }
         Unit
     }
 
-    override fun attach(view: View) {
-        this.view = view as VBListView
+    override fun attach(view: VBListView) {
         view.enableAlternativeMode()
         if (items.isEmpty()) {
             var items = loadBatch(0)
@@ -56,9 +51,8 @@ class AdsLogVB(
         view.onEndReached = loadMore
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
-        view as VBListView
         view.onEndReached = {}
         ktx.cancel(Events.REQUEST, request)
     }
@@ -80,25 +74,5 @@ class AdsLogVB(
         return if (it.blocked)
             DomainBlockedVB(it.domain, it.time, ktx, alternative = true, onTap = slotMutex.openOneAtATime) else
             DomainForwarderVB(it.domain, it.time, ktx, alternative = true, onTap = slotMutex.openOneAtATime)
-    }
-
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
-
-    override fun unselect() {
-        view?.unselect()
     }
 }

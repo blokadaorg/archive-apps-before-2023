@@ -1,22 +1,18 @@
 package core
 
 import android.content.Context
-import android.view.View
 import com.github.salomonbrys.kodein.LazyKodein
 import com.github.salomonbrys.kodein.instance
-import gs.presentation.LayoutViewBinder
+import gs.presentation.ListViewBinder
 import gs.presentation.ViewBinder
 import gs.property.BasicPersistence
-import org.blokada.R
 
 class HomeDashboardSectionVB(
         val ktx: AndroidKontext,
         val ctx: Context = ktx.ctx,
         val battery: Battery = ktx.di().instance(),
         val introPersistence: BasicPersistence<Boolean> = BasicPersistence(LazyKodein(ktx.di), "intro_vb")
-) : LayoutViewBinder(R.layout.vblistview), Scrollable, ListSection {
-
-    private var view: VBListView? = null
+) : ListViewBinder() {
 
     private val slotMutex = SlotMutex()
 
@@ -39,34 +35,14 @@ class HomeDashboardSectionVB(
             HomeNotificationsVB(ctx.ktx("NotificationsVB"), onTap = slotMutex.openOneAtATime)
     )
 
-    override fun attach(view: View) {
+    override fun attach(view: VBListView) {
         if (!introPersistence.read(false)) items = listOf(intro) + items
         if (!battery.isWhitelisted()) items += batteryVB
-        this.view = view as VBListView
         view.set(items)
-        view.setOnSelected(listener)
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
     }
 
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-    override fun unselect() { view?.unselect() }
-
-    private var listener: (item: SlotVB?) -> Unit = {}
-
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
 }

@@ -1,14 +1,9 @@
 package core
 
 import android.content.Context
-import android.view.View
-import gs.presentation.LayoutViewBinder
-import org.blokada.R
+import gs.presentation.ListViewBinder
 
-class AdvancedDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.vblistview),
-    Scrollable, ListSection {
-
-    private var view: VBListView? = null
+class AdvancedDashboardSectionVB(val ctx: Context) : ListViewBinder() {
 
     private val slotMutex = SlotMutex()
 
@@ -19,31 +14,12 @@ class AdvancedDashboardSectionVB(val ctx: Context) : LayoutViewBinder(R.layout.v
             TelegramVB(ctx.ktx("telegramVB"), onTap = slotMutex.openOneAtATime)
     )
 
-    override fun attach(view: View) {
-        this.view = view as VBListView
+    override fun attach(view: VBListView) {
         view.set(items)
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
     }
 
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-    override fun unselect() { view?.unselect() }
-
-    private var listener: (item: SlotVB?) -> Unit = {}
-
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
 }

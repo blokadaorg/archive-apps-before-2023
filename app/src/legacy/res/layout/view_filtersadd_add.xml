@@ -47,7 +47,7 @@
                 android:text="@string/filter_edit_comments_none"
                 android:textColor="@color/colorText" />
 
-            <EditTextthub
+            <EditText
                 android:id="@+id/filter_comment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

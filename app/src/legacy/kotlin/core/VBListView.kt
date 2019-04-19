@@ -31,7 +31,7 @@ class VBListView(
 
     var onItemRemove = { item: ViewBinder -> }
     var onEndReached = { }
-    var onItemSelect = { item: SlotVB? -> }
+    private var onItemSelect = { item: SlotVB? -> }
 
     init {
         inflate(context, R.layout.vblistview_content, this)

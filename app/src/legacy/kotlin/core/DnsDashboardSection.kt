@@ -1,26 +1,21 @@
 package core
 
 import android.content.Context
-import android.view.View
 import com.github.salomonbrys.kodein.instance
-import gs.presentation.LayoutViewBinder
+import gs.presentation.ListViewBinder
 import gs.property.IWhen
-import org.blokada.R
 
-class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistview),
-    ListSection, Scrollable {
+class DnsDashboardSection(val ctx: Context) : ListViewBinder() {
 
     private val ktx = ctx.ktx("DnsDashboard")
     private val filters by lazy { ktx.di().instance<Filters>() }
     private val dns by lazy { ktx.di().instance<Dns>() }
-    private var view: VBListView? = null
 
     private val slotMutex = SlotMutex()
 
     private var get: IWhen? = null
 
-    override fun attach(view: View) {
-        this.view = view as VBListView
+    override fun attach(view: VBListView) {
         view.enableAlternativeMode()
         filters.apps.refresh()
         get = dns.choices.doOnUiWhenSet().then {
@@ -30,26 +25,9 @@ class DnsDashboardSection(val ctx: Context) : LayoutViewBinder(R.layout.vblistvi
         }
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
         dns.choices.cancel(get)
     }
 
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-    override fun unselect() { view?.unselect() }
-
-    private var listener: (SlotVB?) -> Unit = {}
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
 }

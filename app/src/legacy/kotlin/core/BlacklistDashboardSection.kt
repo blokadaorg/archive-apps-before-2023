@@ -1,15 +1,10 @@
 package core
 
-import android.view.View
-import gs.presentation.LayoutViewBinder
-import org.blokada.R
+import gs.presentation.ListViewBinder
 import tunnel.Events
 import tunnel.Filter
 
-class BlacklistDashboardSection(val ktx: AndroidKontext) : LayoutViewBinder(R.layout.vblistview),
-    ListSection, Scrollable {
-
-    private var view: VBListView? = null
+class BlacklistDashboardSection(val ktx: AndroidKontext) : ListViewBinder() {
 
     private val slotMutex = SlotMutex()
 
@@ -20,32 +15,14 @@ class BlacklistDashboardSection(val ktx: AndroidKontext) : LayoutViewBinder(R.la
         Unit
     }
 
-    override fun attach(view: View) {
-        this.view = view as VBListView
+    override fun attach(view: VBListView) {
         view.enableAlternativeMode()
         ktx.on(Events.FILTERS_CHANGED, updateApps)
     }
 
-    override fun detach(view: View) {
+    override fun detach(view: VBListView) {
         slotMutex.detach()
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
     }
 
-    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
-
-    override fun getScrollableView() = view!!
-
-    override fun selectNext() { view?.selectNext() }
-    override fun selectPrevious() { view?.selectPrevious() }
-    override fun unselect() { view?.unselect() }
-
-    private var listener: (SlotVB?) -> Unit = {}
-    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
-        this.listener = listener
-        view?.setOnSelected(listener)
-    }
-
-    override fun scrollToSelected() {
-        view?.scrollToSelected()
-    }
 }

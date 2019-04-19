@@ -4,6 +4,10 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import core.ListSection
+import core.Scrollable
+import core.SlotVB
+import core.VBListView
 import org.blokada.R
 
 /**
@@ -36,6 +40,47 @@ open class LayoutViewBinder(
     override fun attach(view: View) = Unit
     override fun detach(view: View) = Unit
     override val viewType = ViewTypeGenerator.get(this, resId)
+}
+
+abstract class ListViewBinder : LayoutViewBinder(R.layout.vblistview), ListSection, Scrollable {
+
+    abstract fun attach(view: VBListView)
+    open fun detach(view: VBListView) = Unit
+
+    final override fun attach(view: View) {
+        view as VBListView
+        this.view = view
+        view.setOnSelected(onSelectedListener)
+        attach(view)
+    }
+
+    final override fun detach(view: View) {
+        view as VBListView
+        view.unselect()
+        this.view = null
+        detach(view)
+    }
+
+    protected var view: VBListView? = null
+    protected var onSelectedListener: (SlotVB?) -> Unit = {}
+
+    override fun setOnSelected(listener: (item: SlotVB?) -> Unit) {
+        this.onSelectedListener = listener
+        view?.setOnSelected(listener)
+    }
+
+    override fun scrollToSelected() {
+        view?.scrollToSelected()
+    }
+
+    override fun setOnScroll(onScrollDown: () -> Unit, onScrollUp: () -> Unit, onScrollStopped: () -> Unit) = Unit
+
+    override fun getScrollableView() = view!!
+
+    override fun selectNext() { view?.selectNext() }
+    override fun selectPrevious() { view?.selectPrevious() }
+    override fun unselect() { view?.unselect() }
+
 }
 
 @Deprecated("old dashboard going away")
