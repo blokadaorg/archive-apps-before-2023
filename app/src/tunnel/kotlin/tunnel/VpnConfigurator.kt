@@ -135,8 +135,11 @@ internal class BoringTunVpnConfigurator(
 //        Result.of { builder.addDisallowedApplication("com.android.vending") }
 
         builder.addDnsServer("1.1.1.1")
+        builder.addDnsServer("2606:4700:4700::1111")
         builder.addAddress("10.143.0.2", 32)
+        builder.addAddress("fdad:b10c:a::a8f:2", 128)
         builder.addRoute("0.0.0.0", 0)
+        builder.addRoute("::", 0)
 //        builder.setMtu(1200)
         builder.setBlocking(true)
     }

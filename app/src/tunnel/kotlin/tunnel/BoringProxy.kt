@@ -93,6 +93,8 @@ internal class BoringProxy(
                 }
             }
         } while (resp == BoringTunJNI.WRITE_TO_NETWORK)
+
+        ktx.emit(Events.REQUEST, Request("packet", blocked = false))
     }
 
     fun toDevice(ktx: Kontext, response: ByteArray, length: Int) {
@@ -127,7 +129,7 @@ internal class BoringProxy(
                 BoringTunJNI.WIREGUARD_DONE -> {
 //                    ktx.v("read: done")
                 }
-                BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
+                BoringTunJNI.WRITE_TO_TUNNEL_IPV4, BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> {
 //                    ktx.v("read: writing to tunnel")
                     val array = ByteArray(resp) // todo: no copy
                     dest.get(array, 0, resp)
