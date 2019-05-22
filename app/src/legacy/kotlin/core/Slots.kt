@@ -984,14 +984,14 @@ class FiltersListControlVB(
                 description = i18n.getString(R.string.slot_filters_description),
                 icon = ctx.getDrawable(R.drawable.ic_reload),
                 action1 = Slot.Action(i18n.getString(R.string.slot_action_refresh), {
-                    val ktx = "quickActions:refresh".ktx()
+                    val ktx = ctx.ktx("quickActions:refresh")
                     filters.apps.refresh(force = true)
                     tunnel.invalidateFilters(ktx)
                     translations.invalidateCache(ktx)
                     translations.sync(ktx)
                 }),
                 action2 = Slot.Action(i18n.getString(R.string.slot_action_restore), {
-                    val ktx = "quickActions:restore".ktx()
+                    val ktx = ctx.ktx("quickActions:restore")
                     filters.apps.refresh(force = true)
                     tunnel.deleteAllFilters(ktx)
                     translations.invalidateCache(ktx)

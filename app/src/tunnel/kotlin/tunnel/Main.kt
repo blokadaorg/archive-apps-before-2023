@@ -173,7 +173,7 @@ class Main(
         }
     }
 
-    fun removeFilter(ktx: Kontext, filter: Filter) = async(CTRL) {
+    fun removeFilter(ktx: AndroidKontext, filter: Filter) = async(CTRL) {
         filters.remove(ktx, filter)
         if (filters.sync(ktx)) {
             filters.save(ktx)
@@ -181,7 +181,7 @@ class Main(
         }
     }
 
-    fun invalidateFilters(ktx: Kontext) = async(CTRL) {
+    fun invalidateFilters(ktx: AndroidKontext) = async(CTRL) {
         filters.invalidateCache(ktx)
         if(filters.sync(ktx)) {
             filters.save(ktx)
@@ -189,7 +189,7 @@ class Main(
         }
     }
 
-    fun deleteAllFilters(ktx: Kontext) = async(CTRL) {
+    fun deleteAllFilters(ktx: AndroidKontext) = async(CTRL) {
         filters.removeAll(ktx)
         if (filters.sync(ktx)) {
             restartTunnelThread(ktx)
@@ -239,7 +239,7 @@ class Main(
         }
     }
 
-    private fun startTunnelThread(ktx: Kontext) {
+    private fun startTunnelThread(ktx: AndroidKontext) {
         val socketCreator = {
             val socket = DatagramSocket()
             binder?.service?.protect(socket)
@@ -278,7 +278,7 @@ class Main(
         ktx.v("vpn stopped")
     }
 
-    private fun restartTunnelThread(ktx: Kontext) {
+    private fun restartTunnelThread(ktx: AndroidKontext) {
         if (tunnelThread != null) {
             stopTunnelThread(ktx)
             startTunnelThread(ktx)
@@ -292,7 +292,7 @@ class Main(
         }
     }
 
-    private fun maybeStartTunnelThread(ktx: Kontext) = if (tunnelThread == null) {
+    private fun maybeStartTunnelThread(ktx: AndroidKontext) = if (tunnelThread == null) {
         startTunnelThread(ktx)
     } else Unit
 

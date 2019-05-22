@@ -119,14 +119,14 @@ class AFilterGenerateDialog(
     private fun handleSave() {
         when (which) {
             0 -> {
-                val ktx = "quickActions:refresh".ktx()
+                val ktx = ctx.ktx("quickActions:refresh")
                 s.apps.refresh(force = true)
                 tunnel.invalidateFilters(ktx)
                 translations.invalidateCache(ktx)
                 translations.sync(ktx)
             }
             1 -> {
-                val ktx = "quickActions:restore".ktx()
+                val ktx = ctx.ktx("quickActions:restore")
                 s.apps.refresh(force = true)
                 tunnel.deleteAllFilters(ktx)
                 translations.invalidateCache(ktx)
@@ -134,7 +134,7 @@ class AFilterGenerateDialog(
             }
             2 -> {
                 dialogExport.onClosed = { accept ->
-                    val ktx = "quickActions:export:close".ktx()
+                    val ktx = ctx.ktx("quickActions:export:close")
                     tunnel.invalidateFilters(ktx)
                 }
                 dialogExport.show()

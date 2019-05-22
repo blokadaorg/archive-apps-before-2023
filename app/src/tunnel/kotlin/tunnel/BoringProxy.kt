@@ -4,6 +4,7 @@ import android.system.ErrnoException
 import android.system.OsConstants
 import com.cloudflare.app.boringtun.BoringTunJNI
 import com.github.michaelbull.result.mapError
+import core.AndroidKontext
 import core.Kontext
 import core.Result
 import core.ktx
@@ -35,7 +36,7 @@ internal class BoringProxy(
     val datagram = ByteArray(65535)
     val empty = ByteArray(65535)
 
-    fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
+    fun fromDevice(kx: AndroidKontext, packetBytes: ByteArray) {
         val ktx = "boringtun".ktx()
         if (tunnel == null) {
             ktx.v("loading boringtun and generating keys")

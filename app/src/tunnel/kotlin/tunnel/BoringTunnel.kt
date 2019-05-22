@@ -7,6 +7,7 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.onFailure
+import core.AndroidKontext
 import core.Kontext
 import core.Result
 import org.pcap4j.packet.factory.PacketFactoryPropertiesLoader
@@ -62,7 +63,7 @@ internal class BoringTunnel(
         }
     }
 
-    fun run(ktx: Kontext, tunnel: FileDescriptor) {
+    fun run(ktx: AndroidKontext, tunnel: FileDescriptor) {
         ktx.v("running boring tunnel thread", this)
 
         val input = FileInputStream(tunnel)
@@ -115,7 +116,7 @@ internal class BoringTunnel(
         }
     }
 
-    fun runWithRetry(ktx: Kontext, tunnel: FileDescriptor) {
+    fun runWithRetry(ktx: AndroidKontext, tunnel: FileDescriptor) {
         var interrupted = false
         do {
             Result.of { run(ktx, tunnel) }.mapError {
@@ -202,7 +203,7 @@ internal class BoringTunnel(
         }
     }
 
-    private fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream,
+    private fun fromDeviceToProxy(ktx: AndroidKontext, device: StructPollfd, input: InputStream,
                                   buffer: ByteArray) {
         if (device.isEvent(OsConstants.POLLIN)) {
             val length = input.read(buffer)

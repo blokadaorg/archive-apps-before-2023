@@ -42,7 +42,7 @@ class AFilterActor(
                 filter = filter.copy(hidden = true, active = false)
                 t.putFilter(v.context.ktx("filter:delete:hide"), filter)
             } else {
-                t.removeFilter("filter:delete".ktx(), filter)
+                t.removeFilter(v.context.ktx("filter:delete"), filter)
             }
         }
         v.showDelete = true
