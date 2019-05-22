@@ -84,7 +84,8 @@ data class TunnelConfig(
         val powersave: Boolean = false,
         val dnsFallback: Boolean = true,
         val report: Boolean = false,
-        val cacheTTL: Long = 86400
+        val cacheTTL: Long = 86400,
+        val gatewayIp: String = "46.227.65.28"
 )
 
 data class Request(

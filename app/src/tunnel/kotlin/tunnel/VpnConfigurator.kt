@@ -1,7 +1,6 @@
 package tunnel
 
 import android.net.VpnService
-import android.system.OsConstants
 import core.Kontext
 import core.Result
 import java.net.Inet4Address
@@ -109,6 +108,36 @@ internal class PausedVpnConfigurator(
         Result.of { builder.addDisallowedApplication("com.android.vending") }
 
         builder.addAddress("203.0.113.0", 32)
+        builder.setBlocking(true)
+    }
+
+}
+
+internal class BoringTunVpnConfigurator(
+        private val dnsServers: List<InetSocketAddress>,
+        private val filterManager: FilterManager
+): Configurator {
+
+    override fun configure(ktx: Kontext, builder: VpnService.Builder) {
+        for (address in dnsServers) {
+            try {
+                builder.addDnsServer(address.getAddress())
+            } catch (e: Exception) {
+                ktx.e("failed adding dns server", e)
+            }
+        }
+
+        filterManager.getWhitelistedApps(ktx).forEach {
+            builder.addDisallowedApplication(it)
+        }
+
+        // People kept asking why GPlay doesnt work
+//        Result.of { builder.addDisallowedApplication("com.android.vending") }
+
+        builder.addDnsServer("1.1.1.1")
+        builder.addAddress("10.143.0.2", 32)
+        builder.addRoute("0.0.0.0", 0)
+//        builder.setMtu(1200)
         builder.setBlocking(true)
     }
 

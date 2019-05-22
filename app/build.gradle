@@ -180,6 +180,7 @@ dependencies {
     implementation 'org.pcap4j:pcap4j-core:1.7.0'
     implementation 'org.pcap4j:pcap4j-packetfactory-propertiesbased:1.7.0'
     implementation 'dnsjava:dnsjava:2.1.8'
+    implementation 'org.slf4j:slf4j-simple:1.6.1'
 
     // UI libraries
     implementation ('com.github.ozodrukh:CircularReveal:2.0.1@aar') {

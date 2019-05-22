@@ -36,8 +36,11 @@ class Main(
     private var filters = FilterManager(blockade = blockade, doResolveFilterSource =
     doResolveFilterSource, doProcessFetchedFilters = doProcessFetchedFilters)
     private var config = TunnelConfig()
-    private var proxy = Proxy(emptyList(), blockade, forwarder, loopback)
-    private var tunnel = Tunnel(proxy, config, forwarder, loopback)
+    private var proxy = BoringProxy(emptyList(), blockade, loopback)
+    private var tunnel = BoringTunnel(proxy, config, loopback, {
+        "datagramsocket".ktx().w("using non protected socket")
+        DatagramSocket()
+    })
     private var connector = ServiceConnector(
             onClose = onVpnClose,
             onConfigure = { ktx, tunnel -> 0L }
@@ -70,14 +73,16 @@ class Main(
             else -> {
                 val socketCreator = {
                     val socket = DatagramSocket()
-                    binder?.service?.protect(socket)
+                    val protected = binder?.service?.protect(socket) ?: false
+                    if (!protected) "protect".ktx().e("could not protect")
                     socket
                 }
-                proxy = Proxy(servers, blockade, forwarder, loopback, doCreateSocket = socketCreator)
-                tunnel = Tunnel(proxy, config, forwarder, loopback)
+                proxy = BoringProxy(servers, blockade, loopback)
+                tunnel = BoringTunnel(proxy, config, loopback, socketCreator)
 
                 val configurator = if (usePausedConfigurator) PausedVpnConfigurator(servers, filters)
-                else VpnConfigurator(servers, filters)
+//                else VpnConfigurator(servers, filters)
+                else BoringTunVpnConfigurator(servers, filters)
 
                 connector = ServiceConnector(onVpnClose, onConfigure = { ktx, vpn ->
                     configurator.configure(ktx, vpn)
@@ -194,7 +199,14 @@ class Main(
     private fun createComponents(ktx: AndroidKontext, onWifi: Boolean) {
         config = Persistence.config.load(ktx)
         ktx.v("create components, onWifi: $onWifi, firstLoad: ${config.firstLoad}", config)
-        tunnel = Tunnel(proxy, config, forwarder, loopback)
+        val socketCreator = {
+            val socket = DatagramSocket()
+            binder?.service?.protect(socket)
+            val protected = binder?.service?.protect(socket) ?: false
+            if (!protected) "protect".ktx().e("could not protect")
+            socket
+        }
+        tunnel = BoringTunnel(proxy, config, loopback, socketCreator)
         filters = FilterManager(
                 blockade = blockade,
                 doResolveFilterSource = doResolveFilterSource,
@@ -228,7 +240,14 @@ class Main(
     }
 
     private fun startTunnelThread(ktx: Kontext) {
-        tunnel = Tunnel(proxy, config, forwarder, loopback)
+        val socketCreator = {
+            val socket = DatagramSocket()
+            binder?.service?.protect(socket)
+            val protected = binder?.service?.protect(socket) ?: false
+            if (!protected) "protect".ktx().e("could not protect")
+            socket
+        }
+        tunnel = BoringTunnel(proxy, config, loopback, socketCreator)
         val f = fd
         if (f != null) {
             tunnelThread = Thread({ tunnel.runWithRetry(ktx, f) }, "tunnel-${threadCounter++}")
