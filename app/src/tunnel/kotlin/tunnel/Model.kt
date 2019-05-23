@@ -88,6 +88,14 @@ data class TunnelConfig(
         val gatewayIp: String = "46.227.65.28"
 )
 
+// TODO: can be null?
+data class WireguardConfig(
+        val accountId: String = "",
+        val privateKey: String = "",
+        val publicKey: String = "",
+        val gatewayId: String = ""
+)
+
 data class Request(
         val domain: String,
         val blocked: Boolean = false,

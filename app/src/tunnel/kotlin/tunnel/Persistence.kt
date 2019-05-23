@@ -150,3 +150,20 @@ class RequestPersistence(
         }
     }
 }
+
+class WireguardConfigPersistence {
+    val load = { ktx: Kontext ->
+        Result.of { core.Persistence.paper().read<WireguardConfig>("wireguard:config", WireguardConfig()) }
+                .mapBoth(
+                        success = { it },
+                        failure = { ex ->
+                            ktx.w("failed loading WireguardConfig, reverting to empty", ex)
+                            WireguardConfig()
+                        }
+                )
+    }
+
+    val save = { config: WireguardConfig ->
+        Result.of { core.Persistence.paper().write("wireguard:config", config) }
+    }
+}
