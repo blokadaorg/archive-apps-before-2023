@@ -8,7 +8,10 @@ import java.net.Inet6Address
 import java.net.InetSocketAddress
 import java.util.*
 
-internal class VpnConfigurator(
+/**
+ * A VPN tunnel configuration that only redirects DNS requests.
+ */
+internal class DnsVpnConfigurator(
         private val dnsServers: List<InetSocketAddress>,
         private val filterManager: FilterManager
 ): Configurator {
@@ -86,6 +89,10 @@ internal class VpnConfigurator(
     }
 }
 
+/**
+ * A VPN tunnel configuration that forwards nothing to the tunnel.
+ * Used when functionality should be disabled, but the tunnel should be on.
+ */
 internal class PausedVpnConfigurator(
         private val dnsServers: List<InetSocketAddress>,
         private val filterManager: FilterManager
@@ -113,9 +120,13 @@ internal class PausedVpnConfigurator(
 
 }
 
-internal class BoringTunVpnConfigurator(
+/**
+ * A VPN configuration for the true VPN functionality (towards blocka.net).
+ */
+internal class BlockaVpnConfigurator(
         private val dnsServers: List<InetSocketAddress>,
-        private val filterManager: FilterManager
+        private val filterManager: FilterManager,
+        private val blockaConfig: BlockaConfig
 ): Configurator {
 
     override fun configure(ktx: Kontext, builder: VpnService.Builder) {
@@ -131,16 +142,19 @@ internal class BoringTunVpnConfigurator(
             builder.addDisallowedApplication(it)
         }
 
-        // People kept asking why GPlay doesnt work
-//        Result.of { builder.addDisallowedApplication("com.android.vending") }
+        dnsServers.forEach {
+            builder.addDnsServer(it.address)
+        }
 
-        builder.addDnsServer("1.1.1.1")
+        // TODO: support configurable ipv6 servers - this one is cloudflare
         builder.addDnsServer("2606:4700:4700::1111")
-        builder.addAddress("10.143.0.2", 32)
-        builder.addAddress("fdad:b10c:a::a8f:2", 128)
+
+        builder.addAddress(blockaConfig.vip4, 32)
+        builder.addAddress(blockaConfig.vip6, 128)
+
         builder.addRoute("0.0.0.0", 0)
         builder.addRoute("::", 0)
-//        builder.setMtu(1200)
+
         builder.setBlocking(true)
     }
 

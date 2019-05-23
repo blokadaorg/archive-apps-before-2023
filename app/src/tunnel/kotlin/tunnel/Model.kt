@@ -78,6 +78,7 @@ class FilterSourceDescriptor(
     }
 }
 
+// TODO: rename to something else
 data class TunnelConfig(
         val wifiOnly: Boolean = true,
         val firstLoad: Boolean = true,
@@ -85,15 +86,19 @@ data class TunnelConfig(
         val dnsFallback: Boolean = true,
         val report: Boolean = false,
         val cacheTTL: Long = 86400,
-        val gatewayIp: String = "46.227.65.28"
+        val blockaVpn: Boolean = false
 )
 
 // TODO: can be null?
-data class WireguardConfig(
+data class BlockaConfig(
         val accountId: String = "",
         val privateKey: String = "",
         val publicKey: String = "",
-        val gatewayId: String = ""
+        val gatewayId: String = "",
+        val gatewayIp: String = "",
+        val gatewayPort: Int = 0,
+        val vip4: String = "",
+        val vip6: String = ""
 )
 
 data class Request(

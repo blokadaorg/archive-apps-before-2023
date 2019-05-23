@@ -7,29 +7,31 @@ import android.system.OsConstants
 import android.system.StructPollfd
 import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.onFailure
-import core.AndroidKontext
 import core.Kontext
 import core.Result
 import org.pcap4j.packet.factory.PacketFactoryPropertiesLoader
 import org.pcap4j.util.PropertiesLoader
 import java.io.*
 import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import java.util.*
 import kotlin.math.min
 
 
-internal class BoringTunnel(
-        private var proxy: BoringProxy,
+interface Tunnel {
+    fun run(ktx: Kontext, tunnel: FileDescriptor)
+    fun runWithRetry(ktx: Kontext, tunnel: FileDescriptor)
+    fun stop(ktx: Kontext)
+}
+
+internal class DnsTunnel(
+        private var proxy: Proxy,
         private val config: TunnelConfig,
-        private val loopback: Queue<ByteArray> = LinkedList(),
-        private val doCreateSocket: () -> DatagramSocket
-) {
+        private val forwarder: Forwarder = Forwarder(),
+        private val loopback: Queue<ByteArray> = LinkedList()
+) : Tunnel {
 
     private var device: FileDescriptor? = null
     private var error: FileDescriptor? = null
-    private var gatewaySocket: DatagramSocket? = null
 
     private val cooldownTtl = 300L
     private val cooldownMax = 3000L
@@ -37,34 +39,10 @@ internal class BoringTunnel(
     private var epermCounter = 0
 
     private var packetBuffer = ByteArray(32767)
-    private var datagramBuffer = ByteArray(32767)
+    private var datagramBuffer = ByteArray(1024)
 
-    private var lastTickMs = 0L
-    private val tickIntervalMs = 100
-
-    fun openGatewaySocket(ktx: Kontext) {
-        gatewaySocket?.close()
-        gatewaySocket = doCreateSocket()
-        val gatewayAddress = InetAddress.getByName(config.gatewayIp)
-        val gatewayPort = 51820
-        gatewaySocket?.connect(gatewayAddress, gatewayPort)
-        ktx.v("connect to gateway ip: ${config.gatewayIp}")
-        proxy.forward = { ktx, udp ->
-            Result.of {
-//                ktx.v("sending")
-                gatewaySocket!!.send(udp)
-            }.mapError { ex ->
-                ktx.w("failed sending gateway udp", ex.message ?: "")
-                val cause = ex.cause
-                if (cause is ErrnoException && cause.errno == OsConstants.EBADF) {
-                    throw ex
-                } else if (cause is ErrnoException && cause.errno == OsConstants.EPERM) throw ex
-            }
-        }
-    }
-
-    fun run(ktx: AndroidKontext, tunnel: FileDescriptor) {
-        ktx.v("running boring tunnel thread", this)
+    override fun run(ktx: Kontext, tunnel: FileDescriptor) {
+        ktx.v("running tunnel thread", this)
 
         val input = FileInputStream(tunnel)
         val output = FileOutputStream(tunnel)
@@ -73,10 +51,6 @@ internal class BoringTunnel(
             val errors = setupErrorsPipe()
             val device = setupDevicePipe(input)
 
-            openGatewaySocket(ktx)
-
-            val polls = setupPolls(ktx, errors, device)
-
             while (true) {
                 if (threadInterrupted()) throw InterruptedException()
 
@@ -84,10 +58,9 @@ internal class BoringTunnel(
                     device.listenFor(OsConstants.POLLIN or OsConstants.POLLOUT)
                 } else device.listenFor(OsConstants.POLLIN)
 
-                tick()
-
+                val polls = setupPolls(ktx, errors, device)
                 poll(ktx, polls)
-                fromGatewayToProxy(ktx, polls)
+                fromOpenSocketsToProxy(ktx, polls)
                 fromLoopbackToDevice(ktx, device, output)
                 fromDeviceToProxy(ktx, device, input, packetBuffer)
                 cleanup()
@@ -116,7 +89,7 @@ internal class BoringTunnel(
         }
     }
 
-    fun runWithRetry(ktx: AndroidKontext, tunnel: FileDescriptor) {
+    override fun runWithRetry(ktx: Kontext, tunnel: FileDescriptor) {
         var interrupted = false
         do {
             Result.of { run(ktx, tunnel) }.mapError {
@@ -133,14 +106,9 @@ internal class BoringTunnel(
         ktx.v("tunnel thread shutdown", this)
     }
 
-    fun stop(ktx: Kontext) {
+    override fun stop(ktx: Kontext) {
         ktx.v("stopping poll, if any")
         Result.of { Os.close(error) }
-        Result.of {
-            ktx.v("closing gateway socket on stop")
-            gatewaySocket?.close()
-        }
-        gatewaySocket = null
         error = null
     }
 
@@ -161,15 +129,16 @@ internal class BoringTunnel(
     }()
 
     private fun setupPolls(ktx: Kontext, errors: StructPollfd, device: StructPollfd) = {
-        val polls = arrayOfNulls<StructPollfd>(3) as Array<StructPollfd>
+        val polls = arrayOfNulls<StructPollfd>(2 + forwarder.size()) as Array<StructPollfd>
         polls[0] = errors
         polls[1] = device
 
-        val gateway = StructPollfd()
-        gateway.fd = ParcelFileDescriptor.fromDatagramSocket(gatewaySocket).fileDescriptor
-        gateway.listenFor(OsConstants.POLLIN)
-        polls[2] = gateway
-
+        for ((i, rule) in forwarder.withIndex()) {
+            val p = StructPollfd()
+            p.fd = ParcelFileDescriptor.fromDatagramSocket(rule.socket).fileDescriptor
+            p.listenFor(OsConstants.POLLIN)
+            polls[2 + i] = p
+        }
         polls
     }()
 
@@ -187,13 +156,20 @@ internal class BoringTunnel(
         }
     }
 
-    private fun fromGatewayToProxy(ktx: Kontext, polls: Array<StructPollfd>) {
-        if (polls[2].isEvent(OsConstants.POLLIN)) {
-            val responsePacket = DatagramPacket(datagramBuffer, datagramBuffer.size)
-            Result.of {
-                gatewaySocket?.receive(responsePacket)
-                proxy.toDevice(ktx, datagramBuffer, responsePacket.length)
-            }.onFailure { ktx.w("failed receiving gateway socket", it) }
+    private fun fromOpenSocketsToProxy(ktx: Kontext, polls: Array<StructPollfd>) {
+        var index = 0
+        val iterator = forwarder.iterator()
+        while (iterator.hasNext()) {
+            val rule = iterator.next()
+            if (polls[2 + index++].isEvent(OsConstants.POLLIN)) {
+                iterator.remove()
+                val responsePacket = DatagramPacket(datagramBuffer, datagramBuffer.size)
+                Result.of {
+                    rule.socket.receive(responsePacket)
+                    proxy.toDevice(ktx, datagramBuffer, responsePacket.length, rule.originEnvelope)
+                }.onFailure { ktx.w("failed receiving socket", it) }
+                Result.of { rule.socket.close() }.onFailure { ktx.w("failed closing socket") }
+            }
         }
     }
 
@@ -203,7 +179,7 @@ internal class BoringTunnel(
         }
     }
 
-    private fun fromDeviceToProxy(ktx: AndroidKontext, device: StructPollfd, input: InputStream,
+    private fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream,
                                   buffer: ByteArray) {
         if (device.isEvent(OsConstants.POLLIN)) {
             val length = input.read(buffer)
@@ -212,15 +188,6 @@ internal class BoringTunnel(
                 val readPacket = Arrays.copyOfRange(buffer, 0, length)
                 proxy.fromDevice(ktx, readPacket)
             }
-        }
-    }
-
-    private fun tick() {
-        val now = System.currentTimeMillis()
-        if (now > (lastTickMs + tickIntervalMs)) {
-//            "boringtun:tick2".ktx().v("tick after ${now - lastTickMs}ms")
-            lastTickMs = now
-            proxy.tick()
         }
     }
 

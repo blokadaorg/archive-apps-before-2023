@@ -6,13 +6,13 @@ import com.github.michaelbull.result.mapError
 import core.Kontext
 import core.Result
 import org.pcap4j.packet.*
+import org.pcap4j.packet.namednumber.UdpPort
 import org.xbill.DNS.*
 import java.io.IOException
 import java.net.*
 import java.util.*
-import org.pcap4j.packet.namednumber.UdpPort
 
-internal class Proxy(
+internal class DnsProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
         private val forwarder: Forwarder,
@@ -20,9 +20,9 @@ internal class Proxy(
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
                 5L, Name("org.blokada.invalid."), Name("org.blokada.invalid."), 0, 0, 0, 0, 5),
         private val doCreateSocket: () -> DatagramSocket = { DatagramSocket() }
-) {
+) : Proxy {
 
-    fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
+    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
         val originEnvelope = try {
             IpSelector.newPacket(packetBytes, 0, packetBytes.size) as IpPacket
         } catch (e: Exception) {
@@ -63,12 +63,12 @@ internal class Proxy(
             dnsMessage.header.setFlag(Flags.QR.toInt())
             dnsMessage.header.rcode = Rcode.NOERROR
             dnsMessage.addRecord(denyResponse, Section.AUTHORITY)
-            toDevice(ktx, dnsMessage.toWire(), originEnvelope)
+            toDevice(ktx, dnsMessage.toWire(), -1, originEnvelope)
             ktx.emit(Events.REQUEST, Request(host, blocked = true))
         }
     }
 
-    fun toDevice(ktx: Kontext, response: ByteArray, originEnvelope: Packet) {
+    override fun toDevice(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet?) {
         originEnvelope as IpPacket
         val udp = originEnvelope.payload as UdpPacket
         val udpResponse = UdpPacket.Builder(udp)

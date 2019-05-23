@@ -4,10 +4,10 @@ import android.system.ErrnoException
 import android.system.OsConstants
 import com.cloudflare.app.boringtun.BoringTunJNI
 import com.github.michaelbull.result.mapError
-import core.AndroidKontext
 import core.Kontext
 import core.Result
 import core.ktx
+import org.pcap4j.packet.Packet
 import org.xbill.DNS.DClass
 import org.xbill.DNS.Name
 import org.xbill.DNS.SOARecord
@@ -16,14 +16,19 @@ import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.*
 
-internal class BoringProxy(
+interface Proxy {
+    fun fromDevice(ktx: Kontext, packetBytes: ByteArray)
+    fun toDevice(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet? = null)
+}
+
+internal class BlockaProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
         private val loopback: Queue<ByteArray>,
         var forward: (Kontext, DatagramPacket) -> Unit = { _, _ -> },
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
                 5L, Name("org.blokada.invalid."), Name("org.blokada.invalid."), 0, 0, 0, 0, 5)
-) {
+) : Proxy {
     var tunnel: Long? = null
     val dest = ByteBuffer.allocateDirect(65535)
     val op = ByteBuffer.allocateDirect(8)
@@ -36,7 +41,7 @@ internal class BoringProxy(
     val datagram = ByteArray(65535)
     val empty = ByteArray(65535)
 
-    fun fromDevice(kx: AndroidKontext, packetBytes: ByteArray) {
+    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
         val ktx = "boringtun".ktx()
         if (tunnel == null) {
             ktx.v("loading boringtun and generating keys")
@@ -98,7 +103,7 @@ internal class BoringProxy(
         ktx.emit(Events.REQUEST, Request("packet", blocked = false))
     }
 
-    fun toDevice(ktx: Kontext, response: ByteArray, length: Int) {
+    override fun toDevice(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet?) {
         val ktx = "boringtun".ktx()
         var written = 0
         do {

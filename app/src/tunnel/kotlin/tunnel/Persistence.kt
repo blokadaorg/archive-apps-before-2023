@@ -13,6 +13,7 @@ class Persistence {
         val filters = FiltersPersistence()
         val config = TunnelConfigPersistence()
         val request = RequestPersistence()
+        val blocka = BlockaConfigPersistence()
     }
 }
 
@@ -151,19 +152,19 @@ class RequestPersistence(
     }
 }
 
-class WireguardConfigPersistence {
+class BlockaConfigPersistence {
     val load = { ktx: Kontext ->
-        Result.of { core.Persistence.paper().read<WireguardConfig>("wireguard:config", WireguardConfig()) }
+        Result.of { core.Persistence.paper().read<BlockaConfig>("blocka:config", BlockaConfig()) }
                 .mapBoth(
                         success = { it },
                         failure = { ex ->
-                            ktx.w("failed loading WireguardConfig, reverting to empty", ex)
-                            WireguardConfig()
+                            ktx.w("failed loading BlockaConfig, reverting to empty", ex)
+                            BlockaConfig()
                         }
                 )
     }
 
-    val save = { config: WireguardConfig ->
-        Result.of { core.Persistence.paper().write("wireguard:config", config) }
+    val save = { config: BlockaConfig ->
+        Result.of { core.Persistence.paper().write("blocka:config", config) }
     }
 }
