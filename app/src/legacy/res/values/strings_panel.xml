@@ -103,9 +103,17 @@
 
     <string name="slot_list_no_desc">This entry does not have any description.</string>
 
-    <string name="slot_status_title">App status</string>
-    <string name="slot_status_description">You can turn the app off or on using the buttons below, or by swiping the bottom menu.</string>
+    <string name="slot_status_title">Blocking</string>
+    <string name="slot_status_description_active">The app is currently active. You can turn the app off or on using the buttons below, or by swiping the bottom menu.</string>
     <string name="slot_status_info">When the app is Active, the VPN tunnel is activated and your device is protected.</string>
+
+    <string name="slot_status_vpn_turn_off">Disconnect VPN</string>
+    <string name="slot_status_vpn_turn_on">Connect VPN</string>
+    <string name="slot_status_vpn_turned_on">Blokada VPN connected</string>
+    <string name="slot_status_vpn_connecting">Connecting to VPN...</string>
+    <string name="slot_status_vpn_turned_off">Blokada VPN disconnected</string>
+    <string name="slot_status_vpn_desc_on">You are connected to &lt;b&gt;%s&lt;/b&gt;.</string>
+    <string name="slot_status_vpn_desc_off">Blokada VPN is disconnected. If you have active account, you can enable it here. Otherwise, please open the bottom menu in order to activate your account.</string>
 
     <string name="slot_action_deactivate">Turn off</string>
     <string name="slot_action_activate">Turn on</string>
@@ -127,4 +135,19 @@
 
     <string name="slot_dropped_share_title">Share to</string>
     <string name="slot_dropped_share">I blocked %s ads thanks to %s!</string>
+
+    <string name="slot_active">Active</string>
+    <string name="slot_inactive">Inactive</string>
+    <string name="slot_adblocking_label">Block ads &amp; trackers</string>
+    <string name="slot_adblocking_text">When enabled, Blokada will block ads, trackers, and other unwanted content. This helps to protect your privacy, speed up your device and save your data.</string>
+    <string name="slot_blocka_label">Blokada VPN</string>
+    <string name="slot_blocka_text">Blokada VPN is here! Use VPN to speed up your connection, protect your privacy, unblock content, and more. You need an active account in order to connect.</string>
+    <string name="slot_account_label">Account</string>
+    <string name="slot_account_text">%s&lt;br/&gt;&lt;br/&gt;%s</string>
+    <string name="slot_account_text_account">Your account ID is &lt;b&gt;%s&lt;/b&gt;. You should keep it secret. Use the button below to enter your previous account ID, if you want to restore your subscription.</string>
+    <string name="slot_account_text_inactive">Your subscription is inactive. Use the button below to activate it.</string>
+    <string name="slot_account_text_active">Your subscription is active. Your account will be extended on %s. Use the button below to manage your subscription.</string>
+    <string name="slot_account_action_manage">Activate</string>
+    <string name="slot_account_action_change_id">account ID</string>
+    <string name="slot_account_active_until">Active until %s</string>
 </resources>

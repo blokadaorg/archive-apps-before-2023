@@ -123,6 +123,7 @@ class I18nImpl (
 
     init {
         repo.content.doWhenSet().then {
+            "i18n".ktx().v("refreshing locale")
             locale.refresh(force = true)
         }
         locale.doWhenSet().then {

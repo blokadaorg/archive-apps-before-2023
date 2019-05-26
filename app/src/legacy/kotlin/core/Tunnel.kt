@@ -16,9 +16,8 @@ import nl.komponents.kovenant.Kovenant
 import nl.komponents.kovenant.Promise
 import nl.komponents.kovenant.task
 import org.blokada.R
-import tunnel.Main
+import tunnel.*
 import tunnel.Persistence
-import tunnel.checkTunnelPermissions
 
 abstract class Tunnel {
     abstract val enabled: IProperty<Boolean>
@@ -137,15 +136,24 @@ fun newTunnelModule(ctx: Context): Module {
             val retryKctx: Worker = with("retry").instance()
             val ktx = "tunnel:legacy".ktx()
 
-            dns.dnsServers.doWhenSet().then {
+            dns.dnsServers.doWhenChanged(withInit = true).then {
                 engine.setup(ctx.ktx("dns:changed"), dns.dnsServers())
+            }
+
+            async {
+                var wasVpnEnabled = ktx.getMostRecent(BLOCKA_CONFIG)?.blockaVpn ?: false
+                ktx.on(BLOCKA_CONFIG, { cfg ->
+                    if (wasVpnEnabled != cfg.blockaVpn)
+                        engine.setup(ctx.ktx("blocka:vpn:switched"), dns.dnsServers())
+                    wasVpnEnabled = cfg.blockaVpn
+                })
             }
 
             var oldUrl = "localhost"
             pages.filters.doWhenSet().then {
                 val url = pages.filters().toExternalForm()
                 if (pages.filters().host != "localhost" && url != oldUrl) {
-                    oldUrl = pages.filters().toExternalForm()
+                    oldUrl = url
                     engine.setUrl(ctx.ktx("filtersUrl:changed"), url, d.onWifi())
                 }
             }
@@ -314,6 +322,9 @@ fun newTunnelModule(ctx: Context): Module {
             }
 
             async {
+                registerTunnelConfigEvent(ktx)
+                registerBlockaConfigEvent(ctx.ktx("blockaConfigInit"))
+
                 engine.reloadConfig(ctx.ktx("load:persistence:after:start"), d.onWifi())
             }
         }

@@ -31,7 +31,8 @@ class WebDash(
         private val javascript: Boolean = false,
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
-        private val provider: LazyProvider<View> = xx().with("webview").instance()
+        private val provider: LazyProvider<View> = xx().with("webview").instance(),
+        private val small: Boolean = false
 ): CallbackViewBinder, Scrollable, ListSection {
 
     override val viewType = 43
@@ -61,7 +62,11 @@ class WebDash(
             // TODO: Dont use inflater
             val themedContext = ContextThemeWrapper(ctx, R.style.GsTheme_Dialog)
             // TODO: one instance for all
-            v = LayoutInflater.from(themedContext).inflate(R.layout.webview, parent, false)
+            v = LayoutInflater.from(themedContext).inflate(
+                    if (small) R.layout.webview_small
+                    else if (big) R.layout.webview_big
+                    else R.layout.webview
+                    , parent, false)
 //            provider.set(v)
         }
         return v!!

@@ -15,6 +15,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import java.text.DateFormat
+import java.util.*
 
 interface RestApi {
 
@@ -44,7 +45,7 @@ object RestModel {
             @SerializedName("id")
             val accountId: String,
             @SerializedName("active_until")
-            val activeUntil: String,
+            val activeUntil: Date,
             @SerializedName("active_leases")
             val activeLeases: Int
     )
@@ -58,7 +59,7 @@ object RestModel {
             val ipv4: String,
             val ipv6: String,
             val port: Int,
-            val expires: String
+            val expires: Date
     )
     data class LeaseInfo(
             @SerializedName("account_id")
@@ -67,7 +68,7 @@ object RestModel {
             val publicKey: String,
             @SerializedName("gateway_id")
             val gatewayId: String,
-            val expires: String,
+            val expires: Date,
             val vip4: String,
             val vip6: String
     )

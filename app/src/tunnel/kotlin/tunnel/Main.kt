@@ -59,21 +59,26 @@ class Main(
     private var threadCounter = 0
     private var usePausedConfigurator = false
 
-    private fun createProxy() = if (config.blockaVpn) BlockaProxy(currentServers, blockade, loopback)
+    private fun createProxy() = if (blockaConfig.blockaVpn) BlockaProxy(currentServers, blockade, loopback, blockaConfig)
             else DnsProxy(currentServers, blockade, forwarder, loopback, doCreateSocket = socketCreator)
 
-    private fun createTunnel() = if (config.blockaVpn) BlockaTunnel(proxy as BlockaProxy, config,
+    private fun createTunnel() = if (blockaConfig.blockaVpn) BlockaTunnel(proxy as BlockaProxy, config,
             blockaConfig, loopback, socketCreator)
             else DnsTunnel(proxy, config, forwarder, loopback)
 
     private fun createConfigurator() = when {
         usePausedConfigurator -> PausedVpnConfigurator(currentServers, filters)
-        config.blockaVpn -> BlockaVpnConfigurator(currentServers, filters, blockaConfig)
+        blockaConfig.blockaVpn -> BlockaVpnConfigurator(currentServers, filters, blockaConfig)
         else -> DnsVpnConfigurator(currentServers, filters)
     }
 
+//    val updateBlockaConfig = { config: BlockaConfig ->
+//        blockaConfig = config
+//    }
+
     fun setup(ktx: AndroidKontext, servers: List<InetSocketAddress>, start: Boolean = false) = async(CTRL) {
         ktx.v("setup tunnel, start = $start, enabled = $enabled", servers)
+        enabled = start or enabled
         when {
             servers.isEmpty() -> {
                 ktx.v("empty dns servers, will disable tunnel")
@@ -92,6 +97,7 @@ class Main(
                     if (!protected) "socketCreator".ktx().e("could not protect")
                     socket
                 }
+                blockaConfig = ktx.getMostRecent(BLOCKA_CONFIG) ?: BlockaConfig(blockaVpn = false)
                 proxy = createProxy()
                 tunnel = createTunnel()
                 val configurator = createConfigurator()
@@ -103,6 +109,7 @@ class Main(
                 })
                 currentServers = servers
 
+                ktx.v("will sync filters")
                 if (filters.sync(ktx)) {
                     filters.save(ktx)
 
@@ -123,6 +130,7 @@ class Main(
 
     fun reloadConfig(ktx: AndroidKontext, onWifi: Boolean) = async(CTRL) {
         createComponents(ktx, onWifi)
+        filters.setUrl(ktx, currentUrl)
         if (filters.sync(ktx)) {
             filters.save(ktx)
             restartTunnelThread(ktx)
@@ -212,6 +220,7 @@ class Main(
         config = Persistence.config.load(ktx)
         blockaConfig = Persistence.blocka.load(ktx)
         ktx.v("create components, onWifi: $onWifi, firstLoad: ${config.firstLoad}", config)
+        proxy = createProxy()
         tunnel = createTunnel()
         filters = FilterManager(
                 blockade = blockade,
@@ -246,6 +255,7 @@ class Main(
     }
 
     private fun startTunnelThread(ktx: AndroidKontext) {
+        proxy = createProxy()
         tunnel = createTunnel()
         val f = fd
         if (f != null) {

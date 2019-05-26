@@ -345,9 +345,6 @@ class SlotView(
             Slot.Type.COUNTER -> {
                 iconView.setImageResource(R.drawable.ic_counter)
             }
-            Slot.Type.STATUS -> {
-                iconView.setImageResource(R.drawable.ic_power)
-            }
             Slot.Type.NEW -> {
                 iconView.setImageResource(R.drawable.ic_filter_add)
                 iconView.setColorFilter(resources.getColor(R.color.colorAccent))

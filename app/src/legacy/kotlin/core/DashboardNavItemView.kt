@@ -11,7 +11,6 @@ import com.github.salomonbrys.kodein.LazyKodein
 import com.github.salomonbrys.kodein.instance
 import gs.presentation.LayoutViewBinder
 import gs.presentation.WebDash
-import org.blokada.BuildConfig
 import org.blokada.R
 
 data class DashboardSection(
@@ -48,10 +47,11 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
                             nameResId = R.string.panel_section_home_start,
-                            dash = StartViewBinder(ktx,
-                                    currentAppVersion = BuildConfig.VERSION_CODE,
-                                    afterWelcome = {}
-                            )
+//                            dash = StartViewBinder(ktx,
+//                                    currentAppVersion = BuildConfig.VERSION_CODE,
+//                                    afterWelcome = {}
+//                            )
+                            dash = StartDashboardSectionVB(ktx)
                     ),
                     DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,

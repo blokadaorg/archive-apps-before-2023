@@ -31,7 +31,7 @@ class HomeDashboardSectionVB(
 
     private var items = listOf<ViewBinder>(
             AppStatusVB(ctx.ktx("AppStatusSlotVB"), onTap = slotMutex.openOneAtATime),
-            DroppedCountVB(ctx.ktx("DroppedCountSlotVB"), onTap = slotMutex.openOneAtATime),
+            VpnStatusVB(ctx.ktx("VpnStatusVB"), onTap = slotMutex.openOneAtATime),
             HomeNotificationsVB(ctx.ktx("NotificationsVB"), onTap = slotMutex.openOneAtATime)
     )
 

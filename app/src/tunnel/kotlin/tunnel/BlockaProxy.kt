@@ -25,6 +25,7 @@ internal class BlockaProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
         private val loopback: Queue<ByteArray>,
+        private val config: BlockaConfig,
         var forward: (Kontext, DatagramPacket) -> Unit = { _, _ -> },
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
                 5L, Name("org.blokada.invalid."), Name("org.blokada.invalid."), 0, 0, 0, 0, 5)
@@ -32,11 +33,6 @@ internal class BlockaProxy(
     var tunnel: Long? = null
     val dest = ByteBuffer.allocateDirect(65535)
     val op = ByteBuffer.allocateDirect(8)
-    val secretBase = "1mZwVvLTteJvp+mlz27swbnuq4vomTceEjQh0ZcrWxU="
-    val publicBase = "ttZo7et1J9HaB/qoCbgvP+XkuKS3DE/IdsUQxOIvc1o="
-    val publicPeerBase = "aWgVkVE22ybHrPTP5d9fPOKI6dArQykGsVzb+T1aJA4="
-    val accountId = "tbjjqfkjpveo"
-    val vip = "10.143.0.2"
 
     val datagram = ByteArray(65535)
     val empty = ByteArray(65535)
@@ -44,23 +40,8 @@ internal class BlockaProxy(
     override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
         val ktx = "boringtun".ktx()
         if (tunnel == null) {
-            ktx.v("loading boringtun and generating keys")
-            System.loadLibrary("boringtun")
-//            val secret = BoringTunJNI.x25519_secret_key()
-//            val public_key = BoringTunJNI.x25519_public_key(secret)
-//
-//            val secret_string = BoringTunJNI.x25519_key_to_hex(secret)
-//            val public_string = BoringTunJNI.x25519_key_to_hex(public_key)
-
-//            val secret_string_base = BoringTunJNI.x25519_key_to_base64(secret)
-//            val public_string_base = BoringTunJNI.x25519_key_to_base64(public_key)
-
-//            ktx.v("secret: " + secret_string)
-//            ktx.v("public: " + public_string)
-//            ktx.v("secret_base: " + secret_string_base)
-//            ktx.v("public_base: " + public_string_base)
-            ktx.v("creating boringtun tunnel")
-            tunnel = BoringTunJNI.new_tunnel(secretBase, publicPeerBase)
+            ktx.v("creating boringtun tunnel", config.gatewayId)
+            tunnel = BoringTunJNI.new_tunnel(config.privateKey, config.gatewayId)
         }
 
         var written = 0
@@ -107,7 +88,7 @@ internal class BlockaProxy(
         val ktx = "boringtun".ktx()
         var written = 0
         do {
-//            ktx.v("tun $tunnel, reading packet")
+            ktx.v("tun $tunnel, reading packet")
             op.rewind()
             dest.rewind()
             val resp = BoringTunJNI.wireguard_read(tunnel!!, if (written == 0) response else empty,
