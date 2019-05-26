@@ -67,6 +67,7 @@ class PacketsView(
 
     override fun addToHistory(item: Request) {
         this.items.add(item)
+        if (items.size > 1000) items.removeAt(0)
     }
 
     private val base by lazy { Date().time - SystemClock.elapsedRealtime() }

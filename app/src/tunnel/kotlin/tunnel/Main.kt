@@ -72,12 +72,8 @@ class Main(
         else -> DnsVpnConfigurator(currentServers, filters)
     }
 
-//    val updateBlockaConfig = { config: BlockaConfig ->
-//        blockaConfig = config
-//    }
-
     fun setup(ktx: AndroidKontext, servers: List<InetSocketAddress>, config: BlockaConfig? = null, start: Boolean = false) = async(CTRL) {
-        ktx.v("setup tunnel, start = $start, enabled = $enabled", servers)
+        ktx.v("setup tunnel, start = $start, enabled = $enabled", servers, config ?: "null")
         enabled = start or enabled
         when {
             servers.isEmpty() -> {
@@ -87,7 +83,8 @@ class Main(
                 maybeStopTunnelThread(ktx)
                 if (start) enabled = true
             }
-            isVpnOn() && (currentServers == servers && blockaConfig.blockaVpn == config?.blockaVpn
+            isVpnOn() && currentServers == servers && (config == null ||
+                    blockaConfig.blockaVpn == config.blockaVpn
                     && blockaConfig.gatewayId == config.gatewayId) -> {
                 ktx.v("no changes in configuration, ignoring")
             }
@@ -114,14 +111,15 @@ class Main(
                 if (filters.sync(ktx)) {
                     filters.save(ktx)
 
-                    restartVpn(ktx)
-                    restartTunnelThread(ktx)
+                    ktx.v("will restart vpn and tunnel")
+                    maybeStopTunnelThread(ktx)
+                    maybeStopVpn(ktx)
+                    ktx.v("done stopping vpn and tunnel")
 
-                    if (start || enabled) {
-                        ktx.v("starting vpn")
-                        enabled = true
-                        maybeStartVpn(ktx)
-                        maybeStartTunnelThread(ktx)
+                    if (enabled) {
+                        ktx.v("will start vpn")
+                        startVpn(ktx)
+                        startTunnelThread(ktx)
                     }
                 }
             }
@@ -130,6 +128,7 @@ class Main(
     }
 
     fun reloadConfig(ktx: AndroidKontext, onWifi: Boolean) = async(CTRL) {
+        ktx.v("reloading config")
         createComponents(ktx, onWifi)
         filters.setUrl(ktx, currentUrl)
         if (filters.sync(ktx)) {
@@ -203,6 +202,7 @@ class Main(
     }
 
     fun invalidateFilters(ktx: AndroidKontext) = async(CTRL) {
+        ktx.v("invalidating filters")
         filters.invalidateCache(ktx)
         if(filters.sync(ktx)) {
             filters.save(ktx)

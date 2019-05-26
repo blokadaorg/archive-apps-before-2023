@@ -7,11 +7,12 @@ import com.github.michaelbull.result.mapError
 import core.Kontext
 import core.Result
 import core.ktx
-import org.pcap4j.packet.Packet
-import org.xbill.DNS.DClass
-import org.xbill.DNS.Name
-import org.xbill.DNS.SOARecord
+import org.pcap4j.packet.*
+import org.xbill.DNS.*
+import java.io.IOException
 import java.net.DatagramPacket
+import java.net.Inet4Address
+import java.net.Inet6Address
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.util.*
@@ -37,8 +38,46 @@ internal class BlockaProxy(
     val datagram = ByteArray(65535)
     val empty = ByteArray(65535)
 
+    private fun interceptDns(ktx: Kontext, packetBytes: ByteArray): Boolean {
+        val originEnvelope = try {
+            IpSelector.newPacket(packetBytes, 0, packetBytes.size) as IpPacket
+        } catch (e: Exception) {
+            return false
+        }
+
+        if (originEnvelope.payload !is UdpPacket) return false
+
+        val udp = originEnvelope.payload as UdpPacket
+        if (udp.payload == null) {
+            // Some apps use empty UDP packets for something good
+            return false
+        }
+
+        val udpRaw = udp.payload.rawData
+        val dnsMessage = try {
+            Message(udpRaw)
+        } catch (e: IOException) {
+            return false
+        }
+        if (dnsMessage.question == null) return false
+
+        val host = dnsMessage.question.name.toString(true).toLowerCase(Locale.ENGLISH)
+        return if (blockade.allowed(host) || !blockade.denied(host)) {
+            ktx.emit(Events.REQUEST, Request(host))
+            false
+        } else {
+            dnsMessage.header.setFlag(Flags.QR.toInt())
+            dnsMessage.header.rcode = Rcode.NOERROR
+            dnsMessage.addRecord(denyResponse, Section.AUTHORITY)
+            toDeviceFakeDnsResponse(ktx, dnsMessage.toWire(), -1, originEnvelope)
+            ktx.emit(Events.REQUEST, Request(host, blocked = true))
+            true
+        }
+    }
+
     override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
-        val ktx = "boringtun".ktx()
+        if (interceptDns(ktx, packetBytes)) return
+
         if (tunnel == null) {
             ktx.v("creating boringtun tunnel", config.gatewayId)
             tunnel = BoringTunJNI.new_tunnel(config.privateKey, config.gatewayId)
@@ -126,6 +165,38 @@ internal class BlockaProxy(
             }
         } while (resp == BoringTunJNI.WRITE_TO_NETWORK)
 //        loopback(ktx, envelope.rawData)
+    }
+
+    private fun toDeviceFakeDnsResponse(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet?) {
+        originEnvelope as IpPacket
+        val udp = originEnvelope.payload as UdpPacket
+        val udpResponse = UdpPacket.Builder(udp)
+                .srcAddr(originEnvelope.header.dstAddr)
+                .dstAddr(originEnvelope.header.srcAddr)
+                .srcPort(udp.header.dstPort)
+                .dstPort(udp.header.srcPort)
+                .correctChecksumAtBuild(true)
+                .correctLengthAtBuild(true)
+                .payloadBuilder(UnknownPacket.Builder().rawData(response))
+
+        val envelope: IpPacket
+        if (originEnvelope is IpV4Packet) {
+            envelope = IpV4Packet.Builder(originEnvelope)
+                    .srcAddr(originEnvelope.header.dstAddr as Inet4Address)
+                    .dstAddr(originEnvelope.header.srcAddr as Inet4Address)
+                    .correctChecksumAtBuild(true)
+                    .correctLengthAtBuild(true)
+                    .payloadBuilder(udpResponse)
+                    .build()
+        } else {
+            envelope = IpV6Packet.Builder(originEnvelope as IpV6Packet)
+                    .srcAddr(originEnvelope.header.dstAddr as Inet6Address)
+                    .dstAddr(originEnvelope.header.srcAddr as Inet6Address)
+                    .correctLengthAtBuild(true)
+                    .payloadBuilder(udpResponse)
+                    .build()
+        }
+        loopback.add(envelope.rawData)
     }
 
     fun tick() {

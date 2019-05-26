@@ -131,7 +131,6 @@ internal class BlockaTunnel(
     }
 
     override fun stop(ktx: Kontext) {
-        ktx.v("stopping poll, if any")
         Result.of { Os.close(error) }
         Result.of {
             ktx.v("closing gateway socket on stop")
@@ -218,9 +217,6 @@ internal class BlockaTunnel(
 //            "boringtun:tick2".ktx().v("tick after ${now - lastTickMs}ms")
             lastTickMs = now
             proxy.tick()
-
-            // Here to not have too many requests
-            ktx.emit(Events.REQUEST, Request("packet", blocked = false))
         }
     }
 

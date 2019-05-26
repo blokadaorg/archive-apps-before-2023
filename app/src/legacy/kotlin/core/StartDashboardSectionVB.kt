@@ -1,10 +1,9 @@
 package core
 
-import com.github.salomonbrys.kodein.LazyKodein
 import com.github.salomonbrys.kodein.instance
 import gs.presentation.ListViewBinder
 import gs.presentation.ViewBinder
-import gs.presentation.WebDash
+import org.blokada.BuildConfig
 
 class StartDashboardSectionVB(
         val ktx: AndroidKontext,
@@ -14,10 +13,11 @@ class StartDashboardSectionVB(
     private val slotMutex = SlotMutex()
 
     private var items = listOf<ViewBinder>(
-            WebDash(LazyKodein(ktx.di), pages.intro, reloadOnError = true, javascript = true, small = true),
+//            WebDash(LazyKodein(ktx.di), pages.intro, reloadOnError = true, javascript = true, small = true),
             AdblockingVB(ktx, onTap = slotMutex.openOneAtATime),
             BlockaVB(ktx, onTap = slotMutex.openOneAtATime),
-            AccountVB(ktx, onTap = slotMutex.openOneAtATime)
+            AccountVB(ktx, onTap = slotMutex.openOneAtATime),
+            StartViewBinder(ktx, currentAppVersion = BuildConfig.VERSION_CODE, afterWelcome = {})
     )
 
     override fun attach(view: VBListView) {

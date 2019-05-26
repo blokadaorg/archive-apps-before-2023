@@ -292,7 +292,8 @@ class StartViewBinder(
             xx = LazyKodein(ktx.di),
             url = url,
             reloadOnError = true,
-            javascript = true
+            javascript = true,
+            small = true
     )
 
     private fun decide() = when {
