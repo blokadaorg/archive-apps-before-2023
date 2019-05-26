@@ -3,10 +3,12 @@ package tunnel
 import android.content.Context
 import com.github.salomonbrys.kodein.Kodein
 import com.github.salomonbrys.kodein.bind
+import com.github.salomonbrys.kodein.instance
 import com.github.salomonbrys.kodein.singleton
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
+import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -85,6 +87,16 @@ object RestModel {
 fun newRestApiModule(ctx: Context): Kodein.Module {
     return Kodein.Module(init = {
         bind<RestApi>() with singleton {
+            val tun: tunnel.Main = instance()
+            val client = OkHttpClient.Builder()
+                    .addNetworkInterceptor { chain ->
+                        val request = chain.request()
+                        chain.connection()?.socket()?.let {
+                            tun.protect(it)
+                        }
+                        chain.proceed(request)
+                    }
+                    .build()
             val gson = GsonBuilder()
                     .setDateFormat(DateFormat.FULL)
                     .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
@@ -92,6 +104,7 @@ fun newRestApiModule(ctx: Context): Kodein.Module {
             val retrofit = Retrofit.Builder()
                     .baseUrl("https://api.blocka.net")
                     .addConverterFactory(GsonConverterFactory.create(gson))
+                    .client(client)
                     .build()
             retrofit.create(RestApi::class.java)
         }

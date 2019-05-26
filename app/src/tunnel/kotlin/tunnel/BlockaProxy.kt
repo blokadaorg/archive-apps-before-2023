@@ -80,15 +80,13 @@ internal class BlockaProxy(
                 }
             }
         } while (resp == BoringTunJNI.WRITE_TO_NETWORK)
-
-        ktx.emit(Events.REQUEST, Request("packet", blocked = false))
     }
 
     override fun toDevice(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet?) {
         val ktx = "boringtun".ktx()
         var written = 0
         do {
-            ktx.v("tun $tunnel, reading packet")
+//            ktx.v("tun $tunnel, reading packet")
             op.rewind()
             dest.rewind()
             val resp = BoringTunJNI.wireguard_read(tunnel!!, if (written == 0) response else empty,

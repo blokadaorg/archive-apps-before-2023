@@ -81,7 +81,7 @@ internal class BlockaTunnel(
                     device.listenFor(OsConstants.POLLIN or OsConstants.POLLOUT)
                 } else device.listenFor(OsConstants.POLLIN)
 
-                tick()
+                tick(ktx)
 
                 poll(ktx, polls)
                 fromGatewayToProxy(ktx, polls)
@@ -212,12 +212,15 @@ internal class BlockaTunnel(
         }
     }
 
-    private fun tick() {
+    private fun tick(ktx: Kontext) {
         val now = System.currentTimeMillis()
         if (now > (lastTickMs + tickIntervalMs)) {
 //            "boringtun:tick2".ktx().v("tick after ${now - lastTickMs}ms")
             lastTickMs = now
             proxy.tick()
+
+            // Here to not have too many requests
+            ktx.emit(Events.REQUEST, Request("packet", blocked = false))
         }
     }
 

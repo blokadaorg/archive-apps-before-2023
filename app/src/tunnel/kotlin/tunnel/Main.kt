@@ -1,7 +1,6 @@
 package tunnel
 
 import android.net.VpnService
-import com.github.michaelbull.result.mapError
 import com.github.michaelbull.result.onFailure
 import core.*
 import kotlinx.coroutines.experimental.async
@@ -10,6 +9,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import java.io.FileDescriptor
 import java.net.DatagramSocket
 import java.net.InetSocketAddress
+import java.net.Socket
 import java.util.*
 
 object Events {
@@ -76,7 +76,7 @@ class Main(
 //        blockaConfig = config
 //    }
 
-    fun setup(ktx: AndroidKontext, servers: List<InetSocketAddress>, start: Boolean = false) = async(CTRL) {
+    fun setup(ktx: AndroidKontext, servers: List<InetSocketAddress>, config: BlockaConfig? = null, start: Boolean = false) = async(CTRL) {
         ktx.v("setup tunnel, start = $start, enabled = $enabled", servers)
         enabled = start or enabled
         when {
@@ -87,17 +87,18 @@ class Main(
                 maybeStopTunnelThread(ktx)
                 if (start) enabled = true
             }
-            currentServers == servers && isVpnOn() -> {
-                ktx.v("unchanged dns servers, ignoring")
+            isVpnOn() && (currentServers == servers && blockaConfig.blockaVpn == config?.blockaVpn
+                    && blockaConfig.gatewayId == config.gatewayId) -> {
+                ktx.v("no changes in configuration, ignoring")
             }
             else -> {
+                config?.run { blockaConfig = this }
                 socketCreator = {
                     val socket = DatagramSocket()
                     val protected = binder?.service?.protect(socket) ?: false
                     if (!protected) "socketCreator".ktx().e("could not protect")
                     socket
                 }
-                blockaConfig = ktx.getMostRecent(BLOCKA_CONFIG) ?: BlockaConfig(blockaVpn = false)
                 proxy = createProxy()
                 tunnel = createTunnel()
                 val configurator = createConfigurator()
@@ -216,6 +217,11 @@ class Main(
         }
     }
 
+    fun protect(socket: Socket) {
+        val protected = binder?.service?.protect(socket) ?: false
+        if (!protected && isVpnOn()) "socketCreator".ktx().e("could not protect", socket)
+    }
+
     private fun createComponents(ktx: AndroidKontext, onWifi: Boolean) {
         config = Persistence.config.load(ktx)
         blockaConfig = Persistence.blocka.load(ktx)
@@ -281,7 +287,7 @@ class Main(
     private fun stopVpn(ktx: AndroidKontext) {
         ktx.cancel(Events.REQUEST, onRequest)
         binder?.service?.turnOff(ktx)
-        connector.unbind(ktx).mapError { ex -> ktx.w("failed unbinding connector", ex) }
+        connector.unbind(ktx)//.mapError { ex -> ktx.w("failed unbinding connector", ex) }
         binder = null
         fd = null
         ktx.v("vpn stopped")

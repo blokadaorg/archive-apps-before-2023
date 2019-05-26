@@ -1334,3 +1334,61 @@ class AccountVB(
         ktx.cancel(BLOCKA_CONFIG, onBlocka)
     }
 }
+
+class GatewayVB(
+        private val ktx: AndroidKontext,
+        private val gateway: RestModel.GatewayInfo,
+        private val i18n: I18n = ktx.di().instance(),
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    private fun update(cfg: BlockaConfig? = null) {
+        view?.apply {
+            content = Slot.Content(
+                    label = i18n.getString(R.string.slot_gateway_label, gateway.location.capitalize()),
+                    icon = ktx.ctx.getDrawable(R.drawable.ic_server),
+                    description = if (gateway.publicKey == cfg?.gatewayId) {
+                        i18n.getString(R.string.slot_gateway_description_current,
+                                gateway.ipv4, gateway.region, getLoad(gateway.resourceUsagePercent),
+                                cfg.activeUntil)
+                    } else {
+                        i18n.getString(R.string.slot_gateway_description,
+                                gateway.ipv4, gateway.region, getLoad(gateway.resourceUsagePercent))
+                    },
+                    switched = gateway.publicKey == cfg?.gatewayId
+            )
+
+            onSwitch = {
+                if (gateway.publicKey == cfg?.gatewayId) {
+                    // cant 'unselect' for now
+                } else {
+                    cfg?.run {
+                        newLease(ktx, this, gateway)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getLoad(usage: Int): String {
+        return i18n.getString(when(usage) {
+            in 0..50 -> R.string.slot_gateway_load_low
+            else -> R.string.slot_gateway_load_high
+        })
+    }
+
+    private val onConfig = { cfg: BlockaConfig ->
+        update(cfg)
+        Unit
+    }
+
+    override fun attach(view: SlotView) {
+        view.enableAlternativeBackground()
+        view.type = Slot.Type.INFO
+        ktx.on(BLOCKA_CONFIG, onConfig)
+    }
+
+    override fun detach(view: SlotView) {
+        ktx.cancel(BLOCKA_CONFIG, onConfig)
+    }
+}

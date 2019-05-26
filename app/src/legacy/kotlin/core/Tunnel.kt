@@ -141,11 +141,8 @@ fun newTunnelModule(ctx: Context): Module {
             }
 
             async {
-                var wasVpnEnabled = ktx.getMostRecent(BLOCKA_CONFIG)?.blockaVpn ?: false
                 ktx.on(BLOCKA_CONFIG, { cfg ->
-                    if (wasVpnEnabled != cfg.blockaVpn)
-                        engine.setup(ctx.ktx("blocka:vpn:switched"), dns.dnsServers())
-                    wasVpnEnabled = cfg.blockaVpn
+                    engine.setup(ctx.ktx("blocka:vpn:switched"), dns.dnsServers(), cfg)
                 })
             }
 

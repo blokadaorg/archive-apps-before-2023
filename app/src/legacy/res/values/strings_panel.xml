@@ -150,4 +150,11 @@
     <string name="slot_account_action_manage">Activate</string>
     <string name="slot_account_action_change_id">account ID</string>
     <string name="slot_account_active_until">Active until %s</string>
+
+    <string name="slot_gateway_label">VPN %s</string>
+    <string name="slot_gateway_description">IP: &lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;Region: &lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;Load: &lt;b&gt;%s&lt;/b&gt;</string>
+    <string name="slot_gateway_description_current">IP: &lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;Region: &lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;Load: &lt;b&gt;%s&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;This is your currently selected gateway, valid until: &lt;b&gt;%s&lt;/b&gt;.</string>
+    <string name="slot_gateway_load_low">low</string>
+    <string name="slot_gateway_load_high">high</string>
+    <string name="panel_section_home_gateways">VPN Gateways</string>
 </resources>

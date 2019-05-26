@@ -54,6 +54,11 @@ fun createDashboardSections(ktx: AndroidKontext): List<DashboardSection> {
                             dash = StartDashboardSectionVB(ktx)
                     ),
                     DashboardNavItem(
+                            iconResId = R.drawable.ic_server,
+                            nameResId = R.string.panel_section_home_gateways,
+                            dash = GatewaysDashboardSectionVB(ktx.ctx.ktx("gateways"))
+                    ),
+                    DashboardNavItem(
                             iconResId = R.drawable.ic_help_outline,
                             nameResId = R.string.panel_section_home_help,
                             dash = WebDash(LazyKodein(ktx.di), pages.help,

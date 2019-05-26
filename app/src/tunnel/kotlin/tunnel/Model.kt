@@ -192,7 +192,7 @@ fun checkGateways(ktx: AndroidKontext, config: BlockaConfig, gatewayId: String?)
                     ktx.emit(BLOCKA_CONFIG, newCfg)
                 } else {
                     ktx.v("found no matching gateway")
-                    newLease(ktx, config, gateways)
+                    newLease(ktx, config, gateways.first())
                 }
             } }
         }
@@ -226,10 +226,8 @@ fun checkLease(ktx: AndroidKontext, config: BlockaConfig) {
     })
 }
 
-fun newLease(ktx: AndroidKontext, config: BlockaConfig, gateways: List<RestModel.GatewayInfo>) {
+fun newLease(ktx: AndroidKontext, config: BlockaConfig, gateway: RestModel.GatewayInfo) {
     val api: RestApi = ktx.di().instance()
-
-    val gateway = gateways.first()
 
     api.newLease(RestModel.LeaseRequest(config.accountId, config.publicKey, gateway.publicKey)).enqueue(object: retrofit2.Callback<RestModel.Lease> {
         override fun onFailure(call: Call<RestModel.Lease>?, t: Throwable?) {
@@ -239,6 +237,9 @@ fun newLease(ktx: AndroidKontext, config: BlockaConfig, gateways: List<RestModel
         override fun onResponse(call: Call<RestModel.Lease>?, response: Response<RestModel.Lease>?) {
             response?.run { body()?.run {
                 val newCfg = config.copy(
+                        gatewayId = gateway.publicKey,
+                        gatewayIp = gateway.ipv4,
+                        gatewayPort = gateway.port,
                         vip4 = lease.vip4,
                         vip6 = lease.vip6
                 )
