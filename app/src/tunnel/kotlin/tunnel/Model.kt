@@ -109,6 +109,7 @@ data class BlockaConfig(
         val gatewayId: String = "",
         val gatewayIp: String = "",
         val gatewayPort: Int = 0,
+        val gatewayNiceName: String = "",
         val vip4: String = "",
         val vip6: String = ""
 )
@@ -186,7 +187,8 @@ fun checkGateways(ktx: AndroidKontext, config: BlockaConfig, gatewayId: String?)
                     val newCfg = config.copy(
                             gatewayId = gateway.publicKey,
                             gatewayIp = gateway.ipv4,
-                            gatewayPort = gateway.port
+                            gatewayPort = gateway.port,
+                            gatewayNiceName = gateway.niceName()
                     )
                     ktx.v("found gateway, chosen: ${newCfg.gatewayId}")
                     ktx.emit(BLOCKA_CONFIG, newCfg)
@@ -240,6 +242,7 @@ fun newLease(ktx: AndroidKontext, config: BlockaConfig, gateway: RestModel.Gatew
                         gatewayId = gateway.publicKey,
                         gatewayIp = gateway.ipv4,
                         gatewayPort = gateway.port,
+                        gatewayNiceName = gateway.niceName(),
                         vip4 = lease.vip4,
                         vip6 = lease.vip6
                 )

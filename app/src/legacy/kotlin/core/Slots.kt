@@ -19,6 +19,7 @@ import tunnel.Filter
 import update.UpdateCoordinator
 import update.isUpdate
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.*
 
 class AppStatusVB(
@@ -47,11 +48,7 @@ class AppStatusVB(
                         i18n.getString(R.string.slot_status_description_active) else statusString,
                     info = i18n.getString(R.string.slot_status_info),
                     detail = Format.date(Date()),
-                    action1 = Slot.Action(i18n.getString(actionResId), {
-                        if (actionResId == R.string.slot_action_activate) s.enabled %= true
-                        else s.enabled %= false
-                    }),
-                    action2 = Slot.Action(i18n.getString(R.string.slot_action_share), {
+                    action1 = Slot.Action(i18n.getString(R.string.slot_action_share), {
                         val shareIntent: Intent = Intent().apply {
                             action = Intent.ACTION_SEND
                             putExtra(Intent.EXTRA_TEXT, ktx.ctx.getString(R.string.slot_dropped_share,
@@ -62,11 +59,14 @@ class AppStatusVB(
                         ktx.ctx.startActivity(Intent.createChooser(shareIntent,
                                 ktx.ctx.getText(R.string.slot_dropped_share_title)))
                     }),
+                    action2 = Slot.Action(i18n.getString(actionResId), {
+                        if (actionResId == R.string.slot_action_activate) s.enabled %= true
+                        else s.enabled %= false
+                    }),
                     action3 = Slot.Action(i18n.getString(R.string.slot_dropped_action_clear), {
                         tunnelEvents2.tunnelDropCount %= 0
                     })
             )
-            date = Date()
         }
         Unit
     }
@@ -117,6 +117,7 @@ class VpnStatusVB(
         private val tunnelEvents: EnabledStateActor = ktx.di().instance(),
         private val tunnelEvents2: Tunnel = ktx.di().instance(),
         private val s: Tunnel = ktx.di().instance(),
+        private val modal: ModalManager = modalManager,
         onTap: (SlotView) -> Unit
 ) : SlotVB(onTap) {
 
@@ -124,23 +125,31 @@ class VpnStatusVB(
         view?.apply {
             content = Slot.Content(
                     icon = ktx.ctx.getDrawable(R.drawable.ic_shield_key_outline),
-                    label = i18n.getString(if (config.blockaVpn) R.string.slot_status_vpn_turned_on else R.string.slot_status_vpn_turned_off),
+                    label = if (config.blockaVpn)
+                        i18n.getString(R.string.slot_status_vpn_turned_on, config.gatewayNiceName)
+                        else i18n.getString(R.string.slot_status_vpn_turned_off),
                     description = if (config.blockaVpn) {
                         i18n.getString(R.string.slot_status_vpn_desc_on, config.gatewayIp)
                     } else i18n.getString(R.string.slot_status_vpn_desc_off),
+                    info = i18n.getString(R.string.slot_status_vpn_info),
                     detail = Format.date(Date()),
                     action1 = Slot.Action(i18n.getString(
                             if (config.blockaVpn) R.string.slot_status_vpn_turn_off
                             else R.string.slot_status_vpn_turn_on
                     ), {
-                        Toast.makeText(ktx.ctx, i18n.getString(
-                                if (config.blockaVpn) R.string.slot_status_vpn_turned_off
-                                else R.string.slot_status_vpn_connecting
-                        ), Toast.LENGTH_LONG).show()
+                        if (config.activeUntil.before(Date())) {
+                            modal.openModal()
+                            ktx.ctx.startActivity(Intent(ktx.ctx, SubscriptionActivity::class.java))
+                        } else {
+                            Toast.makeText(ktx.ctx, i18n.getString(
+                                    if (config.blockaVpn) R.string.slot_status_vpn_turned_off
+                                    else R.string.slot_status_vpn_connecting
+                            ), Toast.LENGTH_LONG).show()
 
-                        ktx.emit(BLOCKA_CONFIG, config.copy(blockaVpn = !config.blockaVpn))
+                            ktx.emit(BLOCKA_CONFIG, config.copy(blockaVpn = !config.blockaVpn))
+                        }
                     }),
-                    action2 = Slot.Action(i18n.getString(R.string.slot_update_action_refresh), {
+                    action2 = Slot.Action(i18n.getString(R.string.slot_status_vpn_lease), {
                         async {
                             checkGateways(ktx, config, null)
                         }
@@ -1289,15 +1298,19 @@ class AccountVB(
                 val isActive = activeUntil.after(Date())
                 view?.apply {
                     content = Slot.Content(
-                            label = i18n.getString(R.string.slot_account_label),
+                            label = if (isActive) i18n.getString(R.string.slot_account_label_active, activeUntil.pretty(ktx))
+                                else i18n.getString(R.string.slot_account_label),
+                            header = i18n.getString(R.string.slot_account_label),
                             icon = ktx.ctx.getDrawable(R.drawable.ic_account_circle_black_24dp),
                             description =  i18n.getString(R.string.slot_account_text,
                                     i18n.getString(R.string.slot_account_text_account, accountId),
-                                    if (isActive) i18n.getString(R.string.slot_account_text_active, activeUntil)
+                                    if (isActive) i18n.getString(R.string.slot_account_text_active, activeUntil.pretty(ktx))
                                     else i18n.getString(R.string.slot_account_text_inactive)
                             ),
                             switched = isActive,
-                            action1 = Slot.Action(i18n.getString(R.string.slot_account_action_manage), {
+                            action1 = Slot.Action(
+                                    if (isActive) i18n.getString(R.string.slot_account_action_manage)
+                                        else i18n.getString(R.string.slot_account_action_manage_inactive), {
                                 modal.openModal()
                                 ktx.ctx.startActivity(Intent(ktx.ctx, SubscriptionActivity::class.java))
                             }),
@@ -1345,15 +1358,15 @@ class GatewayVB(
     private fun update(cfg: BlockaConfig? = null) {
         view?.apply {
             content = Slot.Content(
-                    label = i18n.getString(R.string.slot_gateway_label, gateway.location.capitalize()),
+                    label = i18n.getString(R.string.slot_gateway_label, gateway.niceName()),
                     icon = ktx.ctx.getDrawable(R.drawable.ic_server),
                     description = if (gateway.publicKey == cfg?.gatewayId) {
                         i18n.getString(R.string.slot_gateway_description_current,
-                                gateway.ipv4, gateway.region, getLoad(gateway.resourceUsagePercent),
+                                getLoad(gateway.resourceUsagePercent), gateway.ipv4, gateway.region,
                                 cfg.activeUntil)
                     } else {
                         i18n.getString(R.string.slot_gateway_description,
-                                gateway.ipv4, gateway.region, getLoad(gateway.resourceUsagePercent))
+                                getLoad(gateway.resourceUsagePercent), gateway.ipv4, gateway.region)
                     },
                     switched = gateway.publicKey == cfg?.gatewayId
             )
@@ -1391,4 +1404,9 @@ class GatewayVB(
     override fun detach(view: SlotView) {
         ktx.cancel(BLOCKA_CONFIG, onConfig)
     }
+}
+
+private val prettyFormat = SimpleDateFormat("MMMM dd, HH:mm")
+fun Date.pretty(ktx: Kontext): String {
+    return prettyFormat.format(this)
 }

@@ -62,7 +62,9 @@ object RestModel {
             val ipv6: String,
             val port: Int,
             val expires: Date
-    )
+    ) {
+        fun niceName() = location.split('-').map { it.capitalize() }.joinToString(" ")
+    }
     data class LeaseInfo(
             @SerializedName("account_id")
             val accountId: String,

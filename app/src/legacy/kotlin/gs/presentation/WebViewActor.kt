@@ -32,7 +32,8 @@ class WebDash(
         private val big: Boolean = false,
         private val j: Journal = xx().instance(),
         private val provider: LazyProvider<View> = xx().with("webview").instance(),
-        private val small: Boolean = false
+        private val small: Boolean = false,
+        private val onLoadSpecificUrl: Pair<String, () -> Unit>? = null
 ): CallbackViewBinder, Scrollable, ListSection {
 
     override val viewType = 43
@@ -118,7 +119,10 @@ class WebDash(
 
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
-                if (url.contains(url().host) || forceEmbedded) {
+                if (onLoadSpecificUrl != null && url.contains(onLoadSpecificUrl.first)) {
+                    onLoadSpecificUrl.second()
+                    return true
+                } else if (forceEmbedded || url.contains(url().host)) {
                     view.loadUrl(url)
                     return false
                 } else {

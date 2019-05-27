@@ -55,7 +55,7 @@
 
             <View
                 android:id="@+id/unfolded_line_top"
-                android:background="@color/colorTextUnimportant"
+                android:background="@color/colorSlotLine"
                 android:layout_below="@id/unfolded_header"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -97,7 +97,7 @@
 
             <View
                 android:id="@+id/unfolded_line_bottom"
-                android:background="@color/colorTextUnimportant"
+                android:background="@color/colorSlotLine"
                 android:layout_below="@id/unfolded_detail"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
