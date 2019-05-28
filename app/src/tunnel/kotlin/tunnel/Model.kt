@@ -101,6 +101,7 @@ fun registerTunnelConfigEvent(ktx: Kontext) {
 
 // TODO: can be null?
 data class BlockaConfig(
+        val adblocking: Boolean = true,
         val blockaVpn: Boolean = false,
         val accountId: String = "",
         val activeUntil: Date = Date(0),

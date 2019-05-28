@@ -1221,15 +1221,17 @@ class AdblockingVB(
         onTap: (SlotView) -> Unit
 ) : SlotVB(onTap) {
 
-    private val update = { cfg: TunnelConfig ->
+    private val update = { cfg: BlockaConfig ->
         view?.apply {
             content = Slot.Content(
                     label = i18n.getString(R.string.slot_adblocking_label),
                     icon = ktx.ctx.getDrawable(R.drawable.ic_block),
                     description = i18n.getString(R.string.slot_adblocking_text),
-                    switched = true
+                    switched = cfg.adblocking
             )
-            onSwitch = {  }
+            onSwitch = {
+                ktx.emit(BLOCKA_CONFIG, cfg.copy(adblocking = !cfg.adblocking))
+            }
         }
         Unit
     }
@@ -1237,11 +1239,11 @@ class AdblockingVB(
     override fun attach(view: SlotView) {
         view.enableAlternativeBackground()
         view.type = Slot.Type.INFO
-        ktx.on(TUNNEL_CONFIG, update)
+        ktx.on(BLOCKA_CONFIG, update)
     }
 
     override fun detach(view: SlotView) {
-        ktx.cancel(TUNNEL_CONFIG, update)
+        ktx.cancel(BLOCKA_CONFIG, update)
     }
 }
 

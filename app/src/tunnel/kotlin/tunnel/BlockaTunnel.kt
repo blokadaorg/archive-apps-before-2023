@@ -6,7 +6,6 @@ import android.system.Os
 import android.system.OsConstants
 import android.system.StructPollfd
 import com.github.michaelbull.result.mapError
-import com.github.michaelbull.result.onFailure
 import core.Kontext
 import core.Result
 import org.pcap4j.packet.factory.PacketFactoryPropertiesLoader
@@ -23,13 +22,15 @@ internal class BlockaTunnel(
         private var proxy: BlockaProxy,
         private val config: TunnelConfig,
         private val blockaConfig: BlockaConfig,
-        private val loopback: Queue<Pair<ByteArray, Int>> = LinkedList(),
+        private val loopback: Queue<Triple<ByteArray, Int, Int>> = LinkedList(),
         private val doCreateSocket: () -> DatagramSocket
 ): Tunnel {
 
     private var device: FileDescriptor? = null
     private var error: FileDescriptor? = null
+
     private var gatewaySocket: DatagramSocket? = null
+    private var gatewayParcelFileDescriptor: ParcelFileDescriptor? = null
 
     private val cooldownTtl = 300L
     private val cooldownMax = 3000L
@@ -41,21 +42,16 @@ internal class BlockaTunnel(
     private var lastTickMs = 0L
     private val tickIntervalMs = 100
 
+    private val packetsToForward: Queue<DatagramPacket> = LinkedList()
+
     fun openGatewaySocket(ktx: Kontext) {
+        gatewayParcelFileDescriptor?.close()
         gatewaySocket?.close()
         gatewaySocket = doCreateSocket()
         gatewaySocket?.connect(InetAddress.getByName(blockaConfig.gatewayIp), blockaConfig.gatewayPort)
         ktx.v("connect to gateway ip: ${blockaConfig.gatewayIp}")
         proxy.forward = { ktx, udp ->
-            Result.of {
-                gatewaySocket!!.send(udp)
-            }.mapError { ex ->
-                ktx.w("failed sending gateway udp", ex.message ?: "")
-                val cause = ex.cause
-                if (cause is ErrnoException && cause.errno == OsConstants.EBADF) {
-                    throw ex
-                } else if (cause is ErrnoException && cause.errno == OsConstants.EPERM) throw ex
-            }
+            packetsToForward.add(udp)
         }
     }
 
@@ -80,11 +76,17 @@ internal class BlockaTunnel(
                     device.listenFor(OsConstants.POLLIN or OsConstants.POLLOUT)
                 } else device.listenFor(OsConstants.POLLIN)
 
+                val gateway = polls[2]
+                if (packetsToForward.isNotEmpty()) {
+                    gateway.listenFor(OsConstants.POLLIN or OsConstants.POLLOUT)
+                } else gateway.listenFor(OsConstants.POLLIN)
+
                 tick(ktx)
 
                 poll(ktx, polls)
-                fromGatewayToProxy(ktx, polls)
                 fromLoopbackToDevice(ktx, device, output)
+                fromProxyToGateway(ktx, polls)
+                fromGatewayToProxy(ktx, polls)
                 fromDeviceToProxy(ktx, device, input)
                 cleanup()
             }
@@ -133,8 +135,10 @@ internal class BlockaTunnel(
         Result.of { Os.close(error) }
         Result.of {
             ktx.v("closing gateway socket on stop")
+            gatewayParcelFileDescriptor?.close()
             gatewaySocket?.close()
         }
+        gatewayParcelFileDescriptor = null
         gatewaySocket = null
         error = null
     }
@@ -160,10 +164,11 @@ internal class BlockaTunnel(
         polls[0] = errors
         polls[1] = device
 
+        val parcel = ParcelFileDescriptor.fromDatagramSocket(gatewaySocket)
         val gateway = StructPollfd()
-        gateway.fd = ParcelFileDescriptor.fromDatagramSocket(gatewaySocket).fileDescriptor
-        gateway.listenFor(OsConstants.POLLIN)
+        gateway.fd = parcel.fileDescriptor
         polls[2] = gateway
+        gatewayParcelFileDescriptor = parcel
 
         polls
     }()
@@ -182,20 +187,43 @@ internal class BlockaTunnel(
         }
     }
 
+    private fun fromProxyToGateway(ktx: Kontext, polls: Array<StructPollfd>) {
+        if (polls[2].isEvent(OsConstants.POLLOUT)) {
+            while (packetsToForward.isNotEmpty()) {
+                val udp = packetsToForward.poll()
+                Result.of {
+                    gatewaySocket!!.send(udp)
+                }.mapError { ex ->
+                    ktx.w("failed sending to gateway", ex.message ?: "")
+                    val cause = ex.cause
+                    if (cause is ErrnoException && cause.errno == OsConstants.EBADF) throw ex
+                    else if (cause is ErrnoException && cause.errno == OsConstants.EPERM) throw ex
+                }
+            }
+        }
+    }
+
     private fun fromGatewayToProxy(ktx: Kontext, polls: Array<StructPollfd>) {
         if (polls[2].isEvent(OsConstants.POLLIN)) {
             val responsePacket = DatagramPacket(packetBuffer, packetBuffer.size)
             Result.of {
                 gatewaySocket?.receive(responsePacket)
                 proxy.toDevice(ktx, packetBuffer, responsePacket.length)
-            }.onFailure { ktx.w("failed receiving gateway socket", it) }
+            }.mapError { ex ->
+                ktx.w("failed receiving from gateway", ex.message ?: "")
+                val cause = ex.cause
+                if (cause is ErrnoException && cause.errno == OsConstants.EBADF) throw ex
+                else if (cause is ErrnoException && cause.errno == OsConstants.EPERM) throw ex
+            }
         }
     }
 
     private fun fromLoopbackToDevice(ktx: Kontext, device: StructPollfd, output: OutputStream) {
         if (device.isEvent(OsConstants.POLLOUT)) {
-            val (buffer, length) = loopback.poll()
-            output.write(buffer, 0, length)
+            while (loopback.isNotEmpty()) {
+                val (buffer, offset, length) = loopback.poll()
+                output.write(buffer, offset, length)
+            }
         }
     }
 

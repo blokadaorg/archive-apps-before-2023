@@ -25,7 +25,7 @@ interface Proxy {
 internal class BlockaProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
-        private val loopback: Queue<Pair<ByteArray, Int>>,
+        private val loopback: Queue<Triple<ByteArray, Int, Int>>,
         private val config: BlockaConfig,
         var forward: (Kontext, DatagramPacket) -> Unit = { _, _ -> },
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
@@ -75,7 +75,7 @@ internal class BlockaProxy(
     }
 
     override fun fromDevice(ktx: Kontext, packetBytes: ByteArray, length: Int) {
-        if (interceptDns(ktx, packetBytes, length)) return
+        if (config.adblocking && interceptDns(ktx, packetBytes, length)) return
 
         if (tunnel == null) {
             ktx.v("creating boringtun tunnel", config.gatewayId)
@@ -95,7 +95,7 @@ internal class BlockaProxy(
                 BoringTunJNI.WRITE_TO_NETWORK -> {
 //                    ktx.v("writing to network (size: $resp)")
                     Result.of {
-                        val udp = DatagramPacket(dest.array(), 0, resp)
+                        val udp = DatagramPacket(dest.array(), dest.arrayOffset(), resp)
                         forward(ktx, udp)
                     }.mapError { ex ->
                         ktx.w("failed sending to gateway", ex.message ?: "")
@@ -129,8 +129,8 @@ internal class BlockaProxy(
                 BoringTunJNI.WRITE_TO_NETWORK -> {
 //                    ktx.v("read: writing to network")
                     Result.of {
-                        val udp = DatagramPacket(dest.array(), 0, resp)
-                        forward(ktx, udp)
+                       val udp = DatagramPacket(dest.array(), dest.arrayOffset(), resp)
+                       forward(ktx, udp)
                     }.mapError { ex ->
                         ktx.w("failed sending to gateway", ex.message ?: "")
                         val cause = ex.cause
@@ -143,15 +143,21 @@ internal class BlockaProxy(
                 BoringTunJNI.WIREGUARD_DONE -> { }
                 BoringTunJNI.WRITE_TO_TUNNEL_IPV4, BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> {
 //                    ktx.v("read: writing to tunnel")
-                    loopback.add(dest.array() to resp)
+                    //val array = ByteArray(resp) // todo: no copy
+                    dest.get(array, 0, resp)
+                    loopback.add(Triple(array, 0, resp))
+
+                    // TODO: Should be like this but offset is ignored or something?
+//                    loopback.add(Triple(dest.array(), dest.arrayOffset(), resp))
                 }
                 else -> {
                     ktx.w("read: wireguard unknown response: ${op[0].toInt()}")
                 }
             }
         } while (resp == BoringTunJNI.WRITE_TO_NETWORK)
-//        loopback(ktx, envelope.rawData)
     }
+
+    private val array = ByteArray(65535)
 
     private fun toDeviceFakeDnsResponse(ktx: Kontext, response: ByteArray, originEnvelope: Packet?) {
         originEnvelope as IpPacket
@@ -183,7 +189,7 @@ internal class BlockaProxy(
                     .build()
         }
         val buffer = envelope.rawData
-        loopback.add(buffer to buffer.size)
+        loopback.add(Triple(buffer, 0, buffer.size))
     }
 
     fun tick() {

@@ -31,7 +31,7 @@ class Main(
 ) {
 
     private val forwarder = Forwarder()
-    private val loopback = LinkedList<Pair<ByteArray, Int>>()
+    private val loopback = LinkedList<Triple<ByteArray, Int, Int>>()
     private val blockade = Blockade()
     private var currentServers = emptyList<InetSocketAddress>()
     private var filters = FilterManager(blockade = blockade, doResolveFilterSource =
@@ -85,7 +85,8 @@ class Main(
             }
             isVpnOn() && currentServers == servers && (config == null ||
                     blockaConfig.blockaVpn == config.blockaVpn
-                    && blockaConfig.gatewayId == config.gatewayId) -> {
+                    && blockaConfig.gatewayId == config.gatewayId
+                    && blockaConfig.adblocking == config.adblocking) -> {
                 ktx.v("no changes in configuration, ignoring")
             }
             else -> {
