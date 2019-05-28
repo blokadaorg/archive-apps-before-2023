@@ -23,7 +23,7 @@ internal class BlockaTunnel(
         private var proxy: BlockaProxy,
         private val config: TunnelConfig,
         private val blockaConfig: BlockaConfig,
-        private val loopback: Queue<ByteArray> = LinkedList(),
+        private val loopback: Queue<Pair<ByteArray, Int>> = LinkedList(),
         private val doCreateSocket: () -> DatagramSocket
 ): Tunnel {
 
@@ -37,7 +37,6 @@ internal class BlockaTunnel(
     private var epermCounter = 0
 
     private var packetBuffer = ByteArray(32767)
-    private var datagramBuffer = ByteArray(32767)
 
     private var lastTickMs = 0L
     private val tickIntervalMs = 100
@@ -86,7 +85,7 @@ internal class BlockaTunnel(
                 poll(ktx, polls)
                 fromGatewayToProxy(ktx, polls)
                 fromLoopbackToDevice(ktx, device, output)
-                fromDeviceToProxy(ktx, device, input, packetBuffer)
+                fromDeviceToProxy(ktx, device, input)
                 cleanup()
             }
         } catch (ex: InterruptedException) {
@@ -185,28 +184,26 @@ internal class BlockaTunnel(
 
     private fun fromGatewayToProxy(ktx: Kontext, polls: Array<StructPollfd>) {
         if (polls[2].isEvent(OsConstants.POLLIN)) {
-            val responsePacket = DatagramPacket(datagramBuffer, datagramBuffer.size)
+            val responsePacket = DatagramPacket(packetBuffer, packetBuffer.size)
             Result.of {
                 gatewaySocket?.receive(responsePacket)
-                proxy.toDevice(ktx, datagramBuffer, responsePacket.length)
+                proxy.toDevice(ktx, packetBuffer, responsePacket.length)
             }.onFailure { ktx.w("failed receiving gateway socket", it) }
         }
     }
 
     private fun fromLoopbackToDevice(ktx: Kontext, device: StructPollfd, output: OutputStream) {
         if (device.isEvent(OsConstants.POLLOUT)) {
-            output.write(loopback.poll())
+            val (buffer, length) = loopback.poll()
+            output.write(buffer, 0, length)
         }
     }
 
-    private fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream,
-                                  buffer: ByteArray) {
+    private fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream) {
         if (device.isEvent(OsConstants.POLLIN)) {
-            val length = input.read(buffer)
+            val length = input.read(packetBuffer)
             if (length > 0) {
-                // TODO: nocopy
-                val readPacket = Arrays.copyOfRange(buffer, 0, length)
-                proxy.fromDevice(ktx, readPacket)
+                proxy.fromDevice(ktx, packetBuffer, length)
             }
         }
     }

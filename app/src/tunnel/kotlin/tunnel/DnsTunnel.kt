@@ -27,7 +27,7 @@ internal class DnsTunnel(
         private var proxy: Proxy,
         private val config: TunnelConfig,
         private val forwarder: Forwarder = Forwarder(),
-        private val loopback: Queue<ByteArray> = LinkedList()
+        private val loopback: Queue<Pair<ByteArray, Int>> = LinkedList()
 ) : Tunnel {
 
     private var device: FileDescriptor? = null
@@ -175,7 +175,8 @@ internal class DnsTunnel(
 
     private fun fromLoopbackToDevice(ktx: Kontext, device: StructPollfd, output: OutputStream) {
         if (device.isEvent(OsConstants.POLLOUT)) {
-            output.write(loopback.poll())
+            val (buffer, length) = loopback.poll()
+            output.write(buffer, 0, length)
         }
     }
 
@@ -186,7 +187,7 @@ internal class DnsTunnel(
             if (length > 0) {
                 // TODO: nocopy
                 val readPacket = Arrays.copyOfRange(buffer, 0, length)
-                proxy.fromDevice(ktx, readPacket)
+                proxy.fromDevice(ktx, readPacket, length)
             }
         }
     }

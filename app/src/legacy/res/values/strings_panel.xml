@@ -113,7 +113,7 @@
     <string name="slot_status_vpn_connecting">Enabling Blokada VPN...</string>
     <string name="slot_status_vpn_turned_off">Blokada VPN is not enabled</string>
     <string name="slot_status_vpn_desc_on">Blokada VPN is currently &lt;b&gt;enabled&lt;/b&gt;.&lt;br /&gt;IP: &lt;b&gt;%s&lt;/b&gt;&lt;br /&gt;&lt;br /&gt;Your device and data is secure now. Tap the question mark for details.</string>
-    <string name="slot_status_vpn_desc_off">Blokada VPN is currently &lt;b&gt;disabled&lt;/b&gt;.&lt;br /&gt;&lt;br /&gt;. When the VPN is connected, your protection is even higher. Your device is connected through our secure servers and your traffic is encrypted, so no one can see your data. Your real IP is hidden, and you can access blocked content. In some cases, you can experience faster Internet connection as well.</string>
+    <string name="slot_status_vpn_desc_off">Blokada VPN is currently &lt;b&gt;disabled&lt;/b&gt;.&lt;br /&gt;&lt;br /&gt;When the VPN is connected, your protection is even higher. Your device is connected through our secure servers and your traffic is encrypted, so no one can see your data. Your real IP is hidden, and you can access blocked content. In some cases, you can experience faster Internet connection as well.</string>
     <string name="slot_status_vpn_info">When the VPN is connected, your protection is even higher. Your device is connected through our secure servers and your traffic is encrypted, so no one can see your data. Your real IP is hidden, and you can access blocked content. In some cases, you can experience faster Internet connection as well.</string>
     <string name="slot_status_vpn_lease">Refresh</string>
 

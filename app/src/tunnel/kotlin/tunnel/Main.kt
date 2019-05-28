@@ -31,7 +31,7 @@ class Main(
 ) {
 
     private val forwarder = Forwarder()
-    private val loopback = LinkedList<ByteArray>()
+    private val loopback = LinkedList<Pair<ByteArray, Int>>()
     private val blockade = Blockade()
     private var currentServers = emptyList<InetSocketAddress>()
     private var filters = FilterManager(blockade = blockade, doResolveFilterSource =

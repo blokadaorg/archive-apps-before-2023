@@ -18,14 +18,14 @@ import java.nio.ByteBuffer
 import java.util.*
 
 interface Proxy {
-    fun fromDevice(ktx: Kontext, packetBytes: ByteArray)
+    fun fromDevice(ktx: Kontext, packetBytes: ByteArray, length: Int)
     fun toDevice(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet? = null)
 }
 
 internal class BlockaProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
-        private val loopback: Queue<ByteArray>,
+        private val loopback: Queue<Pair<ByteArray, Int>>,
         private val config: BlockaConfig,
         var forward: (Kontext, DatagramPacket) -> Unit = { _, _ -> },
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
@@ -35,12 +35,11 @@ internal class BlockaProxy(
     val dest = ByteBuffer.allocateDirect(65535)
     val op = ByteBuffer.allocateDirect(8)
 
-    val datagram = ByteArray(65535)
-    val empty = ByteArray(65535)
+    val empty = ByteArray(1)
 
-    private fun interceptDns(ktx: Kontext, packetBytes: ByteArray): Boolean {
+    private fun interceptDns(ktx: Kontext, packetBytes: ByteArray, length: Int): Boolean {
         val originEnvelope = try {
-            IpSelector.newPacket(packetBytes, 0, packetBytes.size) as IpPacket
+            IpSelector.newPacket(packetBytes, 0, length) as IpPacket
         } catch (e: Exception) {
             return false
         }
@@ -69,14 +68,14 @@ internal class BlockaProxy(
             dnsMessage.header.setFlag(Flags.QR.toInt())
             dnsMessage.header.rcode = Rcode.NOERROR
             dnsMessage.addRecord(denyResponse, Section.AUTHORITY)
-            toDeviceFakeDnsResponse(ktx, dnsMessage.toWire(), -1, originEnvelope)
+            toDeviceFakeDnsResponse(ktx, dnsMessage.toWire(), originEnvelope)
             ktx.emit(Events.REQUEST, Request(host, blocked = true))
             true
         }
     }
 
-    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
-        if (interceptDns(ktx, packetBytes)) return
+    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray, length: Int) {
+        if (interceptDns(ktx, packetBytes, length)) return
 
         if (tunnel == null) {
             ktx.v("creating boringtun tunnel", config.gatewayId)
@@ -89,31 +88,25 @@ internal class BlockaProxy(
             dest.rewind()
             op.rewind()
             val resp = BoringTunJNI.wireguard_write(tunnel!!, if (written == 0) packetBytes else empty,
-                    packetBytes.size, dest, dest.capacity(), op)
+                    length, dest, dest.capacity(), op)
             op.rewind()
             written++
             when (op[0].toInt()) {
                 BoringTunJNI.WRITE_TO_NETWORK -> {
 //                    ktx.v("writing to network (size: $resp)")
                     Result.of {
-                        val array = ByteArray(resp) // todo: no copy
-                        dest.get(array, 0, resp)
-                        val udp = DatagramPacket(array, 0, resp)
+                        val udp = DatagramPacket(dest.array(), 0, resp)
                         forward(ktx, udp)
-//                        ktx.v("sent")
                     }.mapError { ex ->
                         ktx.w("failed sending to gateway", ex.message ?: "")
                         val cause = ex.cause
                         if (cause is ErrnoException && cause.errno == OsConstants.EBADF) throw ex
                     }
-//                    ktx.v("writing done")
                 }
                 BoringTunJNI.WIREGUARD_ERROR -> {
                     ktx.e("wireguard error: $resp")
                 }
-                BoringTunJNI.WIREGUARD_DONE -> {
-//                    ktx.v("done")
-                }
+                BoringTunJNI.WIREGUARD_DONE -> { }
                 else -> {
                     ktx.w("wireguard write unknown response: ${op[0].toInt()}")
                 }
@@ -136,11 +129,8 @@ internal class BlockaProxy(
                 BoringTunJNI.WRITE_TO_NETWORK -> {
 //                    ktx.v("read: writing to network")
                     Result.of {
-                        val array = ByteArray(resp) // todo: no copy
-                        dest.get(array, 0, resp)
-                        val udp = DatagramPacket(array, 0, resp)
+                        val udp = DatagramPacket(dest.array(), 0, resp)
                         forward(ktx, udp)
-//                        ktx.v("timer: sent")
                     }.mapError { ex ->
                         ktx.w("failed sending to gateway", ex.message ?: "")
                         val cause = ex.cause
@@ -150,14 +140,10 @@ internal class BlockaProxy(
                 BoringTunJNI.WIREGUARD_ERROR -> {
                     ktx.e("read: wireguard error: $resp, for response size: $length")
                 }
-                BoringTunJNI.WIREGUARD_DONE -> {
-//                    ktx.v("read: done")
-                }
+                BoringTunJNI.WIREGUARD_DONE -> { }
                 BoringTunJNI.WRITE_TO_TUNNEL_IPV4, BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> {
 //                    ktx.v("read: writing to tunnel")
-                    val array = ByteArray(resp) // todo: no copy
-                    dest.get(array, 0, resp)
-                    loopback.add(array)
+                    loopback.add(dest.array() to resp)
                 }
                 else -> {
                     ktx.w("read: wireguard unknown response: ${op[0].toInt()}")
@@ -167,7 +153,7 @@ internal class BlockaProxy(
 //        loopback(ktx, envelope.rawData)
     }
 
-    private fun toDeviceFakeDnsResponse(ktx: Kontext, response: ByteArray, length: Int, originEnvelope: Packet?) {
+    private fun toDeviceFakeDnsResponse(ktx: Kontext, response: ByteArray, originEnvelope: Packet?) {
         originEnvelope as IpPacket
         val udp = originEnvelope.payload as UdpPacket
         val udpResponse = UdpPacket.Builder(udp)
@@ -196,7 +182,8 @@ internal class BlockaProxy(
                     .payloadBuilder(udpResponse)
                     .build()
         }
-        loopback.add(envelope.rawData)
+        val buffer = envelope.rawData
+        loopback.add(buffer to buffer.size)
     }
 
     fun tick() {

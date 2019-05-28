@@ -16,13 +16,13 @@ internal class DnsProxy(
         private val dnsServers: List<InetSocketAddress>,
         private val blockade: Blockade,
         private val forwarder: Forwarder,
-        private val loopback: Queue<ByteArray>,
+        private val loopback: Queue<Pair<ByteArray, Int>>,
         private val denyResponse: SOARecord = SOARecord(Name("org.blokada.invalid."), DClass.IN,
                 5L, Name("org.blokada.invalid."), Name("org.blokada.invalid."), 0, 0, 0, 0, 5),
         private val doCreateSocket: () -> DatagramSocket = { DatagramSocket() }
 ) : Proxy {
 
-    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray) {
+    override fun fromDevice(ktx: Kontext, packetBytes: ByteArray, length: Int) {
         val originEnvelope = try {
             IpSelector.newPacket(packetBytes, 0, packetBytes.size) as IpPacket
         } catch (e: Exception) {
@@ -114,7 +114,7 @@ internal class DnsProxy(
         }
     }
 
-    private fun loopback(ktx: Kontext, response: ByteArray) = loopback.add(response)
+    private fun loopback(ktx: Kontext, response: ByteArray) = loopback.add(response to response.size)
 
     private fun resolveActualDestination(packet: IpPacket): InetSocketAddress {
         val servers = dnsServers
