@@ -98,9 +98,10 @@ internal class BlockaProxy(
                     buffers.returnBuffer(destinationBufferId)
                 }
                 BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
-                    if (config.adblocking &&
-                            (srcAddress4(ktx, destination, dnsServers[0].address.address) ||
-                            srcAddress4(ktx, destination, dnsServers[1].address.address))
+                    if (config.adblocking && (
+                            srcAddress4(ktx, destination, dnsServers[0].address.address) ||
+                            (dnsServers.size > 1 && srcAddress4(ktx, destination, dnsServers[1].address.address))
+                        )
                     ) {
 //                        ktx.v("detected dns coming back")
                         rewriteSrcDns4(ktx, destination, length)

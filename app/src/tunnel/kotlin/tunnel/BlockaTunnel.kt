@@ -165,23 +165,21 @@ internal class BlockaTunnel(
 
             proxy.createTunnel(ktx)
             openGatewaySocket(ktx)
-
             val polls = setupPolls(ktx, errors, device)
+            val gateway = polls[2]
 
             while (true) {
                 if (threadInterrupted()) throw InterruptedException()
 
                 device.listenFor(OsConstants.POLLIN)
-
-                val gateway = polls[2]
                 gateway.listenFor(OsConstants.POLLIN)
 
                 poll(ktx, polls)
-                tick(ktx)
+//                tick(ktx)
 //                fromLoopbackToDevice(ktx, device, output)
                 fromDeviceToProxy(ktx, device, input)
                 fromGatewayToProxy(ktx, gateway)
-                cleanup()
+                //cleanup()
             }
         } catch (ex: InterruptedException) {
             ktx.v("tunnel thread interrupted", this, ex.toString())
@@ -268,7 +266,7 @@ internal class BlockaTunnel(
         polls
     }()
 
-    private fun poll(ktx: Kontext, polls: Array<StructPollfd>) {
+    private inline fun poll(ktx: Kontext, polls: Array<StructPollfd>) {
         while (true) {
             try {
                 val result = Os.poll(polls, -1)
@@ -282,7 +280,7 @@ internal class BlockaTunnel(
         }
     }
 
-    private fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream) {
+    private inline fun fromDeviceToProxy(ktx: Kontext, device: StructPollfd, input: InputStream) {
         if (device.isEvent(OsConstants.POLLIN)) {
             val length = input.read(memory, 0, Buffers.MTU)
             if (length > 0) {
@@ -291,7 +289,7 @@ internal class BlockaTunnel(
         }
     }
 
-    private fun fromGatewayToProxy(ktx: Kontext, gateway: StructPollfd) {
+    private inline fun fromGatewayToProxy(ktx: Kontext, gateway: StructPollfd) {
         if (gateway.isEvent(OsConstants.POLLIN)) {
 //            ktx.v("from gateway to proxy")
             Result.of {
@@ -307,22 +305,6 @@ internal class BlockaTunnel(
         }
     }
 
-    private fun fromLoopbackToDevice(ktx: Kontext, device: StructPollfd, output: OutputStream) {
-        if (device.isEvent(OsConstants.POLLOUT)) {
-//            ktx.v("from loopback to device")
-            repeat(lastLoopbackBuffer + 1) {
-                val b = loopbackBuffers[it]!!
-                val id = loopbackBuffersReverse[it]!!
-                buffers.returnBuffer(id)
-                output.write(b.array(), b.arrayOffset() + b.position(), b.limit())
-            }
-            loopbackQueued = false
-            currentLoopbackBuffer = 0
-            lastLoopbackBuffer = 0
-//            ktx.v("queued loopbacks: 0")
-        }
-    }
-
 
     private fun tick(ktx: Kontext) {
         // TODO: system current time called to often?
@@ -333,7 +315,7 @@ internal class BlockaTunnel(
         }
     }
 
-    private fun threadInterrupted() = (Thread.interrupted() || this.error == null)
+    private inline fun threadInterrupted() = (Thread.interrupted() || this.error == null)
 
     private var count = 0
     private fun cleanup() {
@@ -351,11 +333,11 @@ internal class BlockaTunnel(
 
 }
 
-private fun StructPollfd.listenFor(events: Int) {
+private inline fun StructPollfd.listenFor(events: Int) {
     this.events = events.toShort()
 }
 
-private fun StructPollfd.isEvent(event: Int): Boolean {
+private inline fun StructPollfd.isEvent(event: Int): Boolean {
     return this.revents.toInt() and event != 0
 }
 
