@@ -126,11 +126,19 @@ class ProtectionVB(
         score(if (score == 0) 1 else score, max, description)
     }
 
+    private val settingsAction = Slot.Action(i18n.getString(R.string.slot_protection_action), {
+        ktx.emit(OPEN_MENU)
+    })
+
     private fun off() {
         view?.content = Slot.Content(
                 label = i18n.getString(R.string.slot_protection_off),
                 icon = ktx.ctx.getDrawable(R.drawable.ic_shield_outline),
-                color = ktx.ctx.resources.getColor(R.color.colorProtectionLow)
+                color = ktx.ctx.resources.getColor(R.color.colorProtectionLow),
+                action1 = Slot.Action(i18n.getString(R.string.slot_action_activate), {
+                    s.enabled %= true
+                }),
+                action2 = settingsAction
         )
         view?.type = Slot.Type.PROTECTION
     }
@@ -168,7 +176,11 @@ class ProtectionVB(
                 description = i18n.getString(R.string.slot_protection_description,
                         i18n.getString(description)),
                 icon = ktx.ctx.getDrawable(icon),
-                color = ktx.ctx.resources.getColor(color)
+                color = ktx.ctx.resources.getColor(color),
+                action1 = Slot.Action(i18n.getString(R.string.slot_action_deactivate), {
+                    s.enabled %= false
+                }),
+                action2 = settingsAction
         )
         view?.type = Slot.Type.PROTECTION
     }
@@ -194,7 +206,7 @@ class AppStatusVB(
                     Format.counter(tunnelEvents2.tunnelDropCount()))
             content = Slot.Content(
                     icon = ktx.ctx.getDrawable(R.drawable.ic_block),
-                    label = if (statusResId == R.string.main_active) droppedString else statusString,
+                    label = droppedString,
                     header = droppedString,
                     description = if (statusResId == R.string.main_active)
                         i18n.getString(R.string.slot_status_description_active) else statusString,
@@ -1281,12 +1293,20 @@ class StorageLocationVB(
 
 }
 
+fun openInBrowser(ctx: Context, url: URL) {
+    val intent = Intent(Intent.ACTION_VIEW)
+    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    intent.setData(Uri.parse(url.toString()))
+    ctx.startActivity(intent)
+}
+
 class UpdateVB(
         private val ktx: AndroidKontext,
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val repo: Repo = ktx.di().instance(),
         private val ver: Version = ktx.di().instance(),
+        private val pages: Pages = ktx.di().instance(),
         private val updater: UpdateCoordinator = ktx.di().instance(),
         onTap: (SlotView) -> Unit
 ) : SlotVB(onTap) {
@@ -1294,6 +1314,10 @@ class UpdateVB(
     private var listener: IWhen? = null
     private var clickCounter = 0
     private var next: Int = 0
+
+    private val changelogAction = Slot.Action(i18n.getString(R.string.main_changelog), {
+        openInBrowser(ctx, pages.changelog())
+    })
 
     override fun attach(view: SlotView) {
         listener = repo.lastRefreshMillis.doOnUiWhenSet().then {
@@ -1316,20 +1340,20 @@ class UpdateVB(
 
                                 next = next++ % repo.content().downloadLinks.size
                             }
-                        })
+                        }),
+                        icon = ctx.getDrawable(R.drawable.ic_new_releases),
+                        action2 = changelogAction
                 )
                 view.date = Date()
             } else {
                 view.content = Slot.Content(
-                        label = i18n.getString(R.string.update_header_noupdate),
-                        header = "${ver.appName} ${ver.name}",
+                        label = i18n.getString(R.string.slot_update_no_updates),
                         description = i18n.getString(R.string.update_info),
                         action1 = Slot.Action(i18n.getString(R.string.slot_update_action_refresh), {
                             repo.content.refresh(force = true)
                         }),
-                        action2 = Slot.Action(i18n.getString(R.string.update_button_appinfo), {
-                            try { ctx.startActivity(newAppDetailsIntent(ctx.packageName)) } catch (e: Exception) {}
-                        })
+                        icon = ctx.getDrawable(R.drawable.ic_reload),
+                        action2 = changelogAction
                 )
                 view.date = Date(repo.lastRefreshMillis())
             }
@@ -1338,6 +1362,44 @@ class UpdateVB(
 
     override fun detach(view: SlotView) {
         repo.lastRefreshMillis.cancel(listener)
+    }
+}
+
+class AboutVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val i18n: I18n = ktx.di().instance(),
+        private val ver: Version = ktx.di().instance(),
+        private val pages: Pages = ktx.di().instance(),
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    private val creditsAction = Slot.Action(i18n.getString(R.string.main_credits), {
+        openInBrowser(ctx, pages.credits())
+    })
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_about),
+                description = "${ver.appName} ${ver.name}",
+                detail = blokadaUserAgent(),
+                action2 = creditsAction,
+                action3 = Slot.Action(i18n.getString(R.string.update_button_appinfo), {
+                    try { ctx.startActivity(newAppDetailsIntent(ctx.packageName)) } catch (e: Exception) {}
+                }),
+                action1 = Slot.Action(i18n.getString(R.string.slot_about_share_log), {
+                    val uri = getExternalPath() + "/blokada.log"
+                    val openFileIntent = Intent(Intent.ACTION_SEND)
+                    openFileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    openFileIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    openFileIntent.type = "plain/*"
+                    openFileIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(ktx.ctx, "${ktx.ctx.packageName}.files",
+                            File(uri)))
+                    ktx.ctx.startActivity(openFileIntent)
+                })
+        )
     }
 
     private fun newAppDetailsIntent(packageName: String): Intent {
@@ -1353,6 +1415,7 @@ class TelegramVB(
         private val ctx: Context = ktx.ctx,
         private val i18n: I18n = ktx.di().instance(),
         private val pages: Pages = ktx.di().instance(),
+        private val onRemove: () -> Unit,
         onTap: (SlotView) -> Unit
 ) : SlotVB(onTap) {
 
@@ -1369,8 +1432,10 @@ class TelegramVB(
                         intent.data = Uri.parse(pages.chat().toString())
                         ctx.startActivity(intent)
                     } catch (e: Exception) {}
-                })
+                }),
+                action2 = view.ACTION_REMOVE
         )
+        view.onRemove = onRemove
     }
 
 }
@@ -1522,31 +1587,6 @@ fun Date.pretty(ktx: Kontext): String {
     return prettyFormat.format(this)
 }
 
-class ShareLogVB(
-        private val ktx: AndroidKontext,
-        private val i18n: I18n = ktx.di().instance(),
-        onTap: (SlotView) -> Unit
-) : SlotVB(onTap) {
-
-    override fun attach(view: SlotView) {
-        view.type = Slot.Type.INFO
-        view.content = Slot.Content(
-                label = "Share log",
-                action1 = Slot.Action("Share", {
-                    val uri = getExternalPath() + "/blokada.log"
-                    val openFileIntent = Intent(Intent.ACTION_SEND)
-                    openFileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    openFileIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    openFileIntent.type = "plain/*"
-                    openFileIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(ktx.ctx, "${ktx.ctx.packageName}.files",
-                            File(uri)))
-                    ktx.ctx.startActivity(openFileIntent)
-                })
-        )
-    }
-
-}
-
 class RecommendedDnsVB(
         private val ktx: AndroidKontext,
         private val i18n: I18n = ktx.di().instance(),
@@ -1601,3 +1641,186 @@ private fun hasGoodDnsServers(dns: Dns): Boolean {
     val active = dns.choices().firstOrNull { it.active }
     return active != null && active.id != "default"
 }
+
+class DonateVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        private val onRemove: () -> Unit,
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_donate_label),
+                icon = ctx.getDrawable(R.drawable.ic_heart_box),
+                action1 = Slot.Action(i18n.getString(R.string.slot_donate_action), {
+                    openInBrowser(ctx, pages.donate())
+                }),
+                action2 = view.ACTION_REMOVE
+        )
+        view.onRemove = onRemove
+    }
+}
+
+class BlogVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        private val onRemove: () -> Unit,
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_blog_label),
+                icon = ctx.getDrawable(R.drawable.ic_earth),
+                action1 = Slot.Action(i18n.getString(R.string.slot_blog_action), {
+                    openInBrowser(ctx, pages.news())
+                }),
+                action2 = view.ACTION_REMOVE
+        )
+        view.onRemove = onRemove
+    }
+}
+
+class HelpVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_help_label),
+                icon = ctx.getDrawable(R.drawable.ic_help_outline),
+                action1 = Slot.Action(i18n.getString(R.string.slot_help_action), {
+                    openInBrowser(ctx, pages.help())
+                })
+        )
+    }
+}
+
+class CtaVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        private val onRemove: () -> Unit,
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_cta_label),
+                icon = ctx.getDrawable(R.drawable.ic_comment_multiple_outline),
+                action1 = Slot.Action(i18n.getString(R.string.slot_cta_action), {
+                    openInBrowser(ctx, pages.cta())
+                }),
+                action2 = view.ACTION_REMOVE
+        )
+        view.onRemove = onRemove
+    }
+}
+
+class ObsoleteVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_obsolete_label),
+                icon = ctx.getDrawable(R.drawable.ic_new_releases),
+                action1 = Slot.Action(i18n.getString(R.string.slot_obsolete_action), {
+                    openInBrowser(ctx, pages.download())
+                })
+        )
+    }
+}
+
+class UpdatedVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        private val onRemove: () -> Unit,
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_updated_label),
+                icon = ctx.getDrawable(R.drawable.ic_reload),
+                action1 = Slot.Action(i18n.getString(R.string.slot_updated_action), {
+                    openInBrowser(ctx, pages.updated())
+                }),
+                action2 = Slot.Action(i18n.getString(R.string.slot_donate_action), {
+                    openInBrowser(ctx, pages.donate())
+                }),
+                action3 = view.ACTION_REMOVE
+        )
+        view.onRemove = onRemove
+    }
+}
+
+class CleanupVB(
+        private val ktx: AndroidKontext,
+        private val ctx: Context = ktx.ctx,
+        private val pages: Pages = ktx.di().instance(),
+        private val welcome: Welcome = ktx.di().instance(),
+        private val i18n: I18n = ktx.di().instance(),
+        onTap: (SlotView) -> Unit
+) : SlotVB(onTap) {
+
+    override fun attach(view: SlotView) {
+        view.type = Slot.Type.INFO
+        view.content = Slot.Content(
+                label = i18n.getString(R.string.slot_cleanup_label),
+                icon = ctx.getDrawable(R.drawable.ic_delete),
+                action1 = Slot.Action(i18n.getString(R.string.slot_cleanup_action), {
+                    Toast.makeText(ctx, R.string.welcome_cleanup_done, Toast.LENGTH_SHORT).show()
+                    val builds = getInstalledBuilds()
+                    for (b in builds.subList(1, builds.size).reversed()) {
+                        uninstallPackage(b)
+                    }
+                })
+        )
+    }
+
+    private fun getInstalledBuilds(): List<String> {
+        return welcome.conflictingBuilds().map {
+            if (isPackageInstalled(it)) it else null
+        }.filterNotNull()
+    }
+
+    private fun isPackageInstalled(appId: String): Boolean {
+        val intent = ctx.packageManager.getLaunchIntentForPackage(appId) as Intent? ?: return false
+        val activities = ctx.packageManager.queryIntentActivities(intent, 0)
+        return activities.size > 0
+    }
+
+    private fun uninstallPackage(appId: String) {
+        try {
+            val intent = Intent(Intent.ACTION_DELETE)
+            intent.data = Uri.parse("package:" + appId)
+            ctx.startActivity(intent)
+        } catch (e: Exception) {
+            ktx.e(e)
+        }
+    }
+}
+
