@@ -1,35 +1,31 @@
 package core
 
-import gs.presentation.ViewBinder
+import gs.presentation.NamedViewBinder
 
 
 internal class DashboardNavigationModel(
-        val sections: List<DashboardSection>,
-        var on: Boolean,
-        val onAnchored: (Int) -> Unit = {},
-        val onCollapsed: (Int) -> Unit = {},
-        val onSectionChanged: (DashboardSection, sectionIndex: Int) -> Unit = { _, _ -> },
-        val onMenuOpened: (DashboardSection, sectionIndex: Int, ViewBinder, menuIndex: Int) -> Unit = { _, _, _, _ -> },
+        val sections: List<NamedViewBinder>,
+        val menu: NamedViewBinder,
+        val onChangeSection: (NamedViewBinder, sectionIndex: Int) -> Unit = { _, _ -> },
+        val onChangeMenu: (NamedViewBinder?, NamedViewBinder?) -> Unit = { _, _ -> },
+        val onBackSubmenu: () -> Unit = {},
         val onMenuClosed: (Int) -> Unit = {},
-        val onTurnOn: () -> Unit = {},
-        val onTurnOff: () -> Unit = {},
         val onOpenMenu: () -> Unit = {},
         val onCloseMenu: () -> Unit = {}
 ) {
 
-    private var firstEventSent = false
-
     private var sectionIndex = 0
     private var section = sections[sectionIndex]
 
-    private var menuIndex = 0
-    private var menuOpened: ViewBinder? = null
+    private var menuOpened: NamedViewBinder? = null
+    private var submenuOpened: NamedViewBinder? = null
+    private var secondarySubmenuOpened: NamedViewBinder? = null
 
     private var slotSelected: SlotVB? = null
     private var slotOpened = false
 
     init {
-        (section.dash as? ListSection)?.run {
+        (section as? ListSection)?.run {
             setOnSelected { slot ->
                 slotSelected = slot
                 slotOpened = false
@@ -37,51 +33,55 @@ internal class DashboardNavigationModel(
         }
     }
 
-    fun inflateFinished() {
-//        if (!on) {
-//            onTurnOff()
-//            onCollapsed(sectionIndex)
-//        } else {
-            onTurnOn()
-            onAnchored(sectionIndex)
-//        }
+    fun menuClosed() {
+        menuOpened = null
+        submenuOpened = null
+        secondarySubmenuOpened = null
+        onMenuClosed(sectionIndex)
     }
 
-    fun panelAnchored() {
-        when {
-            !on -> {
-                on = true
-                onAnchored(sectionIndex)
-            }
-            else -> {
-                setNewMenu(null)
+    fun menuOpened() {
+        menuOpened = menu
+
+        val activeMenu = secondarySubmenuOpened ?: submenuOpened ?: menu
+        slotOpened = false
+        slotSelected = null
+        (activeMenu as? ListSection)?.run {
+            setOnSelected { slot ->
+                slotSelected = slot
+                slotOpened = false
             }
         }
+
+        onChangeMenu(submenuOpened, secondarySubmenuOpened)
     }
 
-    fun panelCollapsed() {
-        onCollapsed(sectionIndex)
-    }
-
-    fun panelExpanded() {
-//        if (menuOpened == null) {
-            val menu = section.subsections[menuIndex].dash
-            setNewMenu(menu)
-//        }
+    fun menuItemClicked(item: NamedViewBinder) {
+        when {
+            menuOpened == null -> {
+                menuOpened = menu
+                submenuOpened = item
+                secondarySubmenuOpened = null
+                onChangeMenu(submenuOpened, secondarySubmenuOpened)
+            }
+            submenuOpened == null || submenuOpened == item -> {
+                submenuOpened = item
+                secondarySubmenuOpened = null
+//                onOpenSubmenu(item)
+                onChangeMenu(submenuOpened, secondarySubmenuOpened)
+            }
+            else -> {
+                secondarySubmenuOpened = item
+//                onOpenSubmenu(item)
+                onChangeMenu(submenuOpened, secondarySubmenuOpened)
+            }
+        }
     }
 
     fun mainViewPagerSwiped(position: Int) {
         if (position != sectionIndex) {
             sectionIndex = position
             setNewSection(sections[sectionIndex])
-        }
-    }
-
-    fun menuViewPagerSwiped(position: Int) {
-        if (position != menuIndex) {
-            menuIndex = position
-            val menu = section.subsections[menuIndex].dash
-            setNewMenu(menu)
         }
     }
 
@@ -93,18 +93,19 @@ internal class DashboardNavigationModel(
         if (sectionIndex > 0) mainViewPagerSwiped(sectionIndex - 1)
     }
 
-    fun tunnelActivating() {
-        if (!on) {
-            on = true
-            firstEventSent = true
-            onAnchored(sectionIndex)
-        }
-    }
-
-    fun tunnelDeactivated() {
-        if (on || !firstEventSent) {
-            on = false
-            firstEventSent = true
+    fun menuViewPagerSwiped(position: Int) {
+        when {
+            position == 0 && submenuOpened != null -> {
+                submenuOpened = null
+                secondarySubmenuOpened = null
+                onChangeMenu(submenuOpened, secondarySubmenuOpened)
+//                onBackSubmenu()
+            }
+            position == 1 && secondarySubmenuOpened != null -> {
+                secondarySubmenuOpened = null
+                onChangeMenu(submenuOpened, secondarySubmenuOpened)
+//                onBackSubmenu()
+            }
         }
     }
 
@@ -125,7 +126,6 @@ internal class DashboardNavigationModel(
 
     fun backPressed(): Boolean {
         val item = slotSelected
-        val menu = menuOpened
         return when {
             item is Navigable && slotOpened -> {
                 setSlotOpened(false)
@@ -135,11 +135,20 @@ internal class DashboardNavigationModel(
                 setSlotUnselected()
                 true
             }
-            menu is Backable && menu.handleBackPressed() -> {
+            secondarySubmenuOpened != null -> {
+                onBackSubmenu()
                 true
             }
-            menu != null -> {
+            submenuOpened != null -> {
+                onBackSubmenu()
+                true
+            }
+            menuOpened != null -> {
                 onCloseMenu()
+                true
+            }
+            sectionIndex > 0 -> {
+                setNewSection(sections[--sectionIndex])
                 true
             }
             else -> {
@@ -156,20 +165,20 @@ internal class DashboardNavigationModel(
                 setSlotOpened(false)
                 item.left()
             }
-            menu != null -> {
-                if (menuIndex > 0) {
-                    menuIndex--
-                    val newMenu = section.subsections[menuIndex].dash
-                    setNewMenu(newMenu)
-                }
-            }
-            sectionIndex > 0 -> {
-                sectionIndex--
-                val newSection = sections[sectionIndex]
-                setNewSection(newSection)
-                onSectionChanged(newSection, sectionIndex)
-                section = newSection
-            }
+//            menu != null -> {
+//                if (menuIndex > 0) {
+//                    menuIndex--
+//                    val newMenu = section.subsections[menuIndex].dash
+//                    setNewMenu(newMenu)
+//                }
+//            }
+//            sectionIndex > 0 -> {
+//                sectionIndex--
+//                val newSection = sections[sectionIndex]
+//                setNewSection(newSection)
+//                onSectionChanged(newSection, sectionIndex)
+//                section = newSection
+//            }
         }
     }
 
@@ -181,20 +190,20 @@ internal class DashboardNavigationModel(
                 setSlotOpened(false)
                 item.right()
             }
-            menu != null -> {
-                if (menuIndex < section.subsections.size - 1) {
-                    menuIndex++
-                    val newMenu = section.subsections[menuIndex].dash
-                    setNewMenu(newMenu)
-                }
-            }
-            sectionIndex < sections.size - 1 -> {
-                sectionIndex++
-                val newSection = sections[sectionIndex]
-                setNewSection(newSection)
-                onSectionChanged(newSection, sectionIndex)
-                section = newSection
-            }
+//            menu != null -> {
+//                if (menuIndex < section.subsections.size - 1) {
+//                    menuIndex++
+//                    val newMenu = section.subsections[menuIndex].dash
+//                    setNewMenu(newMenu)
+//                }
+//            }
+//            sectionIndex < sections.size - 1 -> {
+//                sectionIndex++
+//                val newSection = sections[sectionIndex]
+//                setNewSection(newSection)
+//                onSectionChanged(newSection, sectionIndex)
+//                section = newSection
+//            }
         }
     }
 
@@ -212,7 +221,7 @@ internal class DashboardNavigationModel(
                 }
             }
             else -> {
-                (section.dash as? ListSection)?.apply {
+                (section as? ListSection)?.apply {
                     selectPrevious()
                 }
             }
@@ -233,43 +242,24 @@ internal class DashboardNavigationModel(
                 }
             }
             else -> {
-                (section.dash as? ListSection)?.apply {
+                (section as? ListSection)?.apply {
                     selectNext()
                 }
             }
         }
     }
 
-    private fun setNewMenu(menu: ViewBinder?) {
-        if (menu != null) {
-            menuOpened = menu
-            slotOpened = false
-            slotSelected = null
-            (menu as? ListSection)?.run {
-                setOnSelected { slot ->
-                    slotSelected = slot
-                    slotOpened = false
-                }
-            }
-            onMenuOpened(section, sectionIndex, menu, menuIndex)
-        } else {
-            menuOpened = null
-            onMenuClosed(sectionIndex)
-        }
-    }
-
-    private fun setNewSection(section: DashboardSection) {
+    private fun setNewSection(section: NamedViewBinder) {
         this.section = section
         slotOpened = false
         slotSelected = null
-        (section.dash as? ListSection)?.run {
+        (section as? ListSection)?.run {
             setOnSelected { slot ->
                 slotSelected = slot
                 slotOpened = false
             }
         }
-        menuIndex = 0
-        onSectionChanged(section, sectionIndex)
+        onChangeSection(section, sectionIndex)
     }
 
     private fun setSlotOpened(opened: Boolean) {
@@ -282,7 +272,7 @@ internal class DashboardNavigationModel(
                     scrollToSelected()
                 }
             } else {
-                (section.dash as? ListSection)?.run {
+                (section as? ListSection)?.run {
                     scrollToSelected()
                 }
             }
@@ -298,7 +288,7 @@ internal class DashboardNavigationModel(
                 unselect()
             }
         } else {
-            (section.dash as? ListSection)?.run {
+            (section as? ListSection)?.run {
                 unselect()
             }
         }

@@ -78,6 +78,7 @@ fun newDnsModule(ctx: Context): Kodein.Module {
 abstract class Dns {
     abstract val choices: IProperty<List<DnsChoice>>
     abstract val dnsServers: IProperty<List<InetSocketAddress>>
+    abstract val enabled: IProperty<Boolean>
     abstract val fallback: IProperty<Boolean>
     abstract fun hasCustomDnsSelected(): Boolean
 }
@@ -98,7 +99,7 @@ class DnsImpl(
 ) : Dns() {
 
     override fun hasCustomDnsSelected(): Boolean {
-        return choices().firstOrNull { it.id != "default" && it.active } != null
+        return enabled() && choices().firstOrNull { it.id != "default" && it.active } != null
     }
 
     private val refresh = { it: List<DnsChoice> ->
@@ -150,12 +151,13 @@ class DnsImpl(
             shouldRefresh = { it.size <= 1 })
 
     override val dnsServers = newProperty(w, {
-        val d = choices().firstOrNull { it.active }
+        val d = if (enabled()) choices().firstOrNull { it.active } else null
         if (d?.servers?.isEmpty() ?: true) getDnsServers(ctx)
         else d?.servers!!
     })
 
     override val fallback = newPersistedProperty(w, BasicPersistence(xx, "dnsFallback"), { true })
+    override val enabled = newPersistedProperty(w, BasicPersistence(xx, "dnsEnabled"), { false })
 
     init {
         pages.dns.doWhenSet().then {
@@ -163,6 +165,9 @@ class DnsImpl(
         }
 
         choices.doOnUiWhenSet().then {
+            dnsServers.refresh()
+        }
+        enabled.doOnUiWhenChanged(withInit = true).then {
             dnsServers.refresh()
         }
         d.connected.doOnUiWhenSet().then {
