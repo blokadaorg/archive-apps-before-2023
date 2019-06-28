@@ -284,6 +284,13 @@ fun showSnack(msgResId: Int) {
     }
 }
 
+fun showSnack(resource: Resource) {
+    activityRegister.getParentView()?.run {
+        if (resource.hasResId()) Snackbar.make(this, resource.getResId(), Snackbar.LENGTH_LONG).show()
+        else Snackbar.make(this, resource.getString(), Snackbar.LENGTH_LONG).show()
+    }
+}
+
 fun clearConnectedGateway(ktx: AndroidKontext, config: BlockaConfig, showError: Boolean = true) {
     if (config.blockaVpn && showError) {
         displayLeaseExpiredNotification(ktx.ctx)
