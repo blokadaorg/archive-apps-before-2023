@@ -1,19 +1,23 @@
-package core
+package core.bits
 
 import android.app.Activity
 import android.graphics.Point
 import com.github.michaelbull.result.onSuccess
 import com.github.salomonbrys.kodein.instance
+import core.*
+import core.bits.menu.adblocking.SlotMutex
 import gs.environment.ComponentProvider
 import gs.presentation.ListViewBinder
+import gs.presentation.NamedViewBinder
 import tunnel.Events
 import tunnel.Request
 import kotlin.math.max
 
 class AdsDashboardSectionVB(
         val ktx: AndroidKontext,
-        val activity: ComponentProvider<Activity> = ktx.di().instance()
-) : ListViewBinder() {
+        val activity: ComponentProvider<Activity> = ktx.di().instance(),
+        override val name: Resource = "Ads".res()
+) : ListViewBinder(), NamedViewBinder {
 
     private val screenHeight: Int by lazy {
         val point = Point()

@@ -1,11 +1,20 @@
-package core
+package core.bits.menu.dns
 
 import android.content.Context
 import com.github.salomonbrys.kodein.instance
+import core.*
+import core.bits.AddDnsVB
+import core.bits.DnsChoiceVB
+import core.bits.menu.adblocking.SlotMutex
 import gs.presentation.ListViewBinder
+import gs.presentation.NamedViewBinder
 import gs.property.IWhen
+import org.blokada.R
 
-class DnsDashboardSection(val ctx: Context) : ListViewBinder() {
+class DnsDashboardSection(
+        val ctx: Context,
+        override val name: Resource = R.string.panel_section_advanced_dns.res()
+) : ListViewBinder(), NamedViewBinder {
 
     private val ktx = ctx.ktx("DnsDashboard")
     private val filters by lazy { ktx.di().instance<Filters>() }

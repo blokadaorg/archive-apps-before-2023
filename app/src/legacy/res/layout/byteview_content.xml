@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/byte_root"
+    android:layout_width="match_parent"
+    android:background="@drawable/bg_dashboard_item"
+    android:padding="@dimen/slot_content_padding"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/byte_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:layout_margin="@dimen/slot_icon_margin"
+        android:tint="@color/colorAccent" />
+
+    <ImageView
+        android:id="@+id/byte_icon"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="start|center_vertical"
+        android:layout_margin="@dimen/slot_icon_margin"
+        android:src="@drawable/ic_block"
+        android:tint="@color/colorActive" />
+
+    <LinearLayout
+        android:id="@+id/byte_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/byte_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/slot_secondary_padding"
+            android:layout_marginEnd="@dimen/slot_secondary_padding"
+            android:maxLines="1"
+            android:textSize="24sp"
+            android:textColor="@color/colorAccent"
+            tools:text="39,894" />
+
+        <TextView
+            android:id="@+id/byte_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/slot_secondary_padding"
+            android:layout_marginEnd="@dimen/slot_secondary_padding"
+            android:textColor="@color/colorInactive"
+            android:textSize="@dimen/slot_secondary_text_size"
+            tools:text="blocked" />
+    </LinearLayout>
+
+</FrameLayout>

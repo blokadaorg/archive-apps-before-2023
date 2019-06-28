@@ -1,6 +1,11 @@
-package core
+package core.bits.menu.adblocking
 
+import core.*
+import core.bits.FilterVB
+import core.bits.NewFilterVB
+import core.bits.menu.MenuItemVB
 import gs.presentation.ListViewBinder
+import gs.presentation.NamedViewBinder
 import gs.presentation.ViewBinder
 import org.blokada.R
 import tunnel.Events
@@ -30,7 +35,10 @@ internal class SlotMutex {
 }
 
 
-class FiltersSectionVB(val ktx: AndroidKontext) : ListViewBinder() {
+class FiltersSectionVB(
+        val ktx: AndroidKontext,
+        override val name: Resource = R.string.panel_section_ads_lists.res()
+) : ListViewBinder(), NamedViewBinder {
 
     private val slotMutex = SlotMutex()
 
@@ -38,7 +46,9 @@ class FiltersSectionVB(val ktx: AndroidKontext) : ListViewBinder() {
         val items = filters.filter {
             !it.whitelist && !it.hidden && it.source.id != "single"
         }.sortedBy { it.priority }.map { FilterVB(it, ktx, onTap = slotMutex.openOneAtATime) }
-        view?.set(listOf(NewFilterVB(ktx, nameResId = R.string.slot_new_filter_list)) + items)
+        view?.set(listOf(
+                NewFilterVB(ktx, nameResId = R.string.slot_new_filter_list)
+        ) + items)
         onSelectedListener(null)
         Unit
     }
@@ -53,6 +63,14 @@ class FiltersSectionVB(val ktx: AndroidKontext) : ListViewBinder() {
         ktx.cancel(Events.FILTERS_CHANGED, filtersUpdated)
     }
 
+}
+
+fun createHostsListMenuItem(ktx: AndroidKontext): NamedViewBinder {
+    return MenuItemVB(ktx,
+            label = R.string.panel_section_ads_lists.res(),
+            icon = R.drawable.ic_block.res(),
+            opens = FiltersSectionVB(ktx)
+    )
 }
 
 class StaticItemsListVB(

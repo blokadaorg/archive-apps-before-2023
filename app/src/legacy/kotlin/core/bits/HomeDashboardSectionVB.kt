@@ -1,13 +1,21 @@
-package core
+package core.bits
 
 import android.content.Context
 import android.content.Intent
 import com.github.michaelbull.result.get
 import com.github.salomonbrys.kodein.instance
+import core.*
+import core.bits.menu.adblocking.SlotMutex
+import core.bits.menu.isLandscape
 import gs.presentation.ListViewBinder
+import gs.presentation.NamedViewBinder
 import gs.presentation.ViewBinder
+import gs.property.IWhen
 import gs.property.Version
 import org.blokada.BuildConfig
+import org.blokada.R
+import tunnel.BLOCKA_CONFIG
+import tunnel.BlockaConfig
 
 data class SlotsSeenStatus(
         val intro: Boolean = false,
@@ -47,7 +55,6 @@ class HomeDashboardSectionVB(
 
     private var items = listOf<ViewBinder>(
             AppStatusVB(ctx.ktx("AppStatusSlotVB"), onTap = slotMutex.openOneAtATime),
-            HomeNotificationsVB(ctx.ktx("NotificationsVB"), onTap = slotMutex.openOneAtATime),
             ProtectionVB(ctx.ktx("ProtectionVB"), onTap = slotMutex.openOneAtATime),
             HelpVB(ctx.ktx("HelpVB"), onTap = slotMutex.openOneAtATime)
     )
@@ -110,9 +117,142 @@ class HomeDashboardSectionVB(
 
 class SlotStatusPersistence {
     val load = { ->
-        Result.of { core.Persistence.paper().read<SlotsSeenStatus>("slots:status", SlotsSeenStatus()) }
+        Result.of { Persistence.paper().read<SlotsSeenStatus>("slots:status", SlotsSeenStatus()) }
     }
     val save = { slots: SlotsSeenStatus ->
-        Result.of { core.Persistence.paper().write("slots:status", slots) }
+        Result.of { Persistence.paper().write("slots:status", slots) }
     }
 }
+
+class Home2DashboardSectionVB(
+        val ktx: AndroidKontext,
+        val ctx: Context = ktx.ctx,
+        val version: Version = ktx.di().instance(),
+        val welcome: Welcome = ktx.di().instance(),
+        override val name: Resource = R.string.panel_section_home.res()
+) : ListViewBinder(), NamedViewBinder {
+
+
+    private var items = listOf<ViewBinder>(
+            AdsBlockedVB(ktx),
+            VpnStatusVB(ktx),
+            Adblocking2VB(ktx),
+            VpnVB(ktx),
+            ActiveDnsVB(ktx),
+            HomeNotificationsVB(ktx)
+    )
+
+    override fun attach(view: VBListView) {
+        if (isLandscape(ktx.ctx)) view.enableLandscapeMode()
+        view.set(items)
+    }
+
+    override fun detach(view: VBListView) {
+    }
+
+}
+
+class HomeNotificationsVB(
+        private val ktx: AndroidKontext,
+        private val ui: UiState = ktx.di().instance()
+) : BitVB() {
+
+    private var listener: IWhen? = null
+
+    override fun attach(view: BitView) {
+        listener = ui.notifications.doOnUiWhenSet().then {
+            if (ui.notifications()) {
+                view.label(R.string.slot_notifications_enabled.res())
+                view.icon(R.drawable.ic_info.res(), color = R.color.switch_on.res())
+            } else {
+                view.label(R.string.slot_notifications_disabled.res())
+                view.icon(R.drawable.ic_info.res())
+            }
+
+            view.switch(ui.notifications())
+            view.onSwitch { ui.notifications %= it }
+        }
+    }
+
+    override fun detach(view: BitView) {
+        ui.notifications.cancel(listener)
+    }
+}
+
+class VpnVB(
+        private val ktx: AndroidKontext
+): BitVB() {
+
+    override fun attach(view: BitView) {
+        ktx.on(BLOCKA_CONFIG, configListener)
+        update()
+    }
+
+    override fun detach(view: BitView) {
+        ktx.cancel(BLOCKA_CONFIG, configListener)
+    }
+
+    private var config: BlockaConfig = BlockaConfig()
+    private val configListener = { cfg: BlockaConfig ->
+        config = cfg
+        update()
+        Unit
+    }
+
+    private val update = {
+        view?.apply {
+            if (config.blockaVpn) {
+                label("VPN is enabled".res())
+                icon(R.drawable.ic_verified.res(), color = R.color.switch_on.res())
+            } else {
+                label("VPN is disabled".res())
+                icon(R.drawable.ic_shield_outline.res())
+            }
+            switch(config.blockaVpn)
+            onSwitch {
+                ktx.emit(BLOCKA_CONFIG, config.copy(blockaVpn = it))
+            }
+        }
+        Unit
+    }
+}
+
+class Adblocking2VB(
+        private val ktx: AndroidKontext
+): BitVB() {
+
+    override fun attach(view: BitView) {
+        ktx.on(BLOCKA_CONFIG, configListener)
+        update()
+    }
+
+    override fun detach(view: BitView) {
+        ktx.cancel(BLOCKA_CONFIG, configListener)
+    }
+
+    private var config: BlockaConfig = BlockaConfig()
+    private val configListener = { cfg: BlockaConfig ->
+        config = cfg
+        update()
+        Unit
+    }
+
+    private val update = {
+        view?.apply {
+            if (config.adblocking) {
+                label("Ad blocking is enabled".res())
+                icon(R.drawable.ic_blocked.res(), color = R.color.switch_on.res())
+            } else {
+                label("Ad blocking is disabled".res())
+                icon(R.drawable.ic_show.res())
+            }
+            switch(config.adblocking)
+            onSwitch {
+                ktx.emit(BLOCKA_CONFIG, config.copy(adblocking = it))
+            }
+        }
+        Unit
+    }
+
+}
+

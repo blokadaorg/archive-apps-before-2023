@@ -1,10 +1,19 @@
-package core
+package core.bits.menu.adblocking
 
+import core.*
+import core.bits.FilterVB
+import core.bits.NewFilterVB
+import core.bits.menu.MenuItemVB
 import gs.presentation.ListViewBinder
+import gs.presentation.NamedViewBinder
+import org.blokada.R
 import tunnel.Events
 import tunnel.Filter
 
-class BlacklistDashboardSection(val ktx: AndroidKontext) : ListViewBinder() {
+class BlacklistDashboardSection(
+        val ktx: AndroidKontext,
+        override val name: Resource = R.string.panel_section_ads_blacklist.res()
+) : ListViewBinder(), NamedViewBinder {
 
     private val slotMutex = SlotMutex()
 
@@ -25,4 +34,12 @@ class BlacklistDashboardSection(val ktx: AndroidKontext) : ListViewBinder() {
         ktx.cancel(Events.FILTERS_CHANGED, updateApps)
     }
 
+}
+
+fun createBlacklistMenuItem(ktx: AndroidKontext): NamedViewBinder {
+    return MenuItemVB(ktx,
+            label = R.string.panel_section_ads_blacklist.res(),
+            icon = R.drawable.ic_shield_outline.res(),
+            opens = BlacklistDashboardSection(ktx)
+    )
 }
