@@ -35,7 +35,7 @@ class HostsLogVB(
             if(searchString.isEmpty() || it.domain.contains(searchString.toLowerCase())) {
                 val dash = requestToVB(it)
                 items.add(0, dash)
-                view?.add(dash, 1)
+                view?.add(dash, 2)
                 firstItem = it
                 onSelectedListener(null)
             }
@@ -54,6 +54,7 @@ class HostsLogVB(
                     view.set(emptyList())
                     attach(view)
                 }))
+                view.add(LabelVB(ktx, label = "Live history of allowed and blocked requests".res()))
             }
             var items = loadBatch(0)
             items += loadBatch(1)

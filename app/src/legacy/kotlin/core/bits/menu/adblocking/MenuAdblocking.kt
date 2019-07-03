@@ -15,6 +15,7 @@ private fun createMenuAdblocking(ktx: AndroidKontext): NamedViewBinder {
                 AdblockingSwitchVB(ktx),
                 LabelVB(ktx, label = "Select lists to use for blocking. Defaults are fine for most people.".res()),
                 createHostsListMenuItem(ktx),
+                createHostsListDownloadMenuItem(ktx),
                 LabelVB(ktx, label = "Add your own rules to fine tune blocking.".res()),
                 createWhitelistMenuItem(ktx),
                 createBlacklistMenuItem(ktx),

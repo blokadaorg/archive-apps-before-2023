@@ -20,7 +20,10 @@ class BlacklistDashboardSection(
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { !it.whitelist && !it.hidden && it.source.id == "single" }.map {
             FilterVB(it, ktx, onTap = slotMutex.openOneAtATime)
-        }.apply { view?.set(listOf(NewFilterVB(ktx)) + this) }
+        }.apply { view?.set(listOf(
+                NewFilterVB(ktx),
+                LabelVB(ktx, label = "Blacklisted hosts".res())
+        ) + this) }
         Unit
     }
 

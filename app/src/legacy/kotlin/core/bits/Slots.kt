@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.widget.EditText
-import androidx.core.content.FileProvider
 import com.github.salomonbrys.kodein.instance
 import core.*
 import core.Tunnel
@@ -24,7 +23,6 @@ import tunnel.Filter
 import tunnel.Persistence
 import update.UpdateCoordinator
 import update.isUpdate
-import java.io.File
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
@@ -474,6 +472,7 @@ class FiltersStatusVB(
     }
 
     override fun attach(view: SlotView) {
+        view.enableAlternativeBackground()
         ktx.on(Events.RULESET_BUILT, refreshRuleset)
         ktx.on(Events.FILTERS_CHANGING, updatingFilters)
         ktx.on(Events.MEMORY_CAPACITY, refreshMemory)
@@ -1033,8 +1032,8 @@ class AddDnsVB(private val ktx: AndroidKontext,
     modal.openModal()
     ktx.ctx.startActivity(Intent(ktx.ctx, AddDnsActivity::class.java))}){
     override fun attach(view: SlotView) {
-        view.content = Slot.Content(ktx.ctx.resources.getString(R.string.dns_custom_add_slot)
-        ,icon = ktx.ctx.getDrawable(R.drawable.ic_filter_add))
+        view.content = Slot.Content(ktx.ctx.resources.getString(R.string.dns_custom_add_slot))
+        view.type = Slot.Type.NEW
     }
 }
 
@@ -1431,11 +1430,8 @@ class UpdateVB(
     private var clickCounter = 0
     private var next: Int = 0
 
-    private val changelogAction = Slot.Action(i18n.getString(R.string.main_changelog)) {
-        openInBrowser(ctx, pages.changelog())
-    }
-
     override fun attach(view: SlotView) {
+        view.enableAlternativeBackground()
         listener = repo.lastRefreshMillis.doOnUiWhenSet().then {
             val current = repo.content()
             view.type = Slot.Type.INFO
@@ -1457,8 +1453,7 @@ class UpdateVB(
                                 next = next++ % repo.content().downloadLinks.size
                             }
                         },
-                        icon = ctx.getDrawable(R.drawable.ic_new_releases),
-                        action2 = changelogAction
+                        icon = ctx.getDrawable(R.drawable.ic_new_releases)
                 )
                 view.date = Date()
             } else {
@@ -1468,8 +1463,7 @@ class UpdateVB(
                         action1 = Slot.Action(i18n.getString(R.string.slot_update_action_refresh), {
                             repo.content.refresh(force = true)
                         }),
-                        icon = ctx.getDrawable(R.drawable.ic_reload),
-                        action2 = changelogAction
+                        icon = ctx.getDrawable(R.drawable.ic_reload)
                 )
                 view.date = Date(repo.lastRefreshMillis())
             }
@@ -1496,6 +1490,7 @@ class AboutVB(
     }
 
     override fun attach(view: SlotView) {
+        view.enableAlternativeBackground()
         view.type = Slot.Type.INFO
 
         view.content = Slot.Content(
@@ -1504,24 +1499,15 @@ class AboutVB(
                 detail = blokadaUserAgent(ctx),
                 action2 = creditsAction,
                 action3 = Slot.Action(i18n.getString(R.string.update_button_appinfo)) {
-                    try {
-                        ctx.startActivity(newAppDetailsIntent(ctx.packageName))
-                    } catch (e: Exception) {
-                    }
                 },
                 action1 = Slot.Action(i18n.getString(R.string.slot_about_share_log)) {
-                    //                    if (askForExternalStoragePermissionsIfNeeded(activity)) {
-                    val uri = File(ctx.filesDir, "/blokada.log")
-                    val openFileIntent = Intent(Intent.ACTION_SEND)
-                    openFileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    openFileIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    openFileIntent.type = "plain/*"
-                    openFileIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(ktx.ctx, "${ktx.ctx.packageName}.files",
-                            uri))
-                    ktx.ctx.startActivity(openFileIntent)
-//                    }
                 }
         )
+
+        Handler {
+            view.unfold()
+            true
+        }.sendEmptyMessageDelayed(0, 100)
     }
 
     private fun newAppDetailsIntent(packageName: String): Intent {

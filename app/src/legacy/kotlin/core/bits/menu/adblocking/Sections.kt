@@ -1,9 +1,9 @@
 package core.bits.menu.adblocking
 
 import core.*
-import core.bits.FilterVB
-import core.bits.NewFilterVB
+import core.bits.*
 import core.bits.menu.MenuItemVB
+import core.bits.menu.MenuItemsVB
 import gs.presentation.ListViewBinder
 import gs.presentation.NamedViewBinder
 import gs.presentation.ViewBinder
@@ -47,7 +47,8 @@ class FiltersSectionVB(
             !it.whitelist && !it.hidden && it.source.id != "single"
         }.sortedBy { it.priority }.map { FilterVB(it, ktx, onTap = slotMutex.openOneAtATime) }
         view?.set(listOf(
-                NewFilterVB(ktx, nameResId = R.string.slot_new_filter_list)
+                NewFilterVB(ktx, nameResId = R.string.slot_new_filter_list),
+                LabelVB(ktx, label = "Host lists contain rules for blocking ads and trackers. Try to keep the number of active lists low.".res())
         ) + items)
         onSelectedListener(null)
         Unit
@@ -72,6 +73,30 @@ fun createHostsListMenuItem(ktx: AndroidKontext): NamedViewBinder {
             opens = FiltersSectionVB(ktx)
     )
 }
+
+fun createHostsListDownloadMenuItem(ktx: AndroidKontext): NamedViewBinder {
+    return MenuItemVB(ktx,
+            label = "List settings".res(),
+            icon = R.drawable.ic_tune.res(),
+            opens = createMenuHostsDownload(ktx)
+    )
+}
+
+private fun createMenuHostsDownload(ktx: AndroidKontext): NamedViewBinder {
+    return MenuItemsVB(ktx,
+            items = listOf(
+                    LabelVB(ktx, label = "List status".res()),
+                    FiltersStatusVB(ktx, onTap = defaultOnTap),
+                    LabelVB(ktx, label = "List download settings".res()),
+                    FiltersListControlVB(ktx, onTap = defaultOnTap),
+                    ListDownloadFrequencyVB(ktx, onTap = defaultOnTap),
+                    DownloadOnWifiVB(ktx, onTap = defaultOnTap),
+                    DownloadListsVB(ktx, onTap = defaultOnTap)
+            ),
+            name = "List settings".res()
+    )
+}
+
 
 class StaticItemsListVB(
         private val items: List<ViewBinder>

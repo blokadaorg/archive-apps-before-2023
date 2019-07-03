@@ -52,7 +52,7 @@ fun createGatewaysMenuItem(ktx: AndroidKontext): NamedViewBinder {
 }
 
 fun createWhyVpnMenuItem(ktx: AndroidKontext): NamedViewBinder {
-    val whyPage = ktx.di().instance<Pages>().help
+    val whyPage = ktx.di().instance<Pages>().vpn
     return SimpleMenuItemVB(ktx,
             label = "Why VPN?".res(),
             icon = R.drawable.ic_help_outline.res(),

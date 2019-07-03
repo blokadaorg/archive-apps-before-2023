@@ -3,6 +3,7 @@ package core.bits.menu.dns
 import android.content.Context
 import com.github.salomonbrys.kodein.instance
 import core.*
+import core.bits.ActiveDnsVB
 import core.bits.AddDnsVB
 import core.bits.DnsChoiceVB
 import core.bits.menu.adblocking.SlotMutex
@@ -30,7 +31,13 @@ class DnsDashboardSection(
         get = dns.choices.doOnUiWhenSet().then {
             dns.choices().map {
                 DnsChoiceVB(it, ktx, onTap = slotMutex.openOneAtATime)
-            }.apply { view.set(this); view.add(AddDnsVB(ktx), 0) }
+            }.apply {
+                view.set(this)
+                view.add(LabelVB(ktx, label = "DNS is responsible for connecting your device to websites and apps you use. Choosing a good DNS may speed up your device and will help protect your privacy.".res()), 0)
+                view.add(ActiveDnsVB(ktx), 1)
+                view.add(AddDnsVB(ktx), 2)
+                view.add(LabelVB(ktx, label = "Recommended DNS servers".res()), 3)
+            }
         }
     }
 

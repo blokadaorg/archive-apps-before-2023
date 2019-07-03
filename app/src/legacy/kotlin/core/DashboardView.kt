@@ -52,8 +52,9 @@ class DashboardView(
     private val bg_logo_icon = findViewById<ImageView>(R.id.bg_logo_icon)
     private val bg_pager = findViewById<VBPagesView>(R.id.bg_pager)
     private val bg_packets = findViewById<PacketsView>(R.id.bg_packets)
-    private val bg_chevron_left = findViewById<View>(R.id.bg_chevron_left)
+    private val fg_chevron_back = findViewById<View>(R.id.fg_chevron_back)
     private val bg_chevron_right = findViewById<View>(R.id.bg_chevron_right)
+    private val fg_label = findViewById<RelativeLayout>(R.id.fg_label)
     private val fg_logo_icon = findViewById<ImageView>(R.id.fg_logo_icon)
     private val fg_label_text = findViewById<TextView>(R.id.fg_label_text)
     private val fg_pager = findViewById<VBPagesView>(R.id.fg_pager)
@@ -122,7 +123,7 @@ class DashboardView(
                     ktx.v("onMenuClosed")
                     setOn(sectionIndex + 1)
                     bg_pager.lock = false
-                    updateMenuHeader(null)
+                    updateMenuHeader(null, closed = true)
                     onCloseSection()
                 },
                 onOpenMenu = {
@@ -209,6 +210,10 @@ class DashboardView(
 
     private fun setDragging() {
         fg_pager.alpha = 0f
+
+        val lp = fg_label.layoutParams as FrameLayout.LayoutParams
+        lp.topMargin = 0
+        fg_label.requestLayout()
     }
 
     private val advanced by lazy { getColorStateList(ctx, R.color.dashboard_menu_advanced) }
@@ -274,7 +279,7 @@ class DashboardView(
         }
     }
 
-    private fun updateMenuHeader(label: String?) {
+    private fun updateMenuHeader(label: String?, closed: Boolean = false) {
         if (label == null) {
 //            fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
 //                fg_logo_icon.setImageResource(R.drawable.blokada)
@@ -284,6 +289,7 @@ class DashboardView(
             fg_label_text.animate().setDuration(200).alpha(0f).doAfter {
                 fg_label_text.visibility = View.GONE
             }
+            fg_chevron_back.visibility = View.INVISIBLE
         } else {
 //            fg_logo_icon.animate().setDuration(200).alpha(0f).doAfter {
 //                fg_logo_icon.setImageResource(R.drawable.ic_arrow_back)
@@ -295,6 +301,18 @@ class DashboardView(
                 fg_label_text.text = label
                 fg_label_text.animate().setDuration(200).alpha(1f)
             }
+            fg_chevron_back.visibility = View.VISIBLE
+        }
+        if (closed) {
+            fg_logo_icon.setImageResource(R.drawable.ic_menu)
+
+            val lp = fg_label.layoutParams as FrameLayout.LayoutParams
+            lp.topMargin = 0
+        } else {
+            fg_logo_icon.setImageResource(R.drawable.ic_menu)
+
+            val lp = fg_label.layoutParams as FrameLayout.LayoutParams
+            lp.topMargin = 0 - (context.resources.getDimensionPixelSize(R.dimen.dashboard_fg_logo_margin_top) / 1.5f).toInt()
         }
         //fg_logo_icon.animate().translationX(-100f)
     }
@@ -430,8 +448,8 @@ class DashboardView(
             }
         })
 
-        bg_chevron_left.setOnClickListener {
-            model.mainViewPagerSwipedLeft()
+        fg_chevron_back.setOnClickListener {
+            fg_pager.currentItem = fg_pager.currentItem - 1
         }
 
         bg_chevron_right.setOnClickListener {

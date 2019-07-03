@@ -2,6 +2,7 @@ package core
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.os.Handler
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +12,6 @@ import android.widget.TextView
 import androidx.appcompat.widget.SwitchCompat
 import com.github.salomonbrys.kodein.instance
 import gs.presentation.LayoutViewBinder
-import gs.presentation.doAfter
 import gs.property.I18n
 import org.blokada.R
 
@@ -196,11 +196,15 @@ class BitView(
 
     fun onTap(tap: () -> Unit) {
         setOnClickListener {
-            containerView.animate().setDuration(20).translationX(25f).doAfter {
-                containerView.animate().setDuration(20).translationX(0f).doAfter {
-                    tap()
-                }
-            }
+            containerView.setBackgroundResource(R.drawable.bg_dashboard_item_inactive)
+            tap()
+            Handler {
+                if (alternative)
+                    containerView.setBackgroundResource(R.drawable.bg_dashboard_item_alternative)
+                else
+                    containerView.setBackgroundResource(R.drawable.bg_dashboard_item)
+                true
+            }.sendEmptyMessageDelayed(0, 100)
         }
     }
 

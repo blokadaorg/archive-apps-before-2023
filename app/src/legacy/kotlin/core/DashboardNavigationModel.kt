@@ -147,6 +147,10 @@ internal class DashboardNavigationModel(
                 onCloseMenu()
                 true
             }
+            sectionIndex > 0 -> {
+                setNewSection(sections[--sectionIndex])
+                true
+            }
             else -> {
                 false
             }

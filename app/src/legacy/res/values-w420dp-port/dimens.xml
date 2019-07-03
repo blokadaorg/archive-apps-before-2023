@@ -7,11 +7,7 @@
     <dimen name="dashboard_logo_size">48dp</dimen>
     <dimen name="dashboard_logo_margin_top">12dp</dimen>
     <dimen name="dashboard_pager_margin_bottom">110dp</dimen>
-    <dimen name="dashboard_panel_anchor_size">1dp</dimen>
-    <dimen name="dashboard_panel_margin_top">16dp</dimen>
-    <dimen name="dashboard_panel_margin_bottom">-16dp</dimen>
     <dimen name="dashboard_fg_pager_margin_top">76dp</dimen>
-    <dimen name="dashboard_fg_logo_margin_top">32dp</dimen>
     <dimen name="dashboard_nav_align_end_width">820dp</dimen>
 
     <dimen name="dots_padding_sides">4dp</dimen>

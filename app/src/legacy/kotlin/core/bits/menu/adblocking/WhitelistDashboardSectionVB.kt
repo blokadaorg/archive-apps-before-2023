@@ -1,12 +1,9 @@
 package core.bits.menu.adblocking
 
-import core.AndroidKontext
-import core.Resource
-import core.VBListView
+import core.*
 import core.bits.FilterVB
 import core.bits.NewFilterVB
 import core.bits.menu.MenuItemVB
-import core.res
 import gs.presentation.ListViewBinder
 import gs.presentation.NamedViewBinder
 import org.blokada.R
@@ -23,7 +20,10 @@ class WhitelistDashboardSectionVB(
     private var updateApps = { filters: Collection<Filter> ->
         filters.filter { it.whitelist && !it.hidden && it.source.id != "app" }.map {
             FilterVB(it, ktx, onTap = slotMutex.openOneAtATime)
-        }.apply { view?.set(listOf(NewFilterVB(ktx, whitelist = true, nameResId = R.string.slot_new_filter_whitelist)) + this) }
+        }.apply { view?.set(listOf(
+                NewFilterVB(ktx, whitelist = true, nameResId = R.string.slot_new_filter_whitelist),
+                LabelVB(ktx, label = "Whitelisted hosts".res())
+        ) + this) }
         Unit
     }
 
