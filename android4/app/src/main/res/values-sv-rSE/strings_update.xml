@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="update_button">Hämta uppdatering</string>
-    <string name="update_notification_title">Uppdatering finns</string>
+    <string name="update_notification_title">Uppdatering tillgänglig</string>
     <!-- Parameter: new app version, for example 2.0.1 -->
     <string name="update_notification_text">Version %1$s är redo att hämtas! Tryck för att gå vidare.</string>
     <!-- Header displaying the new app version. Important! Parameter was removed from this string, so please remove any variable placeholders from translations. -->
