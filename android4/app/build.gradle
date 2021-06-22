@@ -39,9 +39,9 @@ android {
     defaultConfig {
         applicationId "org.blokada"
         minSdkVersion 21
-        targetSdkVersion 28
-        versionCode 411000001
-        versionName "4.11.1"
+        targetSdkVersion 29
+        versionCode 414000001
+        versionName "4.14.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
