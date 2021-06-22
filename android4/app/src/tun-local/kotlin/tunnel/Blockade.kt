@@ -104,24 +104,34 @@ internal class WildcardBlockade(
 ) {
 
     override fun afterRulesetsBuilt(denyRuleset: Ruleset, allowRuleset: Ruleset) {
-        wildcardDenyRuleset = Ruleset().apply { addAll(denyRuleset.filter { it.startsWith("*") }) }
-        wildcardAllowRuleset = Ruleset().apply { addAll(allowRuleset.filter { it.startsWith("*") }) }
-        wildcardDenyRuleset = Ruleset().apply { addAll(wildcardDenyRuleset.map { it.removePrefix("*") }) }
-        wildcardAllowRuleset = Ruleset().apply { addAll(wildcardAllowRuleset.map { it.removePrefix("*") }) }
+        wildcardDenyRuleset = Ruleset().apply { addAll(denyRuleset.filter { it.startsWith("*") || it.startsWith("||") }) }
+        wildcardAllowRuleset = Ruleset().apply { addAll(allowRuleset.filter { it.startsWith("*") || it.startsWith("||")  }) }
+        wildcardDenyRuleset = Ruleset().apply { addAll(wildcardDenyRuleset.map { it.removePrefix("*").removePrefix("||").removeSuffix("^") }) }
+        wildcardAllowRuleset = Ruleset().apply { addAll(wildcardAllowRuleset.map { it.removePrefix("*").removePrefix("||").removeSuffix("^") }) }
 
         v("WildcardBlockade configured, deny/allow:", wildcardDenyRuleset.size,
                 wildcardAllowRuleset.size)
     }
 
     override fun denied(host: String): Boolean {
-        return denyRuleset.contains(host) || wildcardDenyRuleset.firstOrNull {
-            host.endsWith(it)
-        } != null
+        if (denyRuleset.contains(host)) return true
+
+        var partial = host
+        do {
+            if (wildcardDenyRuleset.contains(partial)) return true
+            partial = partial.substringAfter(".")
+        } while (partial.contains("."))
+        return false
     }
 
     override fun allowed(host: String): Boolean {
-        return allowRuleset.contains(host) || wildcardAllowRuleset.firstOrNull {
-            host.endsWith(it)
-        } != null
+        if (allowRuleset.contains(host)) return true
+
+        var partial = host
+        do {
+            if (wildcardAllowRuleset.contains(partial)) return true
+            partial = partial.substringAfter(".")
+        } while (partial.contains("."))
+        return false
     }
 }
