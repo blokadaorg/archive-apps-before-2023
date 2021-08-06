@@ -1,6 +1,7 @@
 package tunnel
 
 import android.net.VpnService
+import android.os.Build
 import blocka.CurrentLease
 import core.Result
 import core.e
@@ -75,6 +76,11 @@ internal class DnsVpnConfigurator(
         Result.of { builder.addDisallowedApplication("com.android.vending") }
 
         builder.setBlocking(true)
+
+        // To not show our VPN as a metered connection
+        if (Build.VERSION.SDK_INT >= 29) { // Q
+            builder.setMetered(false)
+        }
     }
 
     private fun VpnService.Builder.addDnsServer(format: String?, ipv6Template: ByteArray?,
