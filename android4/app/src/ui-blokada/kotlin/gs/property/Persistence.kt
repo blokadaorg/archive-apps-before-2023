@@ -81,11 +81,11 @@ class SharedPreferencesWrapper(val p: SharedPreferences): Serialiser {
 
     override val all: Map<String, *> by p.all
     override fun getString(key: String, defValue: String): String {
-        return p.getString(key, defValue)
+        return p.getString(key, defValue)!!
     }
 
     override fun getStringSet(key: String, defValues: Set<String>): Set<String> {
-        return p.getStringSet(key, defValues)
+        return p.getStringSet(key, defValues)!!
     }
 
     override fun getInt(key: String, defValue: Int): Int {

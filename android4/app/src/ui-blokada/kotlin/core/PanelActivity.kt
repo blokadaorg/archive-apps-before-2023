@@ -115,7 +115,7 @@ class PanelActivity : Activity() {
     private fun getNotch() {
         try {
             val displayCutout = window.decorView.rootWindowInsets.displayCutout
-            dashboardView.notchPx = displayCutout.safeInsetTop
+            dashboardView.notchPx = displayCutout!!.safeInsetTop
         } catch (e: Throwable) {
             if (!isAndroidTV())
                 dashboardView.notchPx = resources.getDimensionPixelSize(R.dimen.dashboard_notch_inset)

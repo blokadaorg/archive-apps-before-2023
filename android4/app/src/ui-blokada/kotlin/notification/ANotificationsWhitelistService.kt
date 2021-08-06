@@ -13,8 +13,8 @@ class ANotificationsWhitelistService : IntentService("notificationsWhitelist") {
 
     private var mHandler: Handler = Handler()
 
-    override fun onHandleIntent(intent: Intent) {
-        val host = intent.getStringExtra("host") ?: return
+    override fun onHandleIntent(intent: Intent?) {
+        val host = intent?.getStringExtra("host") ?: return
 
         val f = Filter(
                 id(host, whitelist = true),

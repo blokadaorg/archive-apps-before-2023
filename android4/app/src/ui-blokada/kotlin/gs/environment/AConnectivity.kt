@@ -20,7 +20,7 @@ fun isConnected(ctx: android.content.Context): Boolean {
 
 fun isTethering(ctx: android.content.Context, intent: android.content.Intent? = null): Boolean {
     var tethering = false
-    if (intent != null) tethering = gs.environment.isTetheringMethod3(intent.extras)
+    if (intent != null) tethering = gs.environment.isTetheringMethod3(intent.extras!!)
     if (!tethering) tethering = gs.environment.isTetheringMethod1(ctx)
     if (!tethering) tethering = gs.environment.isTetheringMethod2(ctx)
     return tethering

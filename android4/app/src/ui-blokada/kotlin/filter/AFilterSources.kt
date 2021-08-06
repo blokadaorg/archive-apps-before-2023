@@ -222,7 +222,7 @@ class FilterSourceApp(
 }
 
 private fun openFile(ctx: Context, uri: Uri): java.io.InputStream {
-    return ctx.contentResolver.openInputStream(uri)
+    return ctx.contentResolver.openInputStream(uri)!!
 }
 
 class DefaultSourceProvider(

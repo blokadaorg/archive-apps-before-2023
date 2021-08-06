@@ -14,7 +14,7 @@ class ANotificationsOffService : IntentService("notifications") {
 
     private val state by lazy { inject().instance<UiState>() }
 
-    override fun onHandleIntent(intent: Intent) {
+    override fun onHandleIntent(intent: Intent?) {
         state.notifications %= false
     }
 

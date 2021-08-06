@@ -277,7 +277,7 @@ class AnnouncementNotification(announcement: Announcement): BlokadaNotification(
 
 class AnnouncementNotificationTappedService : IntentService("announcementNotification") {
 
-    override fun onHandleIntent(intent: Intent) {
+    override fun onHandleIntent(intent: Intent?) {
         v("announcement notification tapped")
         markAnnouncementAsSeen()
         openInExternalBrowser(this, URL(getAnnouncementUrl()))

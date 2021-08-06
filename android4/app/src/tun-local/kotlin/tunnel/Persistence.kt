@@ -56,7 +56,7 @@ class FiltersPersistence {
             Err(Exception("custom persistence path detected, skipping legacy import"))
         else {
             val prefs = ktx.ctx.getSharedPreferences("filters", Context.MODE_PRIVATE)
-            val legacy = prefs.getString("filters", "").split("^")
+            val legacy = prefs.getString("filters", "")!!.split("^")
             prefs.edit().putString("filters", "").apply()
             val old = FilterSerializer().deserialise(legacy)
             if (old.isNotEmpty()) {

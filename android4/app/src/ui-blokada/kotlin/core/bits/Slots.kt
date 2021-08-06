@@ -139,7 +139,7 @@ class DomainForwarderVB(
                     // Copy
                     val clipboardManager = ktx.ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clipData = ClipData.newPlainText("domain", domain)
-                    clipboardManager.primaryClip = clipData
+                    clipboardManager.setPrimaryClip(clipData)
                     showSnack(R.string.panel_domain_copied)
                 }
                 //action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), view.ACTION_NONE)
@@ -182,7 +182,7 @@ class DomainBlockedNormalVB(
                     // Copy
                     val clipboardManager = ktx.ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clipData = ClipData.newPlainText("domain", domain)
-                    clipboardManager.primaryClip = clipData
+                    clipboardManager.setPrimaryClip(clipData)
                     showSnack(R.string.panel_domain_copied)
                 }
                 //action2 = Slot.Action(i18n.getString(R.string.slot_action_facts), view.ACTION_NONE)

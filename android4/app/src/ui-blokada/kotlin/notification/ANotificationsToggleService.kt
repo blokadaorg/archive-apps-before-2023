@@ -15,8 +15,9 @@ import org.blokada.R
 class ANotificationsToggleService : IntentService("notificationsToggle") {
     private var mHandler: Handler = Handler()
 
-    override fun onHandleIntent(intent: Intent) {
-         val newState: Boolean = intent.getBooleanExtra("new_state", true)
+    override fun onHandleIntent(intent: Intent?) {
+        if (intent == null) return
+        val newState: Boolean = intent.getBooleanExtra("new_state", true)
         when (intent.getSerializableExtra("setting") as NotificationsToggleSeviceSettings) {
             NotificationsToggleSeviceSettings.GENERAL -> {
                 val t: Tunnel = this.inject().instance()

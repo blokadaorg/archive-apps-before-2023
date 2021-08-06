@@ -34,7 +34,7 @@ class AccountVB(
                 // Copy
                 val clipboardManager = ktx.ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 val clipData = ClipData.newPlainText("account-id", cfg.id)
-                clipboardManager.primaryClip = clipData
+                clipboardManager.setPrimaryClip(clipData)
                 showSnack(R.string.slot_account_action_copied)
             } else {
                 view.id(R.string.slot_account_action_unavailable.res())
