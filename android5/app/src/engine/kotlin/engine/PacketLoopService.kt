@@ -43,7 +43,9 @@ object PacketLoopService {
     init {
         // When connectivity is back restart the loop for faster recovery.
         connectivity.onConnectivityChanged = { isConected ->
-            if (isConected && !wasConnected) maybeRestartLoop()
+            if (isConected) {
+                maybeRestartLoop(delay = wasConnected)
+            }
             wasConnected = isConected
         }
 
@@ -55,7 +57,7 @@ object PacketLoopService {
         }
     }
 
-    private fun maybeRestartLoop(force: Boolean = true) {
+    private fun maybeRestartLoop(force: Boolean = true, delay: Boolean = false) {
         loop?.let {
             val (config, thread) = it
             if (thread == null) {
@@ -64,6 +66,10 @@ object PacketLoopService {
                 startSupportingServices(config)
             } else if (force) {
                 log.w("maybeRestartLoop: loop was running before, restarting it")
+                if (delay) {
+                    log.w("maybeRestartLoop: additional delay because of conn changes")
+                    Thread.sleep(1000)
+                }
                 stopUnexpectedly()
             }
         }

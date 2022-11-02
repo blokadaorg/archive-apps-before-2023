@@ -244,7 +244,7 @@ class DebugPermsRepo: PermsRepo() {
 
         GlobalScope.launch {
             dnsProfilePermsHot.collect {
-                Logger.e("PermsRepo", "Private DNS perms now: $it")
+                Logger.v("PermsRepo", "Private DNS perms now: $it")
             }
         }
     }
