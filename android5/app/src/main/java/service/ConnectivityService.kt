@@ -166,14 +166,26 @@ object ConnectivityService {
     }
 
     private fun checkPrivateDns(link: LinkProperties) {
-        if (Build.VERSION.SDK_INT >= 28 && link.isPrivateDnsActive) {
-            privateDns = link.privateDnsServerName
-            log.v("privateDNS active for ${link.interfaceName}: $privateDns")
-            onPrivateDnsChanged(link.privateDnsServerName)
-        } else {
-            log.v("privateDNS not active or unsupported for ${link.interfaceName}")
-            privateDns = null
-            onPrivateDnsChanged(null)
+        when {
+            Build.VERSION.SDK_INT < 28 -> {
+                log.w("privateDNS unsupported on this Android version")
+            }
+            link.isPrivateDnsActive -> {
+                privateDns = link.privateDnsServerName
+                log.v("privateDNS active for ${link.interfaceName}: $privateDns")
+                onPrivateDnsChanged(link.privateDnsServerName)
+            }
+            else -> {
+                networkLinks.values.firstOrNull { it.isPrivateDnsActive }?.let {
+                    privateDns = it.privateDnsServerName
+                    log.v("privateDNS active for ${it.interfaceName}: $privateDns (skipped default network)")
+                    onPrivateDnsChanged(it.privateDnsServerName)
+                } ?: run {
+                    privateDns = null
+                    log.v("privateDNS not active")
+                    onPrivateDnsChanged(null)
+                }
+            }
         }
     }
 
