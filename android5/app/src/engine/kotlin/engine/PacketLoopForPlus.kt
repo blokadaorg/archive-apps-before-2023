@@ -86,11 +86,11 @@ internal class PacketLoopForPlus (
             val polls = setupPolls(errors, device)
             val gateway = polls[2]
 
+            device.listenFor(OsConstants.POLLIN)
+            gateway.listenFor(OsConstants.POLLIN)
+
             while (true) {
                 if (shouldInterruptLoop()) throw InterruptedException()
-
-                device.listenFor(OsConstants.POLLIN)
-                gateway.listenFor(OsConstants.POLLIN)
 
                 poll(polls)
                 tick()
@@ -121,7 +121,7 @@ internal class PacketLoopForPlus (
         val opCode = op[0].toInt()
         when (opCode) {
             BoringTunJNI.WRITE_TO_NETWORK -> {
-                forward()
+                forward(buffer)
             }
             BoringTunJNI.WIREGUARD_ERROR -> {
                 metrics.onRecoverableError("Wireguard error: ${BoringTunJNI.errors[response]}".ex())
@@ -136,50 +136,45 @@ internal class PacketLoopForPlus (
     }
 
     private fun toDevice(source: ByteArray, length: Int) {
-        var i = 0
-        do {
-            op.rewind()
-            val destination = buffer
-            destination.rewind()
-            destination.limit(destination.capacity())
-            val response = BoringTunJNI.wireguard_read(
-                boringtunHandle,
-                source,
-                if (i++ == 0) length else 0,
-                destination,
-                destination.capacity(),
-                op
-            )
-            destination.limit(response) // TODO: what if -1
-            val opCode = op[0].toInt()
-            when (opCode) {
-                BoringTunJNI.WRITE_TO_NETWORK -> {
-                    forward()
-                }
-                BoringTunJNI.WIREGUARD_ERROR -> {
-                    metrics.onRecoverableError("toDevice: wireguard error: ${BoringTunJNI.errors[response]}".ex())
-                }
-                BoringTunJNI.WIREGUARD_DONE -> {
-                    // This conditional is ignoring the "normal operation" errors
-                    // It would be nice to know why exactly they happen.
-                    if (i == 1 && length != 32)
-                        metrics.onRecoverableError("toDevice: packet dropped, length: $length".ex())
-                }
-                BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
-                    //if (adblocking) tunnelFiltering.handleToDevice(destination, length)
-                    rewriter.handleToDevice(destination, length)
-                    loopback()
-                }
-                BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> loopback()
-                else -> {
-                    metrics.onRecoverableError("toDevice: wireguard unknown response: $opCode".ex())
-                }
+        op.rewind()
+        buffer.rewind()
+        buffer.limit(buffer.capacity())
+        val response = BoringTunJNI.wireguard_read(
+            boringtunHandle,
+            source,
+            length,
+            buffer,
+            buffer.capacity(),
+            op
+        )
+        buffer.limit(response) // TODO: what if -1
+        val opCode = op[0].toInt()
+        when (opCode) {
+            BoringTunJNI.WRITE_TO_NETWORK -> {
+                forward(buffer)
             }
-        } while (opCode == BoringTunJNI.WRITE_TO_NETWORK)
+            BoringTunJNI.WIREGUARD_ERROR -> {
+                metrics.onRecoverableError("toDevice: wireguard error: ${BoringTunJNI.errors[response]}".ex())
+            }
+            BoringTunJNI.WIREGUARD_DONE -> {
+                // This conditional is ignoring the "normal operation" errors
+                // It would be nice to know why exactly they happen.
+//                    if (i == 1 && length != 32)
+//                        metrics.onRecoverableError("toDevice: packet dropped, length: $length".ex())
+            }
+            BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
+                //if (adblocking) tunnelFiltering.handleToDevice(destination, length)
+                rewriter.handleToDevice(buffer, length)
+                loopback()
+            }
+            BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> loopback()
+            else -> {
+                metrics.onRecoverableError("toDevice: wireguard unknown response: $opCode".ex())
+            }
+        }
     }
 
-    private fun forward() {
-        val b = buffer
+    private fun forward(b: ByteBuffer) {
         packet.setData(b.array(), b.arrayOffset() + b.position(), b.limit())
         try {
             gatewaySocket!!.send(packet)
@@ -296,15 +291,14 @@ internal class PacketLoopForPlus (
 
     private fun tickWireguard() {
         op.rewind()
-        val destination = buffer
-        destination.rewind()
-        destination.limit(destination.capacity())
-        val response = BoringTunJNI.wireguard_tick(boringtunHandle, destination, destination.capacity(), op)
-        destination.limit(response)
+        buffer.rewind()
+        buffer.limit(buffer.capacity())
+        val response = BoringTunJNI.wireguard_tick(boringtunHandle, buffer, buffer.capacity(), op)
+        buffer.limit(response)
         val opCode = op[0].toInt()
         when (opCode) {
             BoringTunJNI.WRITE_TO_NETWORK -> {
-                forward()
+                forward(buffer) // "response" is size
             }
             BoringTunJNI.WIREGUARD_ERROR -> {
                 metrics.onRecoverableError("tick: wireguard error: ${BoringTunJNI.errors[response]}".ex())

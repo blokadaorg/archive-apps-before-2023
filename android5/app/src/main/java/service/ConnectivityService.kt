@@ -221,7 +221,7 @@ object ConnectivityService {
                 val fallback = NetworkDescriptor.fallback()
                 activeNetwork = fallback
                 lastSeenRouteNetwork = defaultRouteNetwork
-                log.v("Lost default network, no connectivity")
+                log.w("Lost default network, no connectivity")
 
                 onConnectivityChanged(false)
                 onActiveNetworkChanged(fallback)
@@ -233,7 +233,7 @@ object ConnectivityService {
                 // This is the normal case of switching networks
                 activeNetwork = descriptor
                 lastSeenRouteNetwork = defaultRouteNetwork
-                log.v("Network is now default: $defaultRouteNetwork = $descriptor")
+                log.w("Network is now default: $defaultRouteNetwork = $descriptor")
 
                 onConnectivityChanged(true)
                 onConnectedBack()
