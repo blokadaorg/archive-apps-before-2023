@@ -13,18 +13,16 @@
 package utils
 
 import android.util.Log
-import service.FileService
 import service.LogService
-import service.file
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class Logger(private val component: String) {
+open class Logger(private val component: String) {
 
-    fun e(message: String) = Logger.e(component, message)
-    fun w(message: String) = Logger.w(component, message)
-    fun v(message: String) = Logger.v(component, message)
+    open fun e(message: String) = Logger.e(component, message)
+    open fun w(message: String) = Logger.w(component, message)
+    open fun v(message: String) = Logger.v(component, message)
 
     companion object {
 
@@ -61,5 +59,15 @@ class Logger(private val component: String) {
             LogService.logToFile(line)
         }
     }
+
+}
+
+class LoggerWithThread(val component: String) : Logger(component) {
+
+    override fun e(message: String) = super.e(thread() + message)
+    override fun w(message: String) = super.w(thread() + message)
+    override fun v(message: String) = super.v(thread() + message)
+
+    private fun thread() = "{${Thread.currentThread().id}} "
 
 }

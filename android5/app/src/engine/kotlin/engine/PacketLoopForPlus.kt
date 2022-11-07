@@ -22,7 +22,7 @@ import engine.MetricsService.PACKET_BUFFER_SIZE
 import model.BlokadaException
 import model.GatewayId
 import model.ex
-import utils.Logger
+import utils.LoggerWithThread
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -44,7 +44,7 @@ internal class PacketLoopForPlus (
     private val stoppedUnexpectedly: () -> Unit
 ): Thread("PacketLoopForPlus") {
 
-    private val log = Logger("PLPlus")
+    private val log = LoggerWithThread("PLPlus")
     private val metrics = MetricsService
 
     // Constants
@@ -196,7 +196,7 @@ internal class PacketLoopForPlus (
 
     private fun openGatewaySocket() {
         gatewaySocket = createSocket()
-        gatewaySocket?.connect(InetAddress.getByName(gatewayIp), gatewayPort)
+        gatewaySocket?.connect(InetAddress.getByName(gatewayIp), gatewayPort) ?: throw BlokadaException("Could not create gateway socket")
         log.v("Connect to gateway ip: $gatewayIp")
     }
 
