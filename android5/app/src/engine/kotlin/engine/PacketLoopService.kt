@@ -12,6 +12,8 @@
 
 package engine
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import model.BlokadaException
 import model.Dns
 import model.Gateway
@@ -24,8 +26,10 @@ object PacketLoopService {
 
     private val log = Logger("PacketLoop")
     private val connectivity = ConnectivityService
+    private val engine = EngineService
     private val screenOn = ScreenOnService
-    private var wasConnected = false;
+    private var wasConnected = false
+    private var lastLoopStart = 0L
 
     var onCreateSocket = {
         log.e("Created unprotected socket for the packet loop")
@@ -152,6 +156,7 @@ object PacketLoopService {
         }
 
         thread.start()
+        lastLoopStart = System.currentTimeMillis()
         return config to thread
     }
 
@@ -174,6 +179,10 @@ object PacketLoopService {
                 } else */if (!screenOn.isScreenOn) {
                     log.w("Screen is off, not bringing packet loop back for now")
                     loop = config to null
+                } else if (System.currentTimeMillis() - lastLoopStart < 30000) {
+                    log.w("Packet loop started before recently, performing a full engine restart")
+                    loop = config to null
+                    GlobalScope.launch { engine.forceReload() }
                 } else {
                     log.w("Bringing packet loop back")
                     loop = createLoop(config)
@@ -185,6 +194,7 @@ object PacketLoopService {
 
     suspend fun stop() {
         log.v("Requested to stop packet loop")
+        lastLoopStart = 0
         loop?.let {
             loop = null
             val (_, thread) = it
