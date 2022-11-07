@@ -136,42 +136,46 @@ internal class PacketLoopForPlus (
     }
 
     private fun toDevice(source: ByteArray, length: Int) {
-        op.rewind()
-        buffer.rewind()
-        buffer.limit(buffer.capacity())
-        val response = BoringTunJNI.wireguard_read(
-            boringtunHandle,
-            source,
-            length,
-            buffer,
-            buffer.capacity(),
-            op
-        )
-        buffer.limit(response) // TODO: what if -1
-        val opCode = op[0].toInt()
-        when (opCode) {
-            BoringTunJNI.WRITE_TO_NETWORK -> {
-                forward(buffer)
-            }
-            BoringTunJNI.WIREGUARD_ERROR -> {
-                metrics.onRecoverableError("toDevice: wireguard error: ${BoringTunJNI.errors[response]}".ex())
-            }
-            BoringTunJNI.WIREGUARD_DONE -> {
-                // This conditional is ignoring the "normal operation" errors
-                // It would be nice to know why exactly they happen.
+        // This will read from wg and then possibly loop to flush the queue wg may have
+        var i = 0
+        do {
+            op.rewind()
+            buffer.rewind()
+            buffer.limit(buffer.capacity())
+            val response = BoringTunJNI.wireguard_read(
+                boringtunHandle,
+                source,
+                if (i++ == 0) length else 0, // Zero when flushing the queue as per boringtun docs
+                buffer,
+                buffer.capacity(),
+                op
+            )
+            buffer.limit(response) // TODO: what if -1
+            val opCode = op[0].toInt()
+            when (opCode) {
+                BoringTunJNI.WRITE_TO_NETWORK -> {
+                    forward(buffer)
+                }
+                BoringTunJNI.WIREGUARD_ERROR -> {
+                    metrics.onRecoverableError("toDevice: wireguard error: ${BoringTunJNI.errors[response]}".ex())
+                }
+                BoringTunJNI.WIREGUARD_DONE -> {
+                    // This conditional is ignoring the "normal operation" errors
+                    // It would be nice to know why exactly they happen.
 //                    if (i == 1 && length != 32)
 //                        metrics.onRecoverableError("toDevice: packet dropped, length: $length".ex())
+                }
+                BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
+                    //if (adblocking) tunnelFiltering.handleToDevice(destination, length)
+                    rewriter.handleToDevice(buffer, length)
+                    loopback()
+                }
+                BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> loopback()
+                else -> {
+                    metrics.onRecoverableError("toDevice: wireguard unknown response: $opCode".ex())
+                }
             }
-            BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
-                //if (adblocking) tunnelFiltering.handleToDevice(destination, length)
-                rewriter.handleToDevice(buffer, length)
-                loopback()
-            }
-            BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> loopback()
-            else -> {
-                metrics.onRecoverableError("toDevice: wireguard unknown response: $opCode".ex())
-            }
-        }
+        } while (opCode == BoringTunJNI.WRITE_TO_NETWORK)
     }
 
     private fun forward(b: ByteBuffer) {
