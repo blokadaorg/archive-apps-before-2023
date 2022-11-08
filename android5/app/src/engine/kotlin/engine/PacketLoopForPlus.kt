@@ -49,7 +49,7 @@ internal class PacketLoopForPlus (
     private val metrics = MetricsService
 
     // Constants
-    private val TICK_INTERVAL_MS = 500
+    private val TICK_INTERVAL_MS = 100
 
     // Memory buffers
     private val buffer = ByteBuffer.allocateDirect(PACKET_BUFFER_SIZE)
