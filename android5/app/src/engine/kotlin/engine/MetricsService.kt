@@ -20,7 +20,7 @@ import model.BlokadaException
 import repository.Repos
 import ui.utils.cause
 import ui.utils.now
-import utils.Logger
+import utils.LoggerWithThread
 import java.net.InetSocketAddress
 import java.net.Socket
 
@@ -38,7 +38,7 @@ object MetricsService {
     private const val MAX_ONE_WAY_DNS_REQUESTS = 30
     private const val MAX_RECENT_ERRORS = 20
 
-    private val log = Logger("Metrics")
+    private val log = LoggerWithThread("Metrics")
     private val scope = GlobalScope
 
     private val processingRepo by lazy { Repos.processing }
