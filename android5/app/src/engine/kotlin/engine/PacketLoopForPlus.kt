@@ -128,7 +128,7 @@ internal class PacketLoopForPlus (
                 metrics.onRecoverableError("Wireguard error: ${BoringTunJNI.errors[response]}".ex())
             }
             BoringTunJNI.WIREGUARD_DONE -> {
-                metrics.onRecoverableError("Packet dropped, length: $length".ex())
+                //metrics.onRecoverableError("Packet dropped, length: $length".ex())
             }
             else -> {
                 metrics.onRecoverableError("Wireguard write unknown response: $opCode".ex())
