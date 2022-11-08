@@ -17,6 +17,7 @@ import model.Dns
 import model.Gateway
 import model.PrivateKey
 import service.ConnectivityService
+import service.EnvironmentService
 import utils.Logger
 import java.net.DatagramSocket
 
@@ -136,6 +137,7 @@ object PacketLoopService {
                     gatewayId = gw.public_key,
                     gatewayIp = gw.ipv4,
                     gatewayPort = gw.port,
+                    useRewriter = EnvironmentService.isLibre(),
                     createSocket = onCreateSocket,
                     stoppedUnexpectedly = this::stopUnexpectedly
                 )

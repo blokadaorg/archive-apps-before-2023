@@ -202,7 +202,7 @@ internal class PacketLoopForPlus (
     private fun openGatewaySocket() {
         gatewaySocket = createSocket()
         gatewaySocket?.connect(InetAddress.getByName(gatewayIp), gatewayPort) ?: throw BlokadaException("Could not create gateway socket")
-        log.v("Connect to gateway ip: $gatewayIp")
+        log.v("Connect to gateway ip: $gatewayIp, localAddress: ${gatewaySocket?.localAddress}")
     }
 
     private fun closeGatewaySocket() {
