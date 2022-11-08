@@ -131,7 +131,8 @@ object PacketLoopService {
                     gatewayIp = gw.ipv4,
                     gatewayPort = gw.port,
                     createSocket = onCreateSocket,
-                    stoppedUnexpectedly = this::stopUnexpectedly
+                    stoppedUnexpectedly = this::stopUnexpectedly,
+                    useRewriter = true
                 )
             }
             else -> {

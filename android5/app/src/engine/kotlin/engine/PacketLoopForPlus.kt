@@ -40,6 +40,7 @@ internal class PacketLoopForPlus (
     internal val gatewayId: GatewayId,
     private val gatewayIp: String,
     private val gatewayPort: Int,
+    private val useRewriter: Boolean,
     private val createSocket: () -> DatagramSocket,
     private val stoppedUnexpectedly: () -> Unit
 ): Thread("PacketLoopForPlus") {
@@ -74,7 +75,7 @@ internal class PacketLoopForPlus (
     }
 
     override fun run() {
-        log.v("Started packet loop thread: ${this.hashCode()}")
+        log.v("Started packet loop thread: ${this.hashCode()}, useRewriter: $useRewriter")
 
         try {
             val errors = setupErrorsPipe()
@@ -109,7 +110,7 @@ internal class PacketLoopForPlus (
     }
 
     private fun fromDevice(fromDevice: ByteArray, length: Int) {
-        if (rewriter.handleFromDevice(fromDevice, length)) return
+        if (useRewriter && rewriter.handleFromDevice(fromDevice, length)) return
 
         op.rewind()
         val destination = buffer
@@ -167,7 +168,7 @@ internal class PacketLoopForPlus (
                 }
                 BoringTunJNI.WRITE_TO_TUNNEL_IPV4 -> {
                     //if (adblocking) tunnelFiltering.handleToDevice(destination, length)
-                    rewriter.handleToDevice(destination, length)
+                    if (useRewriter) rewriter.handleToDevice(buffer, length)
                     loopback()
                 }
                 BoringTunJNI.WRITE_TO_TUNNEL_IPV6 -> loopback()

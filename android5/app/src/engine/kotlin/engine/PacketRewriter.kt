@@ -14,12 +14,12 @@ package engine
 
 import android.system.ErrnoException
 import android.system.OsConstants
-import model.*
+import model.ex
 import org.pcap4j.packet.*
 import org.pcap4j.packet.namednumber.UdpPort
 import org.xbill.DNS.*
 import ui.utils.cause
-import utils.Logger
+import utils.LoggerWithThread
 import java.io.IOException
 import java.net.Inet4Address
 import java.net.Inet6Address
@@ -29,13 +29,14 @@ import java.nio.ByteBuffer
 import java.util.*
 import kotlin.experimental.and
 
+private val log = LoggerWithThread("Rewriter")
+
 internal class PacketRewriter(
     private val loopback: () -> Any,
     private val buffer: ByteBuffer,
     private val filter: Boolean = true
 ) {
 
-    private val log = Logger("Rewriter")
     private val filtering = FilteringService
     private val dns = DnsMapperService
     private val metrics = MetricsService
@@ -222,23 +223,23 @@ fun handleForwardException(ex: Exception): Boolean {
     val c = ex.cause
     return when {
         c is ErrnoException && c.errno == OsConstants.ENETUNREACH -> {
-            Logger.v("Rewriter", "Got ENETUNREACH, ignoring (probably no connection)")
+            log.v("Got ENETUNREACH, ignoring (probably no connection)")
             false
         }
         c is ErrnoException && c.errno == OsConstants.EINVAL -> {
-            Logger.v("Rewriter", "Got EINVAL, reconnecting socket (probably switching network)")
+            log.v("Got EINVAL, reconnecting socket (probably switching network)")
             true
         }
         c is SocketException && c.message == "Pending connect failure" -> {
-            Logger.v("Rewriter", "Got pending connect failure, reconnecting socket (probably switching network)")
+            log.v("Got pending connect failure, reconnecting socket (probably switching network)")
             true
         }
         c is ErrnoException && c.errno == OsConstants.EPERM -> {
-            Logger.e("Rewriter", "Got EPERM while forwarding packet")
+            log.e("Got EPERM while forwarding packet")
             throw ex
         }
         else -> {
-            Logger.w("Rewriter", "Failed forwarding packet, ignoring".cause(ex))
+            log.w("Failed forwarding packet, ignoring".cause(ex))
             false
         }
     }
