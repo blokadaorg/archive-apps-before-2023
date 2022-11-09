@@ -14,8 +14,9 @@ import SwiftUI
 
 struct MainView: View {
 
-    @ObservedObject var contentVM = ViewModels.content
+    @ObservedObject var vm = ViewModels.content
     @ObservedObject var tabVM = ViewModels.tab
+    @ObservedObject var homeVM = ViewModels.home
 
     var body: some View {
         ScrollViewReader { scroll in
@@ -54,6 +55,26 @@ struct MainView: View {
                                 handleTappedTab(it, scroll: scroll)
                             })
                         }
+                        // Hacky way to show the action sheet that works on ios 15
+                        Text("")
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .actionSheet(isPresented: self.$vm.showPauseMenu) {
+                            ActionSheet(title: Text(L10n.homePowerOffMenuHeader), buttons: [
+                                .default(Text(self.homeVM.isPaused ? L10n.homePowerActionTurnOn : L10n.homePowerActionPause)) {
+                                    if self.homeVM.isPaused {
+                                        self.homeVM.unpause()
+                                    } else if !self.homeVM.notificationPermsGranted {
+                                        self.homeVM.displayNotificationPermsInstructions()
+                                    } else {
+                                        self.homeVM.pause(seconds: PAUSE_TIME_SECONDS)
+                                    }
+                                },
+                                .destructive(Text(L10n.homePowerActionTurnOff)) {
+                                    self.homeVM.pause(seconds: nil)
+                                },
+                                .cancel()
+                            ])
+                        }
                     }
                 } else {
                     // Small width landscape, like iPad with split screen in landscape
@@ -75,6 +96,26 @@ struct MainView: View {
                                     handleTappedTab(it, scroll: scroll)
                                 })
                             }
+                            // Hacky way to show the action sheet that works on ios 15
+                            Text("")
+                            .frame(minWidth: 0, maxWidth: .infinity)
+                            .actionSheet(isPresented: self.$vm.showPauseMenu) {
+                                ActionSheet(title: Text(L10n.homePowerOffMenuHeader), buttons: [
+                                    .default(Text(self.homeVM.isPaused ? L10n.homePowerActionTurnOn : L10n.homePowerActionPause)) {
+                                        if self.homeVM.isPaused {
+                                            self.homeVM.unpause()
+                                        } else if !self.homeVM.notificationPermsGranted {
+                                            self.homeVM.displayNotificationPermsInstructions()
+                                        } else {
+                                            self.homeVM.pause(seconds: PAUSE_TIME_SECONDS)
+                                        }
+                                    },
+                                    .destructive(Text(L10n.homePowerActionTurnOff)) {
+                                        self.homeVM.pause(seconds: nil)
+                                    },
+                                    .cancel()
+                                ])
+                            }
                         }
                     } else {
                         // Landscape, tab bar on the left, next to content
@@ -92,6 +133,27 @@ struct MainView: View {
                                     ActivitysWideHorizontalView().opacity(self.tabVM.activeTab == .Activity ? 1 : 0)
                                     PacksWideHorizontalView().opacity(self.tabVM.activeTab == .Advanced ? 1 : 0)
                                     SettingsWideHorizontalView().opacity(self.tabVM.activeTab == .Settings ? 1 : 0)
+                                    
+                                    // Hacky way to show the action sheet that works on ios 15
+                                    Text("")
+                                    .frame(minWidth: 0, maxWidth: .infinity)
+                                    .actionSheet(isPresented: self.$vm.showPauseMenu) {
+                                        ActionSheet(title: Text(L10n.homePowerOffMenuHeader), buttons: [
+                                            .default(Text(self.homeVM.isPaused ? L10n.homePowerActionTurnOn : L10n.homePowerActionPause)) {
+                                                if self.homeVM.isPaused {
+                                                    self.homeVM.unpause()
+                                                } else if !self.homeVM.notificationPermsGranted {
+                                                    self.homeVM.displayNotificationPermsInstructions()
+                                                } else {
+                                                    self.homeVM.pause(seconds: PAUSE_TIME_SECONDS)
+                                                }
+                                            },
+                                            .destructive(Text(L10n.homePowerActionTurnOff)) {
+                                                self.homeVM.pause(seconds: nil)
+                                            },
+                                            .cancel()
+                                        ])
+                                    }
                                 }
                             }
                         }
