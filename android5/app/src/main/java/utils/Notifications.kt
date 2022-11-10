@@ -50,7 +50,8 @@ class MonitorNotification(
     tunnelStatus: TunnelStatus,
     counter: Long,
     lastDenied: List<Host>,
-    appState: AppState
+    appState: AppState,
+    working: Boolean,
 ): NotificationPrototype(1, NotificationChannels.ACTIVITY,
     create = { ctx ->
         val b = NotificationCompat.Builder(ctx)
@@ -62,7 +63,7 @@ class MonitorNotification(
         b.setOngoing(true)
 
         when {
-            tunnelStatus.inProgress -> {
+            working -> {
                 b.setContentTitle(ctx.getString(R.string.universal_status_processing))
             }
             tunnelStatus.active -> {

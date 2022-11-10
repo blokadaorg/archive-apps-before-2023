@@ -47,6 +47,7 @@ object MonitorService {
     fun setHistory(history: List<HistoryEntry>) = strategy.setHistory(history)
     fun setTunnelStatus(tunnelStatus: TunnelStatus) = strategy.setTunnelStatus(tunnelStatus)
     fun setAppState(appState: AppState) = strategy.setAppState(appState)
+    fun setWorking(working: Boolean) = strategy.setWorking(working)
 
 }
 
@@ -56,6 +57,7 @@ private interface MonitorServiceStrategy {
     fun setHistory(history: List<HistoryEntry>)
     fun setTunnelStatus(tunnelStatus: TunnelStatus)
     fun setAppState(appState: AppState)
+    fun setWorking(working: Boolean)
 }
 
 // This strategy just shows the notification
@@ -68,6 +70,7 @@ private class SimpleMonitorServiceStrategy: MonitorServiceStrategy {
     private var tunnelStatus: TunnelStatus = TunnelStatus.off()
     private var dnsLabel: String = ""
     private var appState: AppState = AppState.Deactivated
+    private var working: Boolean = false
 
     override fun setup() {}
 
@@ -91,8 +94,13 @@ private class SimpleMonitorServiceStrategy: MonitorServiceStrategy {
         updateNotification()
     }
 
+    override fun setWorking(working: Boolean) {
+        this.working = working
+        updateNotification()
+    }
+
     private fun updateNotification() {
-        val prototype = MonitorNotification(tunnelStatus, counter, lastDenied, appState)
+        val prototype = MonitorNotification(tunnelStatus, counter, lastDenied, appState, working)
         notification.show(prototype)
     }
 
@@ -126,26 +134,32 @@ private class ForegroundMonitorServiceStrategy: MonitorServiceStrategy {
 
     override fun setCounter(counter: Long) {
         scope.launch {
-            getConnection().binder.onNewStats(counter, null, null, null, null)
+            getConnection().binder.onNewStats(counter, null, null, null, null, null)
         }
     }
 
     override fun setHistory(history: List<HistoryEntry>) {
         scope.launch {
             val lastDenied = history.sortedByDescending { it.time }.take(3).map { it.name }
-            getConnection().binder.onNewStats(null, lastDenied, null, null, null)
+            getConnection().binder.onNewStats(null, lastDenied, null, null, null, null)
         }
     }
 
     override fun setTunnelStatus(tunnelStatus: TunnelStatus) {
         scope.launch {
-            getConnection().binder.onNewStats(null, null, tunnelStatus, null, null)
+            getConnection().binder.onNewStats(null, null, tunnelStatus, null, null, null)
         }
     }
 
     override fun setAppState(appState: AppState) {
         scope.launch {
-            getConnection().binder.onNewStats(null, null, null, null, appState)
+            getConnection().binder.onNewStats(null, null, null, null, appState, null)
+        }
+    }
+
+    override fun setWorking(working: Boolean) {
+        scope.launch {
+            getConnection().binder.onNewStats(null, null, null, null, null, working)
         }
     }
 
@@ -189,6 +203,7 @@ class ForegroundService: Service() {
     private var lastDenied: List<Host> = emptyList()
     private var tunnelStatus: TunnelStatus = TunnelStatus.off()
     private var appState: AppState = AppState.Deactivated
+    private var working: Boolean = false
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         ContextService.setApp(this.application)
@@ -199,11 +214,12 @@ class ForegroundService: Service() {
     override fun onBind(intent: Intent?): IBinder? {
         if (FOREGROUND_BINDER_ACTION == intent?.action) {
             ContextService.setApp(this.application)
-            binder = ForegroundBinder { counter, lastDenied, tunnelStatus, dnsLabel, appState ->
+            binder = ForegroundBinder { counter, lastDenied, tunnelStatus, dnsLabel, appState, working ->
                 this.counter = counter ?: this.counter
                 this.lastDenied = lastDenied ?: this.lastDenied
                 this.tunnelStatus = tunnelStatus ?: this.tunnelStatus
                 this.appState = appState ?: this.appState
+                this.working = working ?: this.working
                 updateNotification()
             }
             return binder
@@ -212,7 +228,7 @@ class ForegroundService: Service() {
     }
 
     private fun updateNotification() {
-        val prototype = MonitorNotification(tunnelStatus, counter, lastDenied, appState)
+        val prototype = MonitorNotification(tunnelStatus, counter, lastDenied, appState, working)
         val n = notification.build(prototype)
         startForeground(prototype.id, n)
     }
@@ -223,7 +239,7 @@ class ForegroundBinder(
     val onNewStats: (
         counter: Long?, lastDenied: List<Host>?,
         tunnelStatus: TunnelStatus?, dnsLabel: String?,
-        appState: AppState?
+        appState: AppState?, working: Boolean?
     ) -> Unit
 ) : Binder()
 

@@ -47,7 +47,7 @@ object AndroidUtils {
 
 fun Context.getPendingIntentForService(intent: Intent, flags: Int): PendingIntent {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        PendingIntent.getService(this, 0, intent, flags or PendingIntent.FLAG_MUTABLE)
+        PendingIntent.getService(this, 0, intent, flags or PendingIntent.FLAG_IMMUTABLE)
     } else {
         PendingIntent.getService(this, 0, intent, flags)
     }
@@ -55,7 +55,7 @@ fun Context.getPendingIntentForService(intent: Intent, flags: Int): PendingInten
 
 fun Context.getPendingIntentForActivity(intent: Intent, flags: Int): PendingIntent {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        PendingIntent.getActivity(this, 0, intent, flags or PendingIntent.FLAG_MUTABLE)
+        PendingIntent.getActivity(this, 0, intent, flags or PendingIntent.FLAG_IMMUTABLE)
     } else {
         PendingIntent.getActivity(this, 0, intent, flags)
     }
@@ -63,7 +63,7 @@ fun Context.getPendingIntentForActivity(intent: Intent, flags: Int): PendingInte
 
 fun Context.getPendingIntentForBroadcast(intent: Intent, flags: Int): PendingIntent {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        PendingIntent.getBroadcast(this, 0, intent, flags or PendingIntent.FLAG_MUTABLE)
+        PendingIntent.getBroadcast(this, 0, intent, flags or PendingIntent.FLAG_IMMUTABLE)
     } else {
         PendingIntent.getBroadcast(this, 0, intent, flags)
     }

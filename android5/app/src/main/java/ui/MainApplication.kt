@@ -155,6 +155,7 @@ class MainApplication: LocalizationApplication(), ViewModelStoreOwner {
         }
 
         GlobalScope.launch { onAppStateChanged_updateMonitorService() }
+        GlobalScope.launch { onAppStateWorking_updateMonitorService() }
         GlobalScope.launch { onAppStateActive_maybeUninstallOtherApps() }
         checkOtherAppsInstalled()
 
@@ -164,6 +165,12 @@ class MainApplication: LocalizationApplication(), ViewModelStoreOwner {
     private suspend fun onAppStateChanged_updateMonitorService() {
         appRepo.appStateHot.collect {
             MonitorService.setAppState(it)
+        }
+    }
+
+    private suspend fun onAppStateWorking_updateMonitorService() {
+        appRepo.workingHot.collect {
+            MonitorService.setWorking(it)
         }
     }
 
