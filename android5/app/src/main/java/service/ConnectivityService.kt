@@ -161,7 +161,6 @@ object ConnectivityService {
             onConnectivityChanged(true)
         }
 
-        log.v("Checking privateDNS for: ${network.networkHandle}")
         checkPrivateDns(link)
     }
 
@@ -172,17 +171,16 @@ object ConnectivityService {
             }
             link.isPrivateDnsActive -> {
                 privateDns = link.privateDnsServerName
-                log.v("privateDNS active for ${link.interfaceName}: $privateDns")
                 onPrivateDnsChanged(link.privateDnsServerName)
             }
             else -> {
                 networkLinks.values.firstOrNull { it.isPrivateDnsActive }?.let {
                     privateDns = it.privateDnsServerName
-                    log.v("privateDNS active for ${it.interfaceName}: $privateDns (skipped default network)")
+                    log.w("privateDNS active for ${it.interfaceName}: $privateDns (skipped default network)")
                     onPrivateDnsChanged(it.privateDnsServerName)
                 } ?: run {
                     privateDns = null
-                    log.v("privateDNS not active")
+                    log.w("privateDNS not active")
                     onPrivateDnsChanged(null)
                 }
             }
