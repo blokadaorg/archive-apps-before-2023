@@ -176,11 +176,11 @@
     <string name="activity_filter_showing_for">Zobrazení pro: %s</string>
     <string name="activity_empty_text">Zkuste použít své zařízení a vraťte se sem později, abyste zjistili, kam se vaše zařízení připojuje.</string>
     <string name="activity_device_filter_show_all">Všechna zařízení</string>
-    <string name="activity_retention_header">Should we store your activity?</string>
+    <string name="activity_retention_header">Měli bychom vaši aktivitu uložit?</string>
     <string name="activity_retention_option_none">Neukládat moji aktivitu</string>
-    <string name="activity_retention_option_twofourh">Yes, store my activity</string>
-    <string name="activity_retention_policy">By enabling activity logging you accept the privacy policy.</string>
-    <string name="activity_retention_desc">Blokada Cloud is not logging anything by default. If you wish to see the aggregated stats and activity from all of your devices, enable activity logging below.</string>
+    <string name="activity_retention_option_twofourh">Ano, uložte mou aktivitu</string>
+    <string name="activity_retention_policy">Povolením zaznamenávání aktivity souhlasíte se zásadami ochrany osobních údajů.</string>
+    <string name="activity_retention_desc">Služba Blokada Cloud ve výchozím nastavení nic nezaznamenává. Pokud chcete vidět souhrnné statistiky a aktivity ze všech svých zařízení, povolte níže zaznamenávání aktivit.</string>
     <string name="userdenied_section_header">Výjimky</string>
     <string name="userdenied_section_slugline">Spravovat blokování konkrétních webových stránek</string>
     <string name="userdenied_tab_allowed">Povolené</string>

@@ -2,7 +2,7 @@
     "recommended": "препоръчителни",
     "official": "официални",
     "adblocking": "блокиране на реклами",
-    "tracking": "проследяващи",
+    "tracking": "проследяване",
     "privacy": "поверителност",
     "adult": "за възрастни",
     "porn": "порно",
@@ -11,6 +11,6 @@
     "fake news": "фалшиви новини",
     "gambling": "хазарт",
     "youtube": "youtube",
-    "phishing": "фишинг",
+    "phishing": "измама",
     "security": "защита"
 } }
