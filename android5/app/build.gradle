@@ -22,6 +22,12 @@ android {
     compileSdkVersion 31
     ndkVersion "24.0.8215888"
 
+    buildFeatures {
+        buildConfig = true
+        dataBinding = true
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId "org.blokada" // Not a real name, see flavors below
         minSdkVersion 28
@@ -150,9 +156,11 @@ android {
 
         six.java.srcDirs += 'src/notgoogle/kotlin'
         six.java.srcDirs += 'src/notlibre/kotlin'
+        six.java.srcDirs += 'wireguard-android/ui/src/main/java'
         six.manifest.srcFile 'src/notlibre/AndroidManifest.xml'
         six.res.srcDirs += 'src/six/res'
         six.res.srcDirs += 'src/notlibre/res'
+        six.res.srcDirs += 'wireguard-android/ui/src/main/res'
 
         // Do not include translations in debug builds (does not clutter search during development)
         release.res.srcDirs += 'src/translations/res'
@@ -200,6 +208,15 @@ dependencies {
     implementation 'org.pcap4j:pcap4j-packetfactory-propertiesbased:1.7.7'
     implementation 'dnsjava:dnsjava:2.1.9'
     implementation 'org.slf4j:slf4j-nop:1.6.1'
+
+    // wireguard deps
+    implementation 'com.wireguard.android:tunnel:1.0.20210211'
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+    implementation "androidx.annotation:annotation:1.4.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.5.1"
+    implementation "androidx.activity:activity-ktx:1.5.1"
+    implementation "androidx.fragment:fragment-ktx:1.5.1"
+
 
     // unzip default blocklist
     implementation 'net.lingala.zip4j:zip4j:2.6.4'
