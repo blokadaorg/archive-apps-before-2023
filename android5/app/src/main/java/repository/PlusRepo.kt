@@ -41,7 +41,6 @@ class PlusRepo {
     }
 
     private val accountHot by lazy { Repos.account.accountHot }
-    private val deviceTagHot by lazy { Repos.cloud.deviceTagHot }
 
     private val appRepo by lazy { Repos.app }
     private val processingRepo by lazy { Repos.processing }

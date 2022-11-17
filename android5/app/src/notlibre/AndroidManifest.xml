@@ -15,6 +15,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="org.blokada"
     android:sharedUserId="org.blokada.sex">
+
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:node="remove"/>
