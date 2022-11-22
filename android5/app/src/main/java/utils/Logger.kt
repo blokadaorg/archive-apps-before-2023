@@ -13,8 +13,6 @@
 package utils
 
 import android.util.Log
-import service.LogService
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -26,37 +24,23 @@ open class Logger(private val component: String) {
 
     companion object {
 
-        private val dateFormat = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
+        val dateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
             .withZone(ZoneId.of("UTC"))
 
         fun e(component: String, message: String) {
-            saveToFile(6, component, message)
             logcatLine(6, component, message)
         }
 
         fun w(component: String, message: String) {
-            saveToFile(5, component, message)
             logcatLine(5, component, message)
         }
 
         fun v(component: String, message: String) {
-            saveToFile(2, component, message)
             logcatLine(2, component, message)
         }
 
         private fun logcatLine(priority: Int, component: String, message: String) {
             Log.println(priority, component, message)
-        }
-
-        fun saveToFile(priority: Int, component: String, message: String) {
-            val p = when (priority) {
-                6 -> "E"
-                5 -> "W"
-                else -> " "
-            }
-            val date = dateFormat.format(Instant.now())
-            val line = "$date $p ${component.padEnd(10).slice(0..9)} $message"
-            LogService.logToFile(line)
         }
     }
 

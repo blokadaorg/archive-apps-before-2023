@@ -22,16 +22,36 @@ import android.util.Log
 import android.widget.TextView
 import androidx.core.app.ShareCompat
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import utils.Logger
+import java.io.BufferedReader
 import java.io.File
+import java.io.IOException
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
+import java.text.DateFormat
+import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.util.*
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 object LogService {
 
     private val context = ContextService
     private val file = FileService
     private val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZZZZZ", Locale.ENGLISH);
+
+    init {
+        GlobalScope.launch {
+            Log.println(Log.VERBOSE, "Logger", "Starting logcat streaming")
+            streamingLog()
+        }
+    }
 
     fun onShareLog(name: String, run: PrintsDebugInfo) {
         Logger.v("Log", "Adding onShareLog callback for $name")
@@ -44,6 +64,76 @@ object LogService {
         val handle = file.commonDir().file("blokada.log.txt")
         Log.println(Log.VERBOSE, "Logger", "Logger will log to file: $handle")
         handle
+    }
+
+    private suspend fun streamingLog() = withContext(Dispatchers.IO) {
+        val builder = ProcessBuilder().command("logcat", "-b", "all", "-v", "threadtime", "*:V")
+        builder.environment()["LC_ALL"] = "C"
+        var process: Process? = null
+        try {
+            process = try {
+                builder.start()
+            } catch (e: IOException) {
+                Log.println(Log.ERROR, "Logger", "Could not stream logcat")
+                Log.println(Log.ERROR, "Logger", Log.getStackTraceString(e))
+                return@withContext
+            }
+            val stdout = BufferedReader(InputStreamReader(process!!.inputStream, StandardCharsets.UTF_8))
+            var haveScrolled = false
+            val start = System.nanoTime()
+            var startPeriod = start
+            while (true) {
+                val line = stdout.readLine() ?: break
+                parseLine(line)?.let { p ->
+                    saveToFile(p.level, p.tag, p.msg, p.time)
+                }
+            }
+        } finally {
+            process?.destroy()
+        }
+    }
+
+    private fun parseTime(timeStr: String): Date? {
+        val formatter: DateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+        return try {
+            formatter.parse("$year-$timeStr")
+        } catch (e: ParseException) {
+            null
+        }
+    }
+
+    private val year by lazy {
+        val yearFormatter: DateFormat = SimpleDateFormat("yyyy", Locale.US)
+        yearFormatter.format(Date())
+    }
+
+    private fun parseLine(line: String): LogLine? {
+        val m: Matcher = THREADTIME_LINE.matcher(line)
+        return if (m.matches()) {
+            LogLine(m.group(2)!!.toInt(), m.group(3)!!.toInt(), parseTime(m.group(1)!!), m.group(4)!!, m.group(5)!!, m.group(6)!!)
+        } else {
+            null
+        }
+    }
+
+    private data class LogLine(val pid: Int, val tid: Int, val time: Date?, val level: String, val tag: String, var msg: String)
+
+    /**
+     * Match a single line of `logcat -v threadtime`, such as:
+     *
+     * <pre>05-26 11:02:36.886 5689 5689 D AndroidRuntime: CheckJNI is OFF.</pre>
+     */
+    private val THREADTIME_LINE: Pattern = Pattern.compile("^(\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3})(?:\\s+[0-9A-Za-z]+)?\\s+(\\d+)\\s+(\\d+)\\s+([A-Z])\\s+(.+?)\\s*: (.*)$")
+
+    fun saveToFile(priority: String, component: String, message: String, time: Date?) {
+        val p = when (priority) {
+            "E" -> "E"
+            "W" -> "W"
+            else -> " "
+        }
+        val date = time?.let { Logger.dateFormat.format(Instant.ofEpochMilli(time.time)) } ?: Logger.dateFormat.format(Instant.now())
+        val line = "$date $p ${component.padEnd(10).slice(0..9)} $message"
+        logToFile(line)
     }
 
     fun logToFile(line: String) {
