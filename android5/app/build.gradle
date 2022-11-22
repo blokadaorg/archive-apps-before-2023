@@ -128,6 +128,9 @@ android {
         main.java.srcDirs += 'src/engine/kotlin'
         main.jniLibs.srcDirs += 'src/engine/jniLibs'
 
+        main.java.srcDirs += 'wireguard-android/ui/src/main/java'
+        main.res.srcDirs += 'wireguard-android/ui/src/main/res'
+
         debug.java.srcDirs += 'src/mock/kotlin'
 
         googleslim.res.srcDirs += 'src/google/res'
@@ -156,11 +159,9 @@ android {
 
         six.java.srcDirs += 'src/notgoogle/kotlin'
         six.java.srcDirs += 'src/notlibre/kotlin'
-        six.java.srcDirs += 'wireguard-android/ui/src/main/java'
         six.manifest.srcFile 'src/notlibre/AndroidManifest.xml'
         six.res.srcDirs += 'src/six/res'
         six.res.srcDirs += 'src/notlibre/res'
-        six.res.srcDirs += 'wireguard-android/ui/src/main/res'
 
         // Do not include translations in debug builds (does not clutter search during development)
         release.res.srcDirs += 'src/translations/res'
