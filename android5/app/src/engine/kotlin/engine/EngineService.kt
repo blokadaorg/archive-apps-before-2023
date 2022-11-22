@@ -13,10 +13,6 @@
 package engine
 
 import com.cloudflare.app.boringtun.BoringTunJNI
-import com.wireguard.android.backend.Tunnel
-import com.wireguard.config.*
-import com.wireguard.crypto.Key
-import com.wireguard.crypto.KeyPair
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,7 +22,6 @@ import repository.DnsDataSource
 import service.ConnectivityService
 import service.EnvironmentService
 import service.VpnPermissionService
-import ui.MainApplication
 import ui.utils.cause
 import utils.Logger
 import java.net.DatagramSocket
@@ -43,8 +38,8 @@ object EngineService {
     private val dnsService = BlockaDnsService
     private val configurator = SystemTunnelConfigurator
     private val vpnPerm = VpnPermissionService
+    private val wgTunnel = WgTunnel
     private val scope = GlobalScope
-    private val wgManager = MainApplication.getTunnelManager()
 
     private lateinit var config: EngineConfiguration
         @Synchronized set
@@ -145,49 +140,9 @@ object EngineService {
             when {
                 // Plus mode
                 isPlusMode() -> {
-                    dnsMapper.setDns(dns, doh, plusMode = true)
-                    if (doh) dnsService.startDnsProxy(dns)
-//                    systemTunnel.onConfigureTunnel = { tun ->
-//                        configurator.forPlus(tun, dns, lease = config.lease())
-//                    }
-//                    systemTunnel.open()
-//                    packetLoop.startPlusMode(
-//                        useDoh = doh,
-//                        dns = dns,
-//                        tunnelConfig = systemTunnel.getTunnelConfig(),
-//                        privateKey = config.privateKey,
-//                        gateway = config.gateway()
-//                    )
-                    val tunnels = wgManager.getTunnels()
-                    if (tunnels.isNotEmpty()) wgManager.delete(tunnels.first())
-                    var attempts = 0
-                    while (EnvironmentService.deviceTag == null && attempts++ < 3) {
-                        delay(2000)
-                    }
-                    val tag = EnvironmentService.deviceTag
-                    val dnsAddress =
-                        if (tag != null && tag.isNotEmpty()) InetAddress.getByName(getUserDnsIp(tag))
-                        else throw BlokadaException("Device tag is null or empty, cant start wg-go")
-                    log.v("plus mode dns address: $dnsAddress")
-                    val c = Config.Builder()
-                        .setInterface(Interface.Builder()
-                            .setKeyPair(KeyPair(Key.fromBase64(config.privateKey)))
-                            .addAddress(InetNetwork.parse("${config.lease!!.vip4}/32"))
-                            .addAddress(InetNetwork.parse("${config.lease.vip6}/64"))
-                            .addDnsServer(dnsAddress)
-                            .build()
-                        ).addPeer(Peer.Builder()
-                            .setPublicKey(Key.fromBase64(config.gateway!!.public_key))
-                            .setEndpoint(InetEndpoint.parse("${config.gateway.ipv4}:51820"))
-                            //.setEndpoint(InetEndpoint.parse("${config.lease.vip6}:51820"))
-                            .addAllowedIp(InetNetwork.parse("0.0.0.0/0"))
-                            .addAllowedIp(InetNetwork.parse("::/0"))
-                            .build()
-                        )
-                        .build()
-                    val tunnel = wgManager.create("Blokada", c
-                        )
-                    wgManager.setTunnelState(tunnel, Tunnel.State.UP)
+                    //dnsMapper.setDns(dns, doh, plusMode = true)
+                    //if (doh) dnsService.startDnsProxy(dns)
+                    wgTunnel.start(config.privateKey, config.lease(), config.gateway())
                     state.plusMode(config)
                 }
                 // Slim mode
@@ -216,23 +171,12 @@ object EngineService {
         }
     }
 
-    private fun getUserDnsIp(tag: String): String {
-        return if (tag.length == 6) {
-            // 6 chars old tag
-            "2001:678:e34:1d::${tag.substring(0, 2)}:${tag.substring(2, 6)}"
-        } else {
-            // 11 chars new tag
-            "2001:678:e34:1d::${tag.substring(0, 3)}:${tag.substring(3, 7)}:${tag.substring(7, 11)}"
-        }
-    }
-
     private suspend fun stopAll() {
         state.inProgress()
         dnsService.stopDnsProxy()
 //        packetLoop.stop()
 //        systemTunnel.close()
-        val tunnels = wgManager.getTunnels()
-        if (tunnels.isNotEmpty()) wgManager.setTunnelState(tunnels.first(), Tunnel.State.DOWN)
+        wgTunnel.stop()
         log.w("Waiting after stopping system tunnel, before another start")
         delay(4000)
         state.stopped()
