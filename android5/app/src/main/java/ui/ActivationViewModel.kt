@@ -55,7 +55,7 @@ class ActivationViewModel: ViewModel() {
             _state.value?.let { state ->
                 val active = !activeUntil.beforeNow()
                 when {
-                    !active && state != ActivationState.INACTIVE -> {
+                    !active && state in listOf(ActivationState.EXPIRING, ActivationState.ACTIVE) -> {
                         log.w("Account just expired (was: $state)")
                         updateLiveData(ActivationState.JUST_EXPIRED)
                     }
