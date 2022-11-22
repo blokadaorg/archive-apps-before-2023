@@ -14,7 +14,6 @@ package service
 
 import android.content.Intent
 import android.provider.Settings
-import androidx.core.content.ContextCompat.startActivity
 
 
 object SystemNavService {
@@ -23,7 +22,12 @@ object SystemNavService {
 
     fun openNetworkSettings() {
         val ctx = context.requireContext()
-        ctx.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS));
+        // They broke the direct link to settings
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            ctx.startActivity(Intent(Settings.ACTION_SETTINGS))
+        } else {
+            ctx.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+        }
     }
 
     fun openNotificationSettings() {
