@@ -11,6 +11,7 @@ import 'package:common/service/BlockaApiService.dart';
 import 'package:mobx/mobx.dart' as mobx;
 
 import '../model/UiModel.dart';
+import '../service/Services.dart';
 import 'AccountRepo.dart';
 
 part 'StatsRepo.g.dart';
@@ -20,6 +21,7 @@ class StatsRepo = _StatsRepo with _$StatsRepo;
 abstract class _StatsRepo with Store {
 
   late final BlockaApiService _api = BlockaApiService();
+  late final log = Services.instance.log;
 
   late final AccountRepo accountRepo = Repos.instance.account; // TODO: CurrentUserBlockaApiService...
   late final AppRepo appRepo = Repos.instance.app;
@@ -51,7 +53,7 @@ abstract class _StatsRepo with Store {
 
   _onAccountIdChanged_refreshStats() {
     mobx.reaction((_) => accountRepo.accountId, (_) {
-      print("Account ID changed, refreshing stats");
+      log.v("Account ID changed, refreshing stats");
       stats = UiStats.empty();
       hasStats = false;
       _refreshStats();
@@ -62,24 +64,24 @@ abstract class _StatsRepo with Store {
     mobx.reaction((_) => appRepo.appState, (_) {
       Timer(Duration(seconds: 3), () {
         // Delay to let the VPN settle
-        print("App activated, refreshing stats");
+        log.v("App activated, refreshing stats");
         _refreshStats();
       });
     });
   }
 
   _startRefreshingStats(int seconds, bool refreshNow) {
-    print("Start refreshing stats, now every $seconds seconds");
+    log.v("Start refreshing stats, now every $seconds seconds");
     if (refreshNow) _refreshStats();
     refreshTimer = Timer.periodic(Duration(seconds: seconds), (Timer t) => _refreshStats());
   }
 
   _refreshStats() async {
     if (accountRepo.accountId.isEmpty) {
-      print("Account ID not provided yet, skipping stats refresh");
+      log.v("Account ID not provided yet, skipping stats refresh");
       return;
     } else if (accountRepo.accountType == "Libre") {
-      print("Libre account, skip stats refresh");
+      log.v("Libre account, skip stats refresh");
       return;
     }
 
@@ -88,7 +90,7 @@ abstract class _StatsRepo with Store {
   }
 
   _stopRefreshingStats() {
-    print("Stopping refreshing stats");
+    log.v("Stopping refreshing stats");
     refreshTimer?.cancel();
     refreshTimer = null;
   }
@@ -138,9 +140,6 @@ abstract class _StatsRepo with Store {
       }
     }
 
-    print(allowedHistogram);
-    print(blockedHistogram);
-
     // Also parse the weekly sample to get the average
     var avgDayAllowed = 0;
     var avgDayBlocked = 0;
@@ -165,7 +164,7 @@ abstract class _StatsRepo with Store {
     // Calculate last week's average based on this week (no data)
     if (avgDayAllowed == 0) avgDayAllowed = allowedHistogram.reduce((a, b) => a + b) * 24 * 2;
     if (avgDayBlocked == 0) avgDayBlocked = blockedHistogram.reduce((a, b) => a + b) * 24 * 2;
-    print("daily avg: $avgDayBlocked - $avgDayAllowed");
+    log.v("daily avg: $avgDayBlocked - $avgDayAllowed");
 
     return UiStats(
       totalAllowed: int.parse(stats.totalAllowed),

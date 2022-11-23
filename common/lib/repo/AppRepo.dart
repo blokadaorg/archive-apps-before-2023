@@ -9,6 +9,7 @@ import 'package:common/service/BlockaApiService.dart';
 
 import '../model/AppModel.dart';
 import '../model/UiModel.dart';
+import '../service/Services.dart';
 
 part 'AppRepo.g.dart';
 
@@ -17,6 +18,7 @@ class AppRepo = _AppRepo with _$AppRepo;
 abstract class _AppRepo with Store {
 
   late final BlockaApiService _api = BlockaApiService();
+  late final log = Services.instance.log;
 
   static const appStateChannel = MethodChannel('app:state');
   static const appChangeStateChannel = MethodChannel('app:changeState');
@@ -33,16 +35,16 @@ abstract class _AppRepo with Store {
         final state = AppModel.fromJson(jsonDecode(call.arguments));
         if (state != appState) {
           appState = state;
-          print("Got App state from platform");
-          print(appState.state.toString());
+          log.v("Got App state from platform");
+          log.v(appState.state.toString());
 
           if (/*state.working || */state.state != AppState.activated) {
-            print("Resetting powerOnAnimationReady flag");
+            log.v("Resetting powerOnAnimationReady flag");
             powerOnAnimationReady = false;
           }
         }
       } catch (ex) {
-        print("Failed to parse App state: $ex");
+        log.e("Failed to parse App state: $ex");
       }
     });
   }
@@ -59,18 +61,15 @@ abstract class _AppRepo with Store {
     try {
       await appChangeStateChannel.invokeMethod('app:changeState');
     } on Exception catch (e) {
-      print("Failed to change app state: '${e}'.");
+      log.e("Failed to change app state: '${e}'.");
 
       // TODO: if debug
       if (appState.state != AppState.activated) {
-        print("unpausing - debug");
         appState = AppModel(state: AppState.activated, working: true, plus: false, location: "");
         Timer(Duration(seconds: 3), () {
-          print("unpaused");
           appState = AppModel(state: AppState.activated, working: false, plus: false, location: "");
         });
       } else {
-        print("pausing - debug");
         appState = AppModel(state: AppState.paused, working: true, plus: false, location: "");
         Timer(Duration(seconds: 2), () {
           if (!appState.plus) {

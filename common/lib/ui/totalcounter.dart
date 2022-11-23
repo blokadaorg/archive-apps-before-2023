@@ -6,6 +6,8 @@ import 'package:mobx/mobx.dart' as mobx;
 
 import '../repo/Repos.dart';
 import '../repo/StatsRepo.dart';
+import '../service/LogService.dart';
+import '../service/Services.dart';
 
 class TotalCounter extends StatefulWidget {
 
@@ -25,6 +27,8 @@ class TotalCounterState extends State<TotalCounter> {
   TotalCounterState({required bool this.autoRefresh});
 
   static const shareChannel = MethodChannel('share');
+
+  late LogService log = Services.instance.log;
 
   final bool autoRefresh;
 
@@ -55,7 +59,7 @@ class TotalCounterState extends State<TotalCounter> {
     try {
       await shareChannel.invokeMethod('shareCounter', blocked);
     } on PlatformException catch (e) {
-      print("Failed to share counter: '${e.message}'.");
+      log.e("Failed to share counter: '${e.message}'.");
     }
   }
 

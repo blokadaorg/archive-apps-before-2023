@@ -1,6 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:mobx/mobx.dart';
 
+import '../service/Services.dart';
+
 part 'StageRepo.g.dart';
 
 class StageRepo = _StageRepo with _$StageRepo;
@@ -8,6 +10,8 @@ class StageRepo = _StageRepo with _$StageRepo;
 abstract class _StageRepo with Store {
 
   static const stageChannel = MethodChannel('stage:foreground');
+
+  late final log = Services.instance.log;
 
   @observable
   bool isForeground = false;
@@ -18,10 +22,10 @@ abstract class _StageRepo with Store {
         final state = call.arguments as bool;
         if (state != isForeground) {
           isForeground = state;
-          print("Got Stage state from platform");
+          log.v("Got Stage state from platform");
         }
       } catch (ex) {
-        print("Failed to parse Stage state: $ex");
+        log.e("Failed to parse Stage state: $ex");
       }
     });
   }

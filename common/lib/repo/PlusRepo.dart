@@ -9,6 +9,7 @@ import 'package:common/service/BlockaApiService.dart';
 
 import '../model/AppModel.dart';
 import '../model/UiModel.dart';
+import '../service/Services.dart';
 
 part 'PlusRepo.g.dart';
 
@@ -18,6 +19,8 @@ abstract class _PlusRepo with Store {
 
   static const plusChannel = MethodChannel('plus');
 
+  late final log = Services.instance.log;
+
   start() async {
   }
 
@@ -25,7 +28,7 @@ abstract class _PlusRepo with Store {
     try {
       await plusChannel.invokeMethod('openLocations');
     } on Exception catch (e) {
-      print("Failed to open locations: '$e'.");
+      log.e("Failed to open locations: '$e'.");
     }
   }
 
@@ -33,7 +36,7 @@ abstract class _PlusRepo with Store {
     try {
       await plusChannel.invokeMethod('switchPlus', on);
     } on Exception catch (e) {
-      print("Failed to switchPlus: '$e'.");
+      log.e("Failed to switchPlus: '$e'.");
     }
   }
 

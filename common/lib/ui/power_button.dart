@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:common/service/LogService.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +14,7 @@ import '../model/AppModel.dart';
 import '../repo/AppRepo.dart';
 import '../repo/Repos.dart';
 import '../repo/StatsRepo.dart';
+import '../service/Services.dart';
 
 class PowerButton extends StatefulWidget {
 
@@ -30,6 +32,8 @@ class PowerButton extends StatefulWidget {
 class _PowerButtonState extends State<PowerButton> with TickerProviderStateMixin {
 
   AppModel appModel = AppModel.empty();
+
+  late LogService log = Services.instance.log;
 
   late AppRepo appRepo = Repos.instance.app;
   late StatsRepo statsRepo = Repos.instance.stats;
@@ -204,7 +208,7 @@ class _PowerButtonState extends State<PowerButton> with TickerProviderStateMixin
       return;
     }
 
-    print("Animating status ring from ${animArcCounter.value} to $value, isAnimating: ${animCtrlArcCounter.isAnimating}");
+    //log.v("Animating status ring from ${animArcCounter.value} to $value, isAnimating: ${animCtrlArcCounter.isAnimating}");
     animArcCounter = Tween<double>(begin: animArcCounter.value, end: value)
         .animate(CurvedAnimation(parent: animCtrlArcCounter, curve: Curves.easeOutQuad))
       ..addListener(() {

@@ -16,7 +16,6 @@ class _SelectorState extends State<Selector> {
             padding: const EdgeInsets.only(left: 8.0, right: 4.0),
             child: OutlinedButton(
                 onPressed: () {
-                  debugPrint('Received click');
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
@@ -43,7 +42,6 @@ class _SelectorState extends State<Selector> {
             padding: const EdgeInsets.only(left: 4.0, right: 8.0),
             child: OutlinedButton(
                 onPressed: () {
-                  debugPrint('Received click');
                 },
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
