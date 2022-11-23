@@ -138,11 +138,26 @@ object EngineService {
         state.inProgress()
         config.run {
             when {
-                // Plus mode
-                isPlusMode() -> {
-                    //dnsMapper.setDns(dns, doh, plusMode = true)
-                    //if (doh) dnsService.startDnsProxy(dns)
+                // Plus mode for v6 (cloud filtering)
+                isPlusMode() && !EnvironmentService.isLibre() -> {
                     wgTunnel.start(config.privateKey, config.lease(), config.gateway())
+                    state.plusMode(config)
+                }
+                // Plus mode for v5 (local filtering)
+                isPlusMode() -> {
+                    dnsMapper.setDns(dns, doh, plusMode = true)
+                    if (doh) dnsService.startDnsProxy(dns)
+                    systemTunnel.onConfigureTunnel = { tun ->
+                        configurator.forPlus(tun, dns, lease = config.lease())
+                    }
+                    systemTunnel.open()
+                    packetLoop.startPlusMode(
+                        useDoh = doh,
+                        dns = dns,
+                        tunnelConfig = systemTunnel.getTunnelConfig(),
+                        privateKey = config.privateKey,
+                        gateway = config.gateway()
+                    )
                     state.plusMode(config)
                 }
                 // Slim mode
@@ -174,8 +189,8 @@ object EngineService {
     private suspend fun stopAll() {
         state.inProgress()
         dnsService.stopDnsProxy()
-//        packetLoop.stop()
-//        systemTunnel.close()
+        packetLoop.stop()
+        systemTunnel.close()
         wgTunnel.stop()
         log.w("Waiting after stopping system tunnel, before another start")
         delay(4000)
