@@ -62,7 +62,7 @@ open class CloudRepo {
     val activityRetentionHot = deviceInfoHot.map { it.retention }
     val adblockingPausedHot = deviceInfoHot.map { it.paused }.distinctUntilChanged()
 
-    private val refreshDeviceInfoT = SimpleTasker<Ignored>("refreshDeviceInfo", debounce = 500, errorIsMajor = true)
+    private val refreshDeviceInfoT = SimpleTasker<Ignored>("refreshDeviceInfo", debounce = 500, errorIsMajor = false)
     private val setActivityRetentionT = Tasker<CloudActivityRetention, Ignored>("setActivityRetention")
     private val setBlocklistsT = Tasker<CloudBlocklists, Ignored>("setBlocklists")
     private val setPausedT = Tasker<Boolean, Ignored>("setPaused", errorIsMajor = true)
