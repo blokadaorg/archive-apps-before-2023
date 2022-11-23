@@ -52,6 +52,21 @@ class FlutterService {
     }
 
     func setupChannels(controller: FlutterViewController) {
+        // Log from flutter (to save in file)
+        let onLog = FlutterMethodChannel(name: "log",
+            binaryMessenger: controller.binaryMessenger)
+        onLog.setMethodCallHandler({
+            (call: FlutterMethodCall, result: @escaping FlutterResult) -> Void in
+            let line = call.arguments as? String
+            if let l = line {
+                if call.method == "e" {
+                    Logger.e("Common", l)
+                } else {
+                    Logger.v("Common", l)
+                }
+            }
+        })
+
         // Push the user agent to Flutter
         let sendUserAgent = FlutterMethodChannel(name: "env:userAgent", binaryMessenger: controller.binaryMessenger)
         sendUserAgent.invokeMethod("env:userAgent", arguments: env.userAgent())
