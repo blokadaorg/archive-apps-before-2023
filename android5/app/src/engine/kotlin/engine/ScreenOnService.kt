@@ -23,7 +23,7 @@ object ScreenOnService {
 
     private val ctx by lazy { ContextService }
 
-    private val frequencyMillis = 60 * 1000
+    private val frequencyMillis = 200
     private var lastScreenOffMillis = 0L
 
     var onScreenOn = {}
