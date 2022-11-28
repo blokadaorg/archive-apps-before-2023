@@ -158,6 +158,7 @@ object ConnectivityService {
         if (default && defaultRouteNetwork != network.networkHandle) {
             log.v("New default route through network: ${network.networkHandle}")
             defaultRouteNetwork = network.networkHandle
+            onConnectivityChanged(true)
         }
 
         checkPrivateDns(link)
@@ -206,7 +207,7 @@ object ConnectivityService {
                 val fallback = NetworkDescriptor.fallback()
                 activeNetwork = fallback
                 lastSeenRouteNetwork = null
-                log.v("Doze active, no connectivity")
+                log.v("Doze active")
 
                 onConnectivityChanged(false)
                 onActiveNetworkChanged(fallback)
@@ -268,9 +269,9 @@ object ConnectivityService {
 
     fun isDeviceInOfflineMode(): Boolean {
         return when {
-            doze.isDoze() -> true
             defaultRouteNetwork != null -> false
             isConnectedOldApi() -> false
+            //doze.isDoze() -> true
             else -> true
         }
     }
