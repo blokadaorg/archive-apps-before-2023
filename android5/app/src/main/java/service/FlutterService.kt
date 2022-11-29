@@ -18,7 +18,6 @@ import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import repository.Repos
@@ -42,6 +41,7 @@ object FlutterService {
     private lateinit var share: MethodChannel
     private lateinit var appState: MethodChannel
     private lateinit var appChangeState: MethodChannel
+    private lateinit var log: MethodChannel
 
     fun setup() {
         val engine = FlutterEngine(ctx.requireAppContext())
@@ -81,6 +81,12 @@ object FlutterService {
             } catch (ex: Exception) {
                 Logger.w("FlutterService", "Failed to change app state".cause(ex))
             }
+        }
+
+        // Log channel
+        log = MethodChannel(engine.dartExecutor.binaryMessenger, "log")
+        log.setMethodCallHandler { call, result ->
+            // Empty handler as we save logs from logcat so we'll catch flutter too
         }
 
         Logger.v("Flutter", "FlutterEngine initialized")
