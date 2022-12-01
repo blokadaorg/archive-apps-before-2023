@@ -42,4 +42,5 @@ enum AppState {
     case Deactivated
     case Paused
     case Activated
+    case New
 }

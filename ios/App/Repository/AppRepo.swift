@@ -108,7 +108,7 @@ class AppRepo: Startable {
         unpauseAppT.setTask { _ in
             return self.appStateHot.first()
             .flatMap { it -> AnyPublisher<Ignored, Error> in
-                if it == .Paused || it == .Deactivated {
+                if it == .Paused || it == .Deactivated || it == .New {
                     return self.cloudRepo.setPaused(false)
                     .flatMap { _ in self.timer.cancelTimer(NOTIF_PAUSE) }
                     .eraseToAnyPublisher()
@@ -207,7 +207,7 @@ class AppRepo: Startable {
     }
 
     private func emitWorkingStateOnStart() {
-        writeAppState.send(.Deactivated)
+        writeAppState.send(.New)
         writeWorking.send(true)
     }
 }

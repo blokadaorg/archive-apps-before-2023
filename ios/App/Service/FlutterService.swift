@@ -97,7 +97,17 @@ class FlutterService {
         // Push app state changes to Flutter
         let appState = FlutterMethodChannel(name: "app:state",
             binaryMessenger: controller.binaryMessenger)
-        Publishers.CombineLatest4(appStateHot, workingHot, plusEnabledHot, selectedGatewayHot)
+        Publishers.CombineLatest4(
+            // New state is only used internally in iOS so we need to convert it
+            appStateHot.map { it -> AppState in
+                if it == .New {
+                    return .Deactivated
+                } else {
+                    return it
+                }
+            },
+            workingHot, plusEnabledHot, selectedGatewayHot
+        )
         .tryMap { it -> String in
             let (state, working, plus, selectedGateway) = it
             let location = selectedGateway.gateway?.niceName() ?? ""
