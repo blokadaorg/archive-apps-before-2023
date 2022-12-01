@@ -168,6 +168,7 @@ class PlusRepo: Startable {
         )
         .sink(onValue: { it in
             let (gateway, lease, privateKey, deviceTag) = it
+            Logger.v("PlusRepo", "Setting NETX config to: \(gateway.niceName()), \(lease.vip4)")
             let config = NetxConfig(
                 lease: lease, gateway: gateway,
                 deviceTag: deviceTag,

@@ -98,9 +98,12 @@ class LeaseRepo: Startable {
             if accountWithKeypair.account.isActive(),
                 let current = leases.first(where: { lease in
                     lease.public_key == accountWithKeypair.keypair.publicKey
-            }) {
+                })
+            {
+                Logger.v("LeaseRepo", "Announcing current lease: \(current.vip4)")
                 self.writeCurrent.send(CurrentLease(lease: current))
             } else {
+                Logger.v("LeaseRepo", "Announcing no current lease")
                 self.writeCurrent.send(CurrentLease(lease: nil))
             }
         })

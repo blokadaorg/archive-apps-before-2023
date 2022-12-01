@@ -543,7 +543,7 @@ class NetxService: NetxServiceIn {
                 Just(true)
                 .delay(for: 5.0, scheduler: self.bgQueue)
                 .tryMap { state -> String in
-                    throw "next message timeout"
+                    throw "NETX message timeout"
                 }
                 .eraseToAnyPublisher()
             )
