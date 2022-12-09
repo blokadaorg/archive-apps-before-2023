@@ -34,7 +34,7 @@ object BlockaApiService {
     private val processingRepo by lazy { Repos.processing }
 
     private val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.blocka.net")
+        .baseUrl("https://20221208t152901-dot-blokada-vpn.uc.r.appspot.com/")
         .addConverterFactory(MoshiConverterFactory.create(JsonSerializationService.moshi))
         .client(http.getClient())
         .build()
@@ -55,7 +55,16 @@ object BlockaApiService {
 
     suspend fun getDevice(id: AccountId): DevicePayload {
         return runOnBgAndMapException {
-            api.getDevice(id).responseOrThrow().body()!!
+            if (EnvironmentService.isLibre()) {
+                // Save requests by not doing this irrelevant request for v5
+                Logger.v("BlockaApiService", "Not fetching device for libre")
+                DevicePayload(
+                    lists = emptyList(),
+                    retention = "",
+                    paused = true,
+                    device_tag = ""
+                )
+            } else api.getDevice(id).responseOrThrow().body()!!
         }
     }
 
@@ -91,7 +100,14 @@ object BlockaApiService {
 
     suspend fun getStats(id: AccountId): CounterStats {
         return runOnBgAndMapException {
-            api.getStats(id).responseOrThrow().body()!!
+            if (EnvironmentService.isLibre()) {
+                // Save requests by not doing this irrelevant request for v5
+                Logger.v("BlockaApiService", "Not fetching stats for libre")
+                CounterStats(
+                    total_allowed = "0",
+                    total_blocked = "0"
+                )
+            } else api.getStats(id).responseOrThrow().body()!!
         }
     }
 
