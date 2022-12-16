@@ -44,13 +44,17 @@ class AppRepo: Startable {
     fileprivate let writePausedUntil = CurrentValueSubject<Date?, Never>(nil)
     fileprivate let writeAccountType = CurrentValueSubject<AccountType?, Never>(nil)
 
+    fileprivate let appStartT = SimpleTasker<Ignored>("appStart")
+
     fileprivate let pauseAppT = Tasker<Date?, Ignored>("pauseApp")
     fileprivate let unpauseAppT = SimpleTasker<Ignored>("unpauseApp")
 
     private var cancellables = Set<AnyCancellable>()
+    private let bgQueue = DispatchQueue(label: "AppRepoBgQueue")
     private let recentAccountType = Atomic<AccountType>(AccountType.Libre)
 
     func start() {
+        onAppStart()
         onPauseApp()
         onUnpauseApp()
         onAnythingThatAffectsAppState_UpdateIt()
@@ -124,6 +128,16 @@ class AppRepo: Startable {
             .eraseToAnyPublisher()
         }
     }
+    
+    // A dummy task to show working state when app starts at first
+    private func onAppStart() {
+        appStartT.setTask { _ in
+            return Just(true)
+            .delay(for: 1.0, scheduler: self.bgQueue)
+            .setFailureType(to: Error.self)
+            .eraseToAnyPublisher()
+        }
+    }
 
     private func onAnythingThatAffectsAppState_UpdateIt() {
         Publishers.CombineLatest4(
@@ -168,7 +182,7 @@ class AppRepo: Startable {
     }
 
     private func onCurrentlyOngoing_ChangeWorkingState() {
-        let tasksThatMarkWorkingState = Set([
+        let tasksThatMarkWorkingState = Set(["appStart",
             "accountInit", "refreshAccount", "restoreAccount",
             "pauseApp", "unpauseApp",
             "newPlus", "clearPlus", "switchPlusOn", "switchPlusOff",
@@ -209,6 +223,7 @@ class AppRepo: Startable {
     private func emitWorkingStateOnStart() {
         writeAppState.send(.New)
         writeWorking.send(true)
+        appStartT.send()
     }
 }
 

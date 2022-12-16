@@ -115,6 +115,7 @@ class PlusRepo: Startable {
     private func onSwitchPlusOn() {
         switchPlusOnT.setTask { _ in Just(true)
             .map { _ in self.writePlusEnabled.send(true) }
+            .flatMap { _ in self.netxRepo.stopVpn() } // bieda mentalna
             .flatMap { _ in self.netxRepo.startVpn() }
             .map { _ in self.leaseRepo.refreshLeases() }
             .map { _ in true }
@@ -166,9 +167,18 @@ class PlusRepo: Startable {
             accountHot.map { it in it.keypair.privateKey }.removeDuplicates(),
             deviceTagHot
         )
+        .removeDuplicates { a, b in a.0 != b.0 && a.1 != b.1 && a.2 != b.2 && a.3 != b.3 }
+        // Let the producers settle with new values and use only latest ones
+        //.debounce(for: 5.0, scheduler: self.bgQueue)
         .sink(onValue: { it in
             let (gateway, lease, privateKey, deviceTag) = it
-            Logger.v("PlusRepo", "Setting NETX config to: \(gateway.niceName()), \(lease.vip4)")
+
+            if gateway.public_key != lease.gateway_id {
+                BlockaLogger.v("PlusRepo", "Ignoring request, bieda mentalna")
+                return
+            }
+
+            BlockaLogger.v("PlusRepo", "Setting NETX config to: \(gateway.niceName()), \(gateway.public_key), \(lease.vip4), lgw: \(lease.gateway_id)")
             let config = NetxConfig(
                 lease: lease, gateway: gateway,
                 deviceTag: deviceTag,
@@ -216,7 +226,7 @@ class PlusRepo: Startable {
         .filter { it in it.active || it.pauseSeconds > 0 }
         // Just switch off Plus
         .sink(onValue: { it in
-            Logger.v("PlusRepo", "Stopping VPN as app is paused undefinitely")
+            BlockaLogger.v("PlusRepo", "Stopping VPN as app is paused undefinitely")
             self.netxRepo.stopVpn()
         })
         .store(in: &cancellables)
@@ -236,7 +246,7 @@ class PlusRepo: Startable {
         .filter { it in it.1.active || it.1.pauseSeconds > 0 }
         // Make NETX pause (also will update "until" if changed)
         .sink(onValue: { it in
-            Logger.v("PlusRepo", "Pausing VPN as app is paused with timer")
+            BlockaLogger.v("PlusRepo", "Pausing VPN as app is paused with timer")
             self.changePlusPauseT.send(it.0)
         })
         .store(in: &cancellables)
@@ -255,7 +265,7 @@ class PlusRepo: Startable {
         .filter { it in it.1.pauseSeconds > 0 }
         // Make NETX unpause
         .sink(onValue: { it in
-            Logger.v("PlusRepo", "Unpausing VPN as app is unpaused")
+            BlockaLogger.v("PlusRepo", "Unpausing VPN as app is unpaused")
             self.changePlusPauseT.send(nil)
         })
         .store(in: &cancellables)
@@ -280,9 +290,11 @@ class PlusRepo: Startable {
             let (plusEnabled, netxState) = it
             return plusEnabled && !netxState.active
         }
+        // ... let things settle on startup for good measure ...
+        //.debounce(for: 0.5, scheduler: self.bgQueue)
         // ... start Plus
         .sink(onValue: { it in
-            Logger.v("PlusRepo", "Switch VPN on because app is active and Plus is enabled")
+            BlockaLogger.v("PlusRepo", "Switch VPN on because app is active and Plus is enabled")
             self.switchPlusOn()
         })
         .store(in: &cancellables)
@@ -309,7 +321,7 @@ class PlusRepo: Startable {
                 self.writePlusEnabled.send(it)
             },
             onFailure: { err in
-                Logger.e("PlusRepo", "Could not read vpnEnabled, ignoring: \(err)")
+                BlockaLogger.e("PlusRepo", "Could not read vpnEnabled, ignoring: \(err)")
                 self.writePlusEnabled.send(false)
             }
         )

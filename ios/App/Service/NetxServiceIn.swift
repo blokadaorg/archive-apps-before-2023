@@ -22,6 +22,8 @@ protocol NetxServiceIn: Startable {
     func stopVpn() -> AnyPublisher<Ignored, Error>
     func changePause(until: Date?) -> AnyPublisher<Ignored, Error>
     func createVpnProfile() -> AnyPublisher<Ignored, Error>
+    func makeProtectedRequest(url: String, method: String, body: String) -> AnyPublisher<String, Error>
+    func checkPerms()
 
 }
 

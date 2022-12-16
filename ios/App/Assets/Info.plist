@@ -59,6 +59,8 @@
 	<array>
 		<string>armv7</string>
 	</array>
+	<key>com.wireguard.ios.app_group_id</key>
+	<string>group.net.blocka.app</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

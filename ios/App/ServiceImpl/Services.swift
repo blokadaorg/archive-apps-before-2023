@@ -27,6 +27,7 @@ class ServicesSingleton {
 
     lazy var httpStandard: HttpServiceIn = HttpStandardService()
     lazy var httpProtected: HttpServiceIn = HttpProtectedService()
+    //lazy var httpProtected: HttpServiceIn = HttpStandardService()
 
     lazy var crypto: CryptoServiceIn = CryptoService()
 
@@ -44,7 +45,7 @@ class ServicesSingleton {
     lazy var dialog = DialogService()
     lazy var rate = RateService()
 
-    lazy var netx = NetxService()
+    lazy var netx: NetxServiceIn = WgService()
     lazy var env = EnvService()
     lazy var quickActions = QuickActionsService()
 

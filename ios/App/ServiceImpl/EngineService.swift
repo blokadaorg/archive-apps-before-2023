@@ -21,20 +21,23 @@ class EngineService {
     }
 
     private func registerPanicHook() {
-        engine_logger("info")
-        panic_hook { msg in
-            if let msg = msg {
-                Logger("Engine").e(String(cString: msg))
-            }
-        }
+        //engine_logger("info")
+        //panic_hook { msg in
+        //    if let msg = msg {
+        //        BlockaLogger("Engine").e(String(cString: msg))
+        //    }
+        //}
     }
 
-    func generateKeypair() -> Keypair {
-        let keypair = keypair_new()!
-        let privKey = String(cString: keypair.pointee.private_key)
-        let pubKey = String(cString: keypair.pointee.public_key)
-        keypair_free(keypair)
-        return Keypair(privateKey: privKey, publicKey: pubKey)
+    func generateKeypair() -> BlockaKeypair {
+        //let keypair = keypair_new()!
+        //let privKey = String(cString: keypair.pointee.private_key)
+        //let pubKey = String(cString: keypair.pointee.public_key)
+        //keypair_free(keypair)
+        BlockaLogger.w("EngineService", "Generating new keypair")
+        let privKey = PrivateKey()
+        let pubKey = privKey.publicKey
+        return BlockaKeypair(privateKey: privKey.base64Key, publicKey: pubKey.base64Key)
    }
 
 }
