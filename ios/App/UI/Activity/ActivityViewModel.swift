@@ -15,7 +15,7 @@ import Combine
 
 class ActivityViewModel: ObservableObject {
 
-    private let log = Logger("ActivityVM")
+    private let log = BlockaLogger("ActivityVM")
 
     private lazy var activityRepo = Repos.activityRepo
     private lazy var cloudRepo = Repos.cloudRepo

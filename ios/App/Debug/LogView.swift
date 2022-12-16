@@ -27,7 +27,7 @@ struct LogView: View {
                 .foregroundColor(Color.cActivePlus)
                 .frame(width: 32, height: 32)
                 .onTapGesture {
-                    Logger.w("Debug", "===== Marked from the log viewer =====")
+                    BlockaLogger.w("Debug", "===== Marked from the log viewer =====")
                 }
                 Image(systemName: "eye")
                     .imageScale(.large)

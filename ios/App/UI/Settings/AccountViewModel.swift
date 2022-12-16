@@ -46,7 +46,7 @@ class AccountViewModel: ObservableObject {
         return Strings.activeUntil(account)
     }
 
-    private let log = Logger("Account")
+    private let log = BlockaLogger("Account")
 
     private lazy var accountRepo = Repos.accountRepo
     private var cancellables = Set<AnyCancellable>()

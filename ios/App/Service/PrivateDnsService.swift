@@ -72,7 +72,7 @@ class PrivateDnsService: PrivateDnsServiceIn {
 
                         // XXX: Even uglier error I don't understand that seems safe to ignore
                         if let err = error as NSError?, err.domain == "NEDNSSettingsErrorDomain" {
-                            Logger.w("PrivateDns", "Ignoring the 'configuration is stale' error")
+                            BlockaLogger.w("PrivateDns", "Ignoring the 'configuration is stale' error")
                             return promise(.success(true))
                         }
 

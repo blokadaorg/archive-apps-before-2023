@@ -108,7 +108,7 @@ class StageRepo: Startable {
 
 class DebugStageRepo: StageRepo {
 
-    private let log = Logger("StageRepo")
+    private let log = BlockaLogger("StageRepo")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

@@ -81,7 +81,7 @@ class LeaseRepo: Startable {
             .map { it in self.writeLeases.send(it) }
             .map { _ in true }
 //            .tryCatch { err -> AnyPublisher<Ignored, Error> in
-//                Logger.e("LeaseRepo", "Could not fetch leases, assuming none: \(err)")
+//                BlockaLogger.e("LeaseRepo", "Could not fetch leases, assuming none: \(err)")
 //                self.writeLeases.send([])
 //                throw err
 //            }
@@ -100,10 +100,8 @@ class LeaseRepo: Startable {
                     lease.public_key == accountWithKeypair.keypair.publicKey
                 })
             {
-                Logger.v("LeaseRepo", "Announcing current lease: \(current.vip4)")
                 self.writeCurrent.send(CurrentLease(lease: current))
             } else {
-                Logger.v("LeaseRepo", "Announcing no current lease")
                 self.writeCurrent.send(CurrentLease(lease: nil))
             }
         })
@@ -166,7 +164,7 @@ class LeaseRepo: Startable {
                 if expireAt < Date() {
                     // The new lease we got is limited by account expiration.
                     // Assume we are expiring and delete the lease.
-                    Logger.w("LeaseRepo", "Account is probably about to expire")
+                    BlockaLogger.w("LeaseRepo", "Account is probably about to expire")
                     self.deleteLease(lease)
                     self.dialog.showAlert(
                         message: L10n.notificationVpnExpiredBody,
@@ -181,10 +179,10 @@ class LeaseRepo: Startable {
                 .flatMap { _ in self.timer.obtainTimer(NOTIF_LEASE_EXP) }
                 .sink(
                     onFailure: { err in
-                        Logger.e("LeaseRepo", "Lease expiration timer failed: \(err)")
+                        BlockaLogger.e("LeaseRepo", "Lease expiration timer failed: \(err)")
                     },
                     onSuccess: {
-                        Logger.w("LeaseRepo", "Lease expired, refreshing")
+                        BlockaLogger.w("LeaseRepo", "Lease expired, refreshing")
                         self.newLease(lease.gateway_id)
                     }
                 )
@@ -213,7 +211,7 @@ class LeaseRepo: Startable {
         .flatMap { _ in self.currentHot.first() }
         .compactMap { it in it.lease }
         .sink(onValue: { currentLease in
-            Logger.w("LeaseRepo", "Removing lease because account is not plus")
+            BlockaLogger.w("LeaseRepo", "Removing lease because account is not plus")
             self.deleteLease(currentLease)
         })
         .store(in: &cancellables)

@@ -35,7 +35,7 @@ protocol BlockaApiServiceIn {
 
 class BlockaApiService: BlockaApiServiceIn {
 
-    private let log = Logger("BlockaApi")
+    private let log = BlockaLogger("BlockaApi")
     private let decoder = blockaDecoder
     private let encoder = blockaEncoder
 

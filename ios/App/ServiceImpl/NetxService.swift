@@ -43,7 +43,7 @@ class NetxService: NetxServiceIn {
         return getManager()
         .tryMap { manager -> NETunnelProviderManager in
             let dns = self.getUserDnsIp(config.deviceTag)
-            Logger.v("NetxService", "setConfig: gateway: \(config.gateway.niceName()), tag: \(config.deviceTag), dns: \(dns)")
+            BlockaLogger.v("NetxService", "setConfig: gateway: \(config.gateway.niceName()), tag: \(config.deviceTag), dns: \(dns)")
 
             let protoConfig = NETunnelProviderProtocol()
             protoConfig.providerBundleIdentifier = "net.blocka.app.engine"
@@ -83,7 +83,7 @@ class NetxService: NetxServiceIn {
         .flatMap { _ in self.netxStateHot.first() }
         .flatMap { netxState -> AnyPublisher<Ignored, Error> in
             if (netxState.active) {
-                Logger.v("NetxService", "Updating NETX config live")
+                BlockaLogger.v("NetxService", "Updating NETX config live")
                 return self.switchConfigLive(config)
             } else {
                 return Just(true).setFailureType(to: Error.self).eraseToAnyPublisher()
@@ -153,7 +153,7 @@ class NetxService: NetxServiceIn {
             .tryMap { manager -> Ignored in
                 let connection = manager.connection as! NETunnelProviderSession
                 do {
-                    Logger.v("NetxService", "Starting tunnel")
+                    BlockaLogger.v("NetxService", "Starting tunnel")
                     try connection.startVPNTunnel()
                     return true
                 } catch {
@@ -221,7 +221,7 @@ class NetxService: NetxServiceIn {
             // Actually stop VPN
             .tryMap { manager -> Ignored in
                 let connection = manager.connection as! NETunnelProviderSession
-                Logger.v("NetxService", "Stopping tunnel")
+                BlockaLogger.v("NetxService", "Stopping tunnel")
                 connection.stopVPNTunnel()
                 return true
             }
@@ -258,7 +258,7 @@ class NetxService: NetxServiceIn {
 
     func createVpnProfile() -> AnyPublisher<Ignored, Error> {
         // According to Apple docs we need to call loadFromPreferences at least once
-        Logger.v("NetxService", "Creating new VPN profile")
+        BlockaLogger.v("NetxService", "Creating new VPN profile")
         return Just(NETunnelProviderManager())
         .map { manager -> NETunnelProviderManager in
             manager.onDemandRules = [NEOnDemandRuleConnect()]
@@ -363,7 +363,7 @@ class NetxService: NetxServiceIn {
     }
 
     private func startMonitoringNetx() {
-        Logger.v("NetxService", "startMonitoringNetx")
+        BlockaLogger.v("NetxService", "startMonitoringNetx")
 
         if let observer = netxStateObserver.value {
             NotificationCenter.default.removeObserver(observer)
@@ -389,7 +389,7 @@ class NetxService: NetxServiceIn {
                 self.queryNetxState()
             },
             onFailure: { err in
-                Logger.e("NetxService", "Could not start montioring".cause(err))
+                BlockaLogger.e("NetxService", "Could not start montioring".cause(err))
             }
         )
         .store(in: &cancellables)
@@ -401,22 +401,22 @@ class NetxService: NetxServiceIn {
         case NEVPNStatus.connected:
             self.queryNetxState()
         case NEVPNStatus.connecting:
-            Logger.v("NetxService", "Connecting")
+            BlockaLogger.v("NetxService", "Connecting")
             self.writeNetxState.send(NetworkStatus.inProgress())
         case NEVPNStatus.disconnecting:
-            Logger.v("NetxService", "Disconnecting")
+            BlockaLogger.v("NetxService", "Disconnecting")
             self.writeNetxState.send(NetworkStatus.inProgress())
         case NEVPNStatus.reasserting:
-            Logger.v("NetxService", "Reasserting")
+            BlockaLogger.v("NetxService", "Reasserting")
             self.writeNetxState.send(NetworkStatus.inProgress())
         case NEVPNStatus.disconnected:
-            Logger.v("NetxService", "Disconnected")
+            BlockaLogger.v("NetxService", "Disconnected")
             self.writeNetxState.send(NetworkStatus.disconnected())
         case NEVPNStatus.invalid:
-            Logger.v("NetxService", "Invalid")
+            BlockaLogger.v("NetxService", "Invalid")
             self.writeNetxState.send(NetworkStatus.disconnected())
         default:
-            Logger.v("NetxService", "Unknown")
+            BlockaLogger.v("NetxService", "Unknown")
             self.writeNetxState.send(NetworkStatus.disconnected())
         }
     }
@@ -447,7 +447,7 @@ class NetxService: NetxServiceIn {
             }
             // Get the pause information from the NETX itself (ignore error)
             .flatMap { status  -> AnyPublisher<(NetworkStatus, String), Error> in
-                Logger.v("NetxService", "Query state: before report")
+                BlockaLogger.v("NetxService", "Query state: before report")
                 return Publishers.CombineLatest(
                     Just(status).setFailureType(to: Error.self).eraseToAnyPublisher(),
                     self.sendNetxMessage(msg: NetworkCommand.report.rawValue)
@@ -464,7 +464,7 @@ class NetxService: NetxServiceIn {
             }
             // Put it all together
             .tryMap { it -> NetworkStatus in
-                Logger.v("NetxService", "Query state: after report")
+                BlockaLogger.v("NetxService", "Query state: after report")
                 let (status, response) = it
                 var pauseSeconds = 0
                 if response != "off" {
@@ -478,7 +478,7 @@ class NetxService: NetxServiceIn {
             .tryMap { it in self.writeNetxState.send(it) }
             .tryMap { _ in true }
             .tryCatch { err -> AnyPublisher<Ignored, Error> in
-                Logger.e(
+                BlockaLogger.e(
                     "NetxService",
                     "queryNetxState: could not get status info".cause(err)
                 )
@@ -487,7 +487,7 @@ class NetxService: NetxServiceIn {
                 self.manager = Atomic(nil)
 
                 if let e = err as? CommonError, e == .vpnNoPermissions {
-                    Logger.w("NetxService", "marking VPN as disabled")
+                    BlockaLogger.w("NetxService", "marking VPN as disabled")
                     self.writeNetxState.send(NetworkStatus.disconnected())
                 }
 
@@ -572,9 +572,9 @@ class NetxService: NetxServiceIn {
         return Publishers.Merge(
             // Actual query for object
             Future<NETunnelProviderManager, Error> { promise in
-                Logger.w("NetxService", "getManager: asking")
+                BlockaLogger.w("NetxService", "getManager: asking")
                 return NETunnelProviderManager.loadAllFromPreferences { (managers, error) in
-                    Logger.w("NetxService", "getManager: got callback")
+                    BlockaLogger.w("NetxService", "getManager: got callback")
                     if let error = error {
                         return promise(
                             .failure("getManager: loadAllPreferences".cause(error))
@@ -584,12 +584,12 @@ class NetxService: NetxServiceIn {
                     // Remove multiple profiles, we just need one
                     let managersCount = managers?.count ?? 0
                     if (managersCount > 1) {
-                        Logger.w("NetxService", "getManager: Found multiple VPN profiles, deleting others")
+                        BlockaLogger.w("NetxService", "getManager: Found multiple VPN profiles, deleting others")
                         for i in 0..<(managersCount - 1) {
                             managers![i].removeFromPreferences(completionHandler: nil)
                         }
                     }
-                    Logger.w("NetxService", "getManager: after managersCount")
+                    BlockaLogger.w("NetxService", "getManager: after managersCount")
 
                     // No profiles means no perms, otherwise normal flow
                     if (managersCount == 0) {
@@ -599,9 +599,9 @@ class NetxService: NetxServiceIn {
                         self.writePerms.send(true)
                         // According to Apple docs we need to call loadFromPreferences at least once
                         let manager = managers![0]
-                        Logger.w("NetxService", "getManager: before second load")
+                        BlockaLogger.w("NetxService", "getManager: before second load")
                         manager.loadFromPreferences { error in
-                            Logger.w("NetxService", "getManager: second load callback rec")
+                            BlockaLogger.w("NetxService", "getManager: second load callback rec")
                             if let error = error {
                                 return promise(
                                     .failure("getManager: loadFromPreferences".cause(error))

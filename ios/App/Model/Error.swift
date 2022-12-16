@@ -98,17 +98,17 @@ func mapErrorForUser(_ error: Error, cause: Error? = nil) -> String {
         userFriendlyError = errorDescriptions[e]!
     }
 
-    Logger.e("Error", "Detailed error: " + error.localizedDescription.cause(cause))
+    BlockaLogger.e("Error", "Detailed error: " + error.localizedDescription.cause(cause))
 
     if let c = cause {
-        Logger.e("Error", "Detailed cause: " + mapCauseForDebug(c))
+        BlockaLogger.e("Error", "Detailed cause: " + mapCauseForDebug(c))
 
         if let userCause = mapCauseForUser(c) {
             return userCause
         }
     }
 
-    Logger.e("Error", userFriendlyError)
+    BlockaLogger.e("Error", userFriendlyError)
     return userFriendlyError
 }
 

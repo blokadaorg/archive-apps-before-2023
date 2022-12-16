@@ -180,7 +180,7 @@ class CloudRepo: Startable {
 
 class DebugCloudRepo: CloudRepo {
 
-    private let log = Logger("Cloud")
+    private let log = BlockaLogger("Cloud")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

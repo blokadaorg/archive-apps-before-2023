@@ -49,12 +49,12 @@ extension Encodable {
             let jsonData = try blockaEncoder.encode(self)
             let jsonString = String(data: jsonData, encoding: .utf8)
             guard let json = jsonString else {
-                Logger.e("JSON", "jsonString was nil")
+                BlockaLogger.e("JSON", "jsonString was nil")
                 return nil
             }
             return json
         } catch {
-            Logger.e("JSON", "Failed encoding to json".cause(error))
+            BlockaLogger.e("JSON", "Failed encoding to json".cause(error))
             return nil
         }
     }

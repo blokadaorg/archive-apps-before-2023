@@ -174,7 +174,7 @@ extension Pack {
             }
 
             if activeSources.isEmpty {
-                Logger.w("Pack", "No matching sources for chosen configuration, choosing first")
+                BlockaLogger.w("Pack", "No matching sources for chosen configuration, choosing first")
                 return self.sources.first!.urls
             } else {
                 return activeSources.flatMap { $0.urls }.unique()

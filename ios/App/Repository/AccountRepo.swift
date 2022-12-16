@@ -141,17 +141,20 @@ class AccountRepo: Startable {
                 try self.validateAccountId(it.0.id)
                 return it
             }
-            .flatMap { it -> AnyPublisher<(Account, Keypair), Error> in
+            .flatMap { it -> AnyPublisher<(Account, BlockaKeypair), Error> in
                 let accountPublisher: AnyPublisher<Account, Error> = Just(it.0)
                     .setFailureType(to: Error.self)
                     .eraseToAnyPublisher()
-                var keypairPublisher: AnyPublisher<Keypair, Error> = self.crypto.generateKeypair()
+                var keypairPublisher: AnyPublisher<BlockaKeypair, Error> = Fail<BlockaKeypair, Error>(error: "No publisher set")
+                    .eraseToAnyPublisher()
 
                 if let acc = it.1, acc.account.id == it.0.id {
                     // Use same keypair if account ID hasn't changed
                     keypairPublisher = Just(acc.keypair)
                         .setFailureType(to: Error.self)
                         .eraseToAnyPublisher()
+                } else {
+                    keypairPublisher = self.crypto.generateKeypair()
                 }
 
                 return Publishers.CombineLatest(
@@ -223,10 +226,10 @@ class AccountRepo: Startable {
                 .flatMap { _ in self.timer.obtainTimer(NOTIF_ACC_EXP) }
                 .sink(
                     onFailure: { err in
-                        Logger.e("AppRepo", "Acc expiration timer failed: \(err)")
+                        BlockaLogger.e("AppRepo", "Acc expiration timer failed: \(err)")
                     },
                     onSuccess: {
-                        Logger.v("AppRepo", "Account soon to expire, refreshing")
+                        BlockaLogger.v("AppRepo", "Account soon to expire, refreshing")
                         self.refreshAccountT.send(it.id)
                         .sink(onFailure: { err in
                             // If cannot refresh, emit expired account manually.
@@ -261,7 +264,7 @@ class AccountRepo: Startable {
         }
         .sink(onValue: { it in
             // Mark account as expired internally
-            Logger.v(
+            BlockaLogger.v(
                 "AppRepo",
                  "Marking account as expired, now: \(Date()), acc: \(it.activeUntil()?.shortlyBefore())"
             )
@@ -313,7 +316,7 @@ class AccountRepo: Startable {
     }
 
     private func createNewUser() -> AnyPublisher<AccountWithKeypair, Error> {
-        Logger.w("Account", "Creating new user")
+        BlockaLogger.w("Account", "Creating new user")
         return Publishers.CombineLatest(
             self.api.postNewAccount(),
             self.crypto.generateKeypair()
@@ -325,14 +328,14 @@ class AccountRepo: Startable {
         .eraseToAnyPublisher()
     }
 
-    private func validateAccount(_ account: Account, _ keypair: Keypair) throws {
+    private func validateAccount(_ account: Account, _ keypair: BlockaKeypair) throws {
         try validateAccountId(account.id)
         if keypair.privateKey.isEmpty || keypair.publicKey.isEmpty {
             throw "account with empty keypair"
         }
 
         if Services.env.isProduction && CRYPTO_MOCKED_KEYS.contains(keypair) {
-            Logger.w("Account", "Mocked keys detected, recreating account")
+            BlockaLogger.w("Account", "Mocked keys detected, recreating account")
             throw CommonError.emptyResult
         }
     }
@@ -357,7 +360,7 @@ class AccountRepo: Startable {
         .eraseToAnyPublisher()
     }
 
-    private func saveKeypairToPersistence(_ keypair: Keypair) -> AnyPublisher<Ignored, Error> {
+    private func saveKeypairToPersistence(_ keypair: BlockaKeypair) -> AnyPublisher<Ignored, Error> {
         Just(keypair).encode(encoder: self.encoder)
         .tryMap { it -> String in
             guard let it = String(data: it, encoding: .utf8) else {
@@ -387,7 +390,7 @@ class AccountRepo: Startable {
         .eraseToAnyPublisher()
     }
 
-    private func loadKeypairFromPersistence() -> AnyPublisher<Keypair, Error> {
+    private func loadKeypairFromPersistence() -> AnyPublisher<BlockaKeypair, Error> {
         return local.getString(forKey: "keypair").tryMap { it -> Data in
             guard let it = it.data(using: .utf8) else {
                 throw "keypair: failed reading persisted keypair data"
@@ -395,15 +398,15 @@ class AccountRepo: Startable {
 
             return it
         }
-        .decode(type: Keypair.self, decoder: self.decoder)
-        .tryCatch { err -> AnyPublisher<Keypair, Error> in
+        .decode(type: BlockaKeypair.self, decoder: self.decoder)
+        .tryCatch { err -> AnyPublisher<BlockaKeypair, Error> in
             // A legacy read of the keys - to be removed later
             return Publishers.CombineLatest(
                 self.local.getString(forKey: "privateKey"),
                 self.local.getString(forKey: "publicKey")
             )
             .tryMap { it in
-                return Keypair(privateKey: it.0, publicKey: it.1)
+                return BlockaKeypair(privateKey: it.0, publicKey: it.1)
             }
             .eraseToAnyPublisher()
         }
@@ -414,7 +417,7 @@ class AccountRepo: Startable {
 
 class DebugAccountRepo: AccountRepo {
 
-    private let log = Logger("AccRepo")
+    private let log = BlockaLogger("AccRepo")
     private var cancellables = Set<AnyCancellable>()
 
     override init() {

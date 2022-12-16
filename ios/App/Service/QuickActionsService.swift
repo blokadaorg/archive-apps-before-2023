@@ -51,7 +51,7 @@ class QuickActionsService: Startable {
     }
 
     func onQuickAction(_ type: String) {
-        Logger.v("QuickAction", "Received quick action: \(type)")
+        BlockaLogger.v("QuickAction", "Received quick action: \(type)")
 
         if type == "start" {
             appRepo.unpauseApp()
@@ -61,7 +61,7 @@ class QuickActionsService: Startable {
             let until = getDateInTheFuture(seconds: PAUSE_TIME_SECONDS)
             appRepo.pauseApp(until: until)
         } else {
-            Logger.w("QuickAction", "Unknown action, ignoring")
+            BlockaLogger.w("QuickAction", "Unknown action, ignoring")
         }
     }
 

@@ -114,11 +114,11 @@ class PackRepo: Startable {
                     let pack = packsDict[packId]
 
                     guard let pack = pack else {
-                        return Logger.w("Pack", "reload: unknown pack id: \(packId)")
+                        return BlockaLogger.w("Pack", "reload: unknown pack id: \(packId)")
                     }
 
                     guard pack.configs.contains(configName) else {
-                        return Logger.w("Pack", "reload: pack \(packId) doesnt know config \(configName)")
+                        return BlockaLogger.w("Pack", "reload: pack \(packId) doesnt know config \(configName)")
                     }
 
                     let newPack = pack.changeStatus(installed: true, config: configName)
@@ -144,7 +144,7 @@ class PackRepo: Startable {
             // Select default config for this pack if none selected
             var pack = pack.changeStatus(installing: true)
             if pack.status.config.isEmpty {
-                Logger.v("Pack", "installPack: selecting first config by default: \(pack.configs.first!)")
+                BlockaLogger.v("Pack", "installPack: selecting first config by default: \(pack.configs.first!)")
                 pack = pack.changeStatus(config: pack.configs.first!)
             }
 
@@ -175,7 +175,7 @@ class PackRepo: Startable {
                 if mapped.isEmpty {
                     throw "could not find relevant blocklist for: \(pack)"
                 } else {
-                    Logger.v("Pack", "New choice: \(mapped)")
+                    BlockaLogger.v("Pack", "New choice: \(mapped)")
                 }
 
                 // A config might have been unselected for the currently edited pack

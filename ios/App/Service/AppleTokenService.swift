@@ -34,7 +34,7 @@ class AppleTokenService {
     }
 
     func onAppleTokenFailed(_ err: Error) {
-        Logger.w("AppleToken", "Failed registering for remote notifications: \(err)")
+        BlockaLogger.w("AppleToken", "Failed registering for remote notifications: \(err)")
     }
 
     private func onSendAppleToken() {

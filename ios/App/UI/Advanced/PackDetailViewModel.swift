@@ -28,7 +28,7 @@ class PackDetailViewModel: ObservableObject {
     @Published var on: Bool = false
     @Published var selected: Bool = false
 
-    private let log = Logger("Pack")
+    private let log = BlockaLogger("Pack")
 
     init(pack: Pack) {
         self.pack = pack

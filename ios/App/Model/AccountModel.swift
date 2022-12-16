@@ -12,13 +12,13 @@
 
 import Foundation
 
-struct Keypair: Codable {
-    let privateKey: PrivateKey
-    let publicKey: PublicKey
+struct BlockaKeypair: Codable {
+    let privateKey: BlockaPrivateKey
+    let publicKey: BlockaPublicKey
 }
 
-extension Keypair : Equatable {
-    static func == (lhs: Keypair, rhs: Keypair) -> Bool {
+extension BlockaKeypair : Equatable {
+    static func == (lhs: BlockaKeypair, rhs: BlockaKeypair) -> Bool {
         return
             lhs.privateKey == rhs.privateKey &&
             lhs.publicKey == rhs.publicKey
@@ -27,5 +27,5 @@ extension Keypair : Equatable {
 
 struct AccountWithKeypair {
     let account: Account
-    let keypair: Keypair
+    let keypair: BlockaKeypair
 }

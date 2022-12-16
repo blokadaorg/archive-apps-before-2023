@@ -27,7 +27,7 @@ class SystemNavService {
         if let url = link.url {
             UIApplication.shared.open(url, options: [:])
         } else {
-            Logger.e("SystemNav", "Could not open link: \(link)")
+            BlockaLogger.e("SystemNav", "Could not open link: \(link)")
         }
     }
 

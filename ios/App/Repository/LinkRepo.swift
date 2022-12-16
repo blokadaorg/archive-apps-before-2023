@@ -54,7 +54,7 @@ class LinkRepo: Startable {
         .tryMap { it in it[link]! }
         .sink(
             onValue: { it in self.systemNav.openInBrowser(it) },
-            onFailure: { err in Logger.e("LinkRepo", "Could not find link: \(link)") }
+            onFailure: { err in BlockaLogger.e("LinkRepo", "Could not find link: \(link)") }
         )
         .store(in: &cancellables)
     }
@@ -66,7 +66,7 @@ class LinkRepo: Startable {
         .tryMap { it in URLComponents(url: it, resolvingAgainstBaseURL: false)! }
         .sink(
             onValue: { it in self.systemNav.openInBrowser(it) },
-            onFailure: { err in Logger.e("LinkRepo", "Could not parse link: \(link)") }
+            onFailure: { err in BlockaLogger.e("LinkRepo", "Could not parse link: \(link)") }
         )
         .store(in: &cancellables)
     }
@@ -84,7 +84,7 @@ class LinkRepo: Startable {
             .compactMapValues { it -> URLComponents? in do {
                 return try self.linkToUrlComponents(it, replace: replace)
             } catch {
-                Logger.w("LinkRepo", "Could not parse link: \(it): \(error)")
+                BlockaLogger.w("LinkRepo", "Could not parse link: \(it): \(error)")
                 return nil
             }}
         }

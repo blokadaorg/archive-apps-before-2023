@@ -16,7 +16,7 @@ class InboxService {
 
     static let shared = InboxService()
 
-    private let log = Logger("Inbox")
+    private let log = BlockaLogger("Inbox")
     private let version = 1
 
     private var messages = [Message]()

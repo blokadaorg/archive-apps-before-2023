@@ -54,7 +54,7 @@ class GatewayRepo: Startable {
             .map { it in
                 let matchingGateway = it.first { $0.public_key == gw }
                 if matchingGateway == nil {
-                    Logger.e("GatewayRepo", "Unknown Gateway ID, ignoring")
+                    BlockaLogger.e("GatewayRepo", "Unknown Gateway ID, ignoring")
                 }
                 return matchingGateway
             }

@@ -138,7 +138,7 @@ class NetxRepo: Startable {
 
 class DebugNetxRepo: NetxRepo {
 
-    private let log = Logger("Netx")
+    private let log = BlockaLogger("Netx")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

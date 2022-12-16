@@ -84,5 +84,5 @@ func resetReposForDebug() {
 func prepareReposForTesting() {
     resetReposForDebug()
     startAllRepos()
-    Logger.w("Repos", "Ready for testing")
+    BlockaLogger.w("Repos", "Ready for testing")
 }

@@ -123,7 +123,7 @@ class NotificationCenterDelegateHandler: NSObject, UNUserNotificationCenterDeleg
         // I haven't tested this, but let's try to invoke the usual flow and hope it works.
         // Normally (for foreground notif) this would execute timer expiration callback.
         // So in case of NOTIF_ACC_EXP, it will expire account and deactivate everything.
-        Logger.w("Notif", "Received push notification, marking NOTIF_ACC_EXP")
+        BlockaLogger.w("Notif", "Received push notification, marking NOTIF_ACC_EXP")
         self.writeNotification.send(NOTIF_ACC_EXP)
         completionHandler(.newData)
     }

@@ -143,7 +143,7 @@ class PaymentRepo: Startable {
             // So we repeat until it gives them but, we can't get an active account.
             .tryCatch { err -> AnyPublisher<Bool, Error> in
                 if let err = err as? CommonError, err == CommonError.paymentInactiveAfterRestore {
-                    Logger.w("PaymentRepo", "Pulling another restored transaction if any")
+                    BlockaLogger.w("PaymentRepo", "Pulling another restored transaction if any")
                     return self.buyProductT.send(productId)
                 } else {
                     // Try finishing transaction anyway, StoreKit seems very finnicky.

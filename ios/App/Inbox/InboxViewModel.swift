@@ -18,7 +18,7 @@ class InboxViewModel: ObservableObject {
     @Published var responding = false
     @Published var input = ""
 
-    private let log = Logger("Inbox")
+    private let log = BlockaLogger("Inbox")
     private let service = InboxService.shared
 
     func fetch() {

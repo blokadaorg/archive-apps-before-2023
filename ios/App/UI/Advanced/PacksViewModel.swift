@@ -35,7 +35,7 @@ class PacksViewModel: ObservableObject {
 
     @Published var showError: Bool = false
 
-    private let log = Logger("Pack")
+    private let log = BlockaLogger("Pack")
 
     init() {
         onPacksChanged()

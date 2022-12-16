@@ -194,7 +194,7 @@ class AppRepo: Startable {
             self.unpauseApp()
         }
         .sink(
-            onFailure: { err in Logger.w("AppRepo", "Pause timer failed: \(err)")}
+            onFailure: { err in BlockaLogger.w("AppRepo", "Pause timer failed: \(err)")}
         )
         .store(in: &cancellables)
     }
@@ -222,7 +222,7 @@ func getDateInTheFuture(seconds: Int) -> Date {
 
 class DebugAppRepo: AppRepo {
 
-    private let log = Logger("App")
+    private let log = BlockaLogger("App")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

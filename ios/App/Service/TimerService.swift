@@ -25,7 +25,7 @@ class TimerService {
     private let dateFormatter = blockaDateFormatter
 
     func createTimer(_ id: String, when: Date) -> AnyPublisher<Ignored, Error> {
-        Logger.v("Timer", "Creating timer for: \(id), at: \(when)")
+        BlockaLogger.v("Timer", "Creating timer for: \(id), at: \(when)")
         return storage.setString(blockaDateFormatter.string(from: when), forKey: "timer_\(id)")
         .tryMap { _ in true }
         .eraseToAnyPublisher()
@@ -33,7 +33,7 @@ class TimerService {
 
     // Returns a publisher that will finish exactly when this timer expires.
     func obtainTimer(_ id: String) -> AnyPublisher<Ignored, Error> {
-        Logger.v("Timer", "Obtaining timer for: \(id)")
+        BlockaLogger.v("Timer", "Obtaining timer for: \(id)")
         return getTimerDate(id)
         .flatMap { when -> AnyPublisher<Ignored, Error> in
             if when <= Date() {
@@ -47,7 +47,7 @@ class TimerService {
                     // Just ignore the output, and wait for the above job to finish.
                     self.notification.scheduleNotification(id: id, when: when)
                     .tryCatch { err -> AnyPublisher<Ignored, Error> in
-                        Logger.w("Timer", "Notification failed to set, ignoring: \(err)")
+                        BlockaLogger.w("Timer", "Notification failed to set, ignoring: \(err)")
                         return Just(true)
                         .setFailureType(to: Error.self)
                         .ignoreOutput()
@@ -99,7 +99,7 @@ class TimerService {
     }
 
     func cancelTimer(_ id: String) -> AnyPublisher<Ignored, Error> {
-        Logger.v("Timer", "Cancelling timer for: \(id)")
+        BlockaLogger.v("Timer", "Cancelling timer for: \(id)")
         return storage.delete(forKey: "timer_\(id)")
         .tryMap { _ in true }
         .eraseToAnyPublisher()

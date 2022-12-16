@@ -64,7 +64,7 @@ class ProcessingRepo: Startable {
 
 class DebugProcessingRepo: ProcessingRepo {
 
-    private let log = Logger("Processing")
+    private let log = BlockaLogger("Processing")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

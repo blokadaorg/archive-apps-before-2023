@@ -91,7 +91,7 @@ extension InboxHistory {
         if let jsonified = self.toJson() {
             UserDefaults.standard.set(jsonified, forKey: "inbox.history")
         } else {
-            Logger.w("Inbox", "Could not convert chat to json")
+            BlockaLogger.w("Inbox", "Could not convert chat to json")
         }
     }
 
@@ -103,14 +103,14 @@ extension InboxHistory {
 
            let jsonData = stringData.data(using: .utf8)
            guard let json = jsonData else {
-               Logger.e("Inbox", "Failed getting chat json")
+               BlockaLogger.e("Inbox", "Failed getting chat json")
                return InboxHistory.empty()
            }
 
            do {
                return try blockaDecoder.decode(InboxHistory.self, from: json)
            } catch {
-               Logger.e("Inbox", "Failed decoding chat json".cause(error))
+               BlockaLogger.e("Inbox", "Failed decoding chat json".cause(error))
                return InboxHistory.empty()
            }
     }

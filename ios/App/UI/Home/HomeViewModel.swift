@@ -16,7 +16,7 @@ import Combine
 
 class HomeViewModel: ObservableObject {
 
-    private let log = Logger("Home")
+    private let log = BlockaLogger("Home")
 
     private lazy var appRepo = Repos.appRepo
     private lazy var permsRepo = Repos.permsRepo

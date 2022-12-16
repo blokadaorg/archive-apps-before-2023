@@ -40,7 +40,7 @@ extension Dns {
         if let dnsString = self.toJson() {
             UserDefaults.standard.set(dnsString, forKey: "dns")
         } else {
-            Logger.w("Dns", "Could not convert dns to json")
+            BlockaLogger.w("Dns", "Could not convert dns to json")
         }
     }
 
@@ -52,14 +52,14 @@ extension Dns {
 
         let jsonData = stringData.data(using: .utf8)
         guard let json = jsonData else {
-            Logger.e("Dns", "Failed getting dns json")
+            BlockaLogger.e("Dns", "Failed getting dns json")
             return Dns.defaultDns()
         }
 
         do {
             return try blockaDecoder.decode(Dns.self, from: json)
         } catch {
-            Logger.e("Dns", "Failed decoding dns json".cause(error))
+            BlockaLogger.e("Dns", "Failed decoding dns json".cause(error))
             return Dns.defaultDns()
         }
     }

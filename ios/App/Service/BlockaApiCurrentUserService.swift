@@ -157,7 +157,7 @@ class BlockaApiCurrentUserService {
             }
         }
         .flatMap { request -> AnyPublisher<Ignored, Error> in
-            Logger.w("BlockaApi", "Deleting one active lease for current alias")
+            BlockaLogger.w("BlockaApi", "Deleting one active lease for current alias")
             return self.client.deleteLease(request: request)
         }
         .eraseToAnyPublisher()

@@ -18,8 +18,8 @@ import Foundation
 
 typealias AccountId = String
 typealias GatewayId = String
-typealias PrivateKey = String
-typealias PublicKey = String
+typealias BlockaPrivateKey = String
+typealias BlockaPublicKey = String
 typealias ActiveUntil = Date
 typealias DeviceToken = Data
 
@@ -98,9 +98,9 @@ struct Gateways: Decodable {
 }
 
 struct Lease: Codable, Identifiable {
-    let id = UUID()
+    let id = UUID() // Only used to persist or something, do not compare on it
     let account_id: AccountId
-    let public_key: PublicKey
+    let public_key: BlockaPublicKey
     let gateway_id: GatewayId
     let expires: String
     let alias: String?
@@ -132,7 +132,13 @@ struct Lease: Codable, Identifiable {
 
 extension Lease: Equatable {
     static func == (lhs: Lease, rhs: Lease) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.account_id == rhs.account_id
+            && lhs.public_key == rhs.public_key
+            && lhs.gateway_id == rhs.gateway_id
+            && lhs.expires == rhs.expires
+            && lhs.alias == rhs.alias
+            && lhs.vip4 == rhs.vip4
+            && lhs.vip6 == rhs.vip6
     }
 }
 
@@ -155,7 +161,7 @@ struct Leases: Decodable {
 
 struct LeaseRequest: Codable {
     let account_id: AccountId
-    let public_key: PublicKey
+    let public_key: BlockaPublicKey
     let gateway_id: GatewayId
     let alias: String?
 }
@@ -244,7 +250,7 @@ struct AppleCheckoutRequest: Codable {
 
 struct AppleDeviceTokenRequest: Codable {
     let account_id: AccountId
-    let public_key: PublicKey
+    let public_key: BlockaPublicKey
     let device_token: AppleToken
 }
 

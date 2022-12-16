@@ -156,7 +156,7 @@ class SheetRepo: Startable {
 
 class DebugSheetRepo: SheetRepo {
 
-    private let log = Logger("Sheet")
+    private let log = BlockaLogger("Sheet")
     private var cancellables = Set<AnyCancellable>()
 
     override func start() {

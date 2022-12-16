@@ -22,7 +22,7 @@ class StoreKitWrapper: NSObject, SKProductsRequestDelegate, SKRequestDelegate,
         "plus_12month",
     ]
 
-    private let log = Logger("StoreKit")
+    private let log = BlockaLogger("StoreKit")
 
     private var products = [SKProduct]()
 
@@ -147,7 +147,7 @@ class StoreKitWrapper: NSObject, SKProductsRequestDelegate, SKRequestDelegate,
     }
 
     func startObservingPayments() {
-        Logger.v("StoreKit", "Starting observing payments")
+        BlockaLogger.v("StoreKit", "Starting observing payments")
         SKPaymentQueue.default().add(self)
     }
 
@@ -322,7 +322,7 @@ class StoreKitWrapper: NSObject, SKProductsRequestDelegate, SKRequestDelegate,
     }
 
     func paymentQueue(_ queue: SKPaymentQueue, removedTransactions transactions: [SKPaymentTransaction]) {
-        Logger.e("StoreKit", "Removed transactions: \(transactions)")
+        BlockaLogger.e("StoreKit", "Removed transactions: \(transactions)")
     }
 
 }

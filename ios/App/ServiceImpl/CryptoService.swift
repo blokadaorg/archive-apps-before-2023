@@ -17,7 +17,7 @@ class CryptoService: CryptoServiceIn {
 
     private lazy var engine = EngineService()
     
-    func generateKeypair() -> AnyPublisher<Keypair, Error> {
+    func generateKeypair() -> AnyPublisher<BlockaKeypair, Error> {
         return Just(true)
         .tryMap { _ in engine.generateKeypair() }
         .eraseToAnyPublisher()

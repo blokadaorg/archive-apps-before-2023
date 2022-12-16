@@ -60,9 +60,9 @@ class FlutterService {
             let line = call.arguments as? String
             if let l = line {
                 if call.method == "e" {
-                    Logger.e("Common", l)
+                    BlockaLogger.e("Common", l)
                 } else {
-                    Logger.v("Common", l)
+                    BlockaLogger.v("Common", l)
                 }
             }
         })
@@ -77,7 +77,7 @@ class FlutterService {
         accountHot.sink(onValue: { it in
             sendAccount.invokeMethod("id", arguments: it.account.id)
             let type = it.account.type?.capitalizingFirstLetter() ?? "Libre"
-            Logger.v("FlutterService", "Account type: \(type)")
+            BlockaLogger.v("FlutterService", "Account type: \(type)")
             sendAccount.invokeMethod("type", arguments: type)
         })
         .store(in: &cancellables)
@@ -115,7 +115,7 @@ class FlutterService {
         }
         .removeDuplicates()
         .sink(onValue: { it in
-            Logger.v("FlutterService", "Passing new app state: \(it)")
+            BlockaLogger.v("FlutterService", "Passing new app state: \(it)")
             appState.invokeMethod("app:state", arguments: it)
         })
         .store(in: &cancellables)
@@ -188,7 +188,7 @@ class FlutterService {
         dnsPermsGrantedHot.sink(onValue: { it in self.dnsPermsGranted = it }).store(in: &cancellables)
         vpnPermsGrantedHot.sink(onValue: { it in self.vpnPermsGranted = it }).store(in: &cancellables)
 
-        Logger.v("FlutterService", "All channels are set up")
+        BlockaLogger.v("FlutterService", "All channels are set up")
     }
 
 }

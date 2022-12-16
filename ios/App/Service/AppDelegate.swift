@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         LoggerSaver.cleanup()
 
-        let log = Logger("")
+        let log = BlockaLogger("")
         log.w("*** ******************* ***")
         log.w("*** BLOKADA IOS STARTED ***")
         log.w("*** ******************* ***")
@@ -93,7 +93,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillTerminate(_ application: UIApplication) {
-        Logger.v("Main", "Application will terminate")
+        BlockaLogger.v("Main", "Application will terminate")
         Repos.stageRepo.onDestroy()
     }
 

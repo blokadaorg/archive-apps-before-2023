@@ -23,7 +23,7 @@ class HttpProtectedService: HttpServiceIn {
     private let bgQueue = DispatchQueue(label: "HttpProtectedBgQueue")
 
     func get(_ path: String) -> AnyPublisher<Data, Error> {
-        Logger.v("HttpProtect", "GET through a protected socket")
+        BlockaLogger.v("HttpProtect", "GET through a protected socket")
         return makeProtectedRequest(path, method: "GET")
         .tryCatch { error in
             // A delayed retry (total 3 attemps spread 1-5 sec at random)
@@ -36,7 +36,7 @@ class HttpProtectedService: HttpServiceIn {
 
     // TODO: should post/put also repeat on fail?
     func postOrPut(_ path: String, method: String, payload: Encodable?) -> AnyPublisher<Data, Error> {
-        Logger.v("HttpProtect", "POST/PUT through a protected socket")
+        BlockaLogger.v("HttpProtect", "POST/PUT through a protected socket")
         var body = ""
         if payload != nil {
             guard let payloadEncoded = payload?.toJson() else {

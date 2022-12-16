@@ -25,7 +25,7 @@ class LogViewModel: ObservableObject {
     }
 
     func toggleMonitorLog() {
-        Logger.v("Debug", "Toggle log monitoring")
+        BlockaLogger.v("Debug", "Toggle log monitoring")
         onMain {
             self.loadLog()
 
@@ -65,7 +65,7 @@ class LogViewModel: ObservableObject {
             sleep(1)
             onMain {
                 guard let file = LoggerSaver.logFile else {
-                    return Logger.e("Logger", "Could not share log file: no log file")
+                    return BlockaLogger.e("Logger", "Could not share log file: no log file")
                 }
 
                 Services.dialog.shareFile(file)
