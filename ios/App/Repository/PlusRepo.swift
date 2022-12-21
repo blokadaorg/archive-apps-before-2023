@@ -30,6 +30,7 @@ class PlusRepo: Startable {
     private lazy var gatewayRepo = Repos.gatewayRepo
     private lazy var netxRepo = Repos.netxRepo
     private lazy var appRepo = Repos.appRepo
+    private lazy var permsRepo = Repos.permsRepo
 
     fileprivate let writePlusEnabled = CurrentValueSubject<Bool?, Never>(nil)
 
@@ -115,7 +116,7 @@ class PlusRepo: Startable {
     private func onSwitchPlusOn() {
         switchPlusOnT.setTask { _ in Just(true)
             .map { _ in self.writePlusEnabled.send(true) }
-            .flatMap { _ in self.netxRepo.stopVpn() } // bieda mentalna
+            .flatMap { _ in self.netxRepo.stopVpn() }
             .flatMap { _ in self.netxRepo.startVpn() }
             .map { _ in self.leaseRepo.refreshLeases() }
             .map { _ in true }
@@ -165,23 +166,23 @@ class PlusRepo: Startable {
             gatewayRepo.selectedHot.compactMap { it in it.gateway },
             leaseRepo.currentHot.compactMap { it in it.lease },
             accountHot.map { it in it.keypair.privateKey }.removeDuplicates(),
-            deviceTagHot
+            //deviceTagHot
+            permsRepo.vpnProfilePerms
         )
         .removeDuplicates { a, b in a.0 != b.0 && a.1 != b.1 && a.2 != b.2 && a.3 != b.3 }
         // Let the producers settle with new values and use only latest ones
         //.debounce(for: 5.0, scheduler: self.bgQueue)
         .sink(onValue: { it in
-            let (gateway, lease, privateKey, deviceTag) = it
+            let (gateway, lease, privateKey, vpnPerm) = it
 
             if gateway.public_key != lease.gateway_id {
-                BlockaLogger.v("PlusRepo", "Ignoring request, bieda mentalna")
                 return
             }
 
             BlockaLogger.v("PlusRepo", "Setting NETX config to: \(gateway.niceName()), \(gateway.public_key), \(lease.vip4), lgw: \(lease.gateway_id)")
             let config = NetxConfig(
                 lease: lease, gateway: gateway,
-                deviceTag: deviceTag,
+                deviceTag: Services.env.deviceTag,
                 userAgent: self.env.userAgent(),
                 privateKey: privateKey
             )

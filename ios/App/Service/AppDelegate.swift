@@ -98,3 +98,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 }
+
+// Copied from WG - not sure if important
+extension AppDelegate {
+    func application(_ application: UIApplication, shouldSaveApplicationState coder: NSCoder) -> Bool {
+        return true
+    }
+    
+    func application(_ application: UIApplication, shouldRestoreApplicationState coder: NSCoder) -> Bool {
+        return true
+    }
+}

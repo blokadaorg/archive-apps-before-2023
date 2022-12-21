@@ -637,4 +637,5 @@ class NetxService: NetxServiceIn {
         }
     }
 
+    func refreshOnForeground() {}
 }

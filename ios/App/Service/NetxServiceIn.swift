@@ -24,6 +24,7 @@ protocol NetxServiceIn: Startable {
     func createVpnProfile() -> AnyPublisher<Ignored, Error>
     func makeProtectedRequest(url: String, method: String, body: String) -> AnyPublisher<String, Error>
     func checkPerms()
+    func refreshOnForeground()
 
 }
 
@@ -112,6 +113,8 @@ class NetxServiceMock: NetxServiceIn {
     func checkPerms() {
         
     }
+    
+    func refreshOnForeground() {}
 
     private func emitNoPermsOnStart() {
         self.writePerms.send(false)

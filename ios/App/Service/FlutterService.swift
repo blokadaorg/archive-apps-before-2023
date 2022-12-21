@@ -34,6 +34,7 @@ class FlutterService {
     private lazy var vpnPermsGrantedHot = Repos.permsRepo.vpnProfilePerms
     private lazy var selectedGatewayHot = Repos.gatewayRepo.selectedHot
     private lazy var plusEnabledHot = Repos.plusRepo.plusEnabledHot
+    private lazy var netxStateHot = Repos.netxRepo.netxStateHot
 
     // All fields below are used by defining power button action
     private var working: Bool = false
@@ -97,6 +98,13 @@ class FlutterService {
         // Push app state changes to Flutter
         let appState = FlutterMethodChannel(name: "app:state",
             binaryMessenger: controller.binaryMessenger)
+        let plusEnabled = netxStateHot.flatMap { it in
+            if it.inProgress {
+                return self.plusEnabledHot
+            } else {
+                return Just(it.active).eraseToAnyPublisher()
+            }
+        }
         Publishers.CombineLatest4(
             // New state is only used internally in iOS so we need to convert it
             appStateHot.map { it -> AppState in
@@ -106,7 +114,7 @@ class FlutterService {
                     return it
                 }
             },
-            workingHot, plusEnabledHot, selectedGatewayHot
+            workingHot, plusEnabled, selectedGatewayHot
         )
         .tryMap { it -> String in
             let (state, working, plus, selectedGateway) = it

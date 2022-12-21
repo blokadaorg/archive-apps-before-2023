@@ -35,6 +35,18 @@ class WgService: NetxServiceIn {
     var tunnelsManager = Atomic<TunnelsManager?>(nil)
     var tunnelsTracker: TunnelsTracker?
 
+    let localIps = [
+        "1.0.0.0/8", "2.0.0.0/8", "3.0.0.0/8", "4.0.0.0/6",
+        "8.0.0.0/7", "11.0.0.0/8", "12.0.0.0/6", "16.0.0.0/4",
+        "32.0.0.0/3", "64.0.0.0/2", "128.0.0.0/3", "160.0.0.0/5",
+        "168.0.0.0/6", "172.0.0.0/12", "172.32.0.0/11", "172.64.0.0/10",
+        "172.128.0.0/9", "173.0.0.0/8", "174.0.0.0/7", "176.0.0.0/4",
+        "192.0.0.0/9", "192.128.0.0/11", "192.160.0.0/13", "192.169.0.0/16",
+        "192.170.0.0/15", "192.172.0.0/14", "192.176.0.0/12", "192.192.0.0/10",
+        "193.0.0.0/8", "194.0.0.0/7", "196.0.0.0/6", "200.0.0.0/5", "208.0.0.0/4",
+        "::/0"
+    ]
+
     func start() {
         initTunnelsManager()
         onPermsGranted_startMonitoringWg()
@@ -42,7 +54,7 @@ class WgService: NetxServiceIn {
         checkPerms()
         self.writeWgState.send(NetworkStatus.disconnected())
     }
-
+    
     private func initTunnelsManager() {
         TunnelsManager.create { [weak self] result in
             guard let self = self else { return }
@@ -116,10 +128,12 @@ class WgService: NetxServiceIn {
 
             var peer = PeerConfiguration(publicKey: PublicKey(base64Key: config.gateway.public_key)!)
             peer.endpoint = Endpoint(from: "\(config.gateway.ipv4):51820")
-            peer.allowedIPs = [
-                IPAddressRange(from: "0.0.0.0/0")!,
-                IPAddressRange(from: "::/0")!,
-            ]
+//            peer.allowedIPs = [
+//                IPAddressRange(from: "0.0.0.0/0")!,
+//                IPAddressRange(from: "::/0")!,
+//            ]
+            peer.allowedIPs = self.localIps.map { it in IPAddressRange(from: it)! }
+            peer.persistentKeepAlive = 120
 
             let tunnelConfiguration = TunnelConfiguration(name: "Blokada+ (\(config.gateway.niceName()))", interface: interface, peers: [peer])
 
@@ -276,19 +290,10 @@ class WgService: NetxServiceIn {
         }
         // Add new empty tunnel configuration (will be replaced before starting)
         .flatMap { manager -> AnyPublisher<TunnelsManager, Error> in
-            var interface = InterfaceConfiguration(privateKey: PrivateKey())
-            interface.addresses = [
-                IPAddressRange(from: "0.0.0.0/32")!,
-            ]
-            //interface.dns = [DNSServer(from: dns)!]
-
-            var peer = PeerConfiguration(publicKey: PrivateKey().publicKey)
-            peer.endpoint = Endpoint(from: "0.0.0.0:51820")
-            peer.allowedIPs = [
-                IPAddressRange(from: "0.0.0.0/0")!,
-            ]
-
-            let tunnelConfiguration = TunnelConfiguration(name: "Blokada", interface: interface, peers: [peer])
+            let key = PrivateKey()
+            var interface = InterfaceConfiguration(privateKey: key)
+            var peer = PeerConfiguration(publicKey: key.publicKey)
+            let tunnelConfiguration = TunnelConfiguration(name: "Blokada+ (...)", interface: interface, peers: [peer])
 
             return Future<TunnelsManager, Error> { promise in
                 manager.add(tunnelConfiguration: tunnelConfiguration) { result -> Void in
@@ -305,16 +310,6 @@ class WgService: NetxServiceIn {
         .map { _ in true }
         .eraseToAnyPublisher()
     }
-
-//    // Make a request outside of the tunnel while tunnel is established.
-//    // It is used while VPN is on, in order to be able to do requests even
-//    // if tunnel is cut out (for example because it expired).
-//    func makeProtectedRequest(url: String, method: String, body: String) -> AnyPublisher<String, Error> {
-//        let request = [
-//            NetworkCommand.request.rawValue, url, method, ":body:", body
-//        ].joined(separator: " ")
-//        return sendNetxMessage(msg: request)
-//    }
 
     // Will create a NETX timer that is not killed in bg. No param means unpause.
     func changePause(until: Date? = nil) -> AnyPublisher<Ignored, Error> {
@@ -354,6 +349,10 @@ class WgService: NetxServiceIn {
             .map { _ in true }
             .eraseToAnyPublisher()
         }
+    }
+
+    func refreshOnForeground() {
+        tunnelsManager.value?.refreshStatuses()
     }
 
     // Creates initial configuration (when user grants VPN permissions).
@@ -464,115 +463,6 @@ class WgService: NetxServiceIn {
         }
         .eraseToAnyPublisher()
     }
-
-//    private func startMonitoringWg() {
-//        BlockaLogger.v("WgService", "startMonitoringWg")
-//
-//        if let observer = wgStateObserver.value {
-//            NotificationCenter.default.removeObserver(observer)
-//        }
-//
-//        getManager()
-//        .tryMap { manager -> NETunnelProviderSession in
-//            guard let connection = manager.connection as? NETunnelProviderSession else {
-//                throw "startMonitoringWg: no connection in manager"
-//            }
-//            return connection
-//        }
-//        .sink(
-//            onValue: { connection in
-//                self.wgStateObserver.value = NotificationCenter.default.addObserver(
-//                    forName: NSNotification.Name.NEVPNStatusDidChange,
-//                    object: connection,
-//                    queue: OperationQueue.main,
-//                    using: self.wgStateListener
-//                )
-//
-//                // Check the current state as we'll only get state changes
-//                self.queryWgState()
-//            },
-//            onFailure: { err in
-//                BlockaLogger.e("WgService", "Could not start montioring".cause(err))
-//            }
-//        )
-//        .store(in: &cancellables)
-//    }
-
-//    private func onQueryWgState() {
-//        queryWgStateT.setTask { _ in
-//            self.getManager()
-//            // Get the status information from the manager connection
-//            .tryMap { manager -> NetworkStatus in
-//                guard let connection = manager.connection as? NETunnelProviderSession else {
-//                    throw "queryWgState: no connection in manager"
-//                }
-//
-//                var gatewayId: String? = nil
-//                if let server = (manager.protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration?["gatewayId"] {
-//                    gatewayId = server as? String
-//                }
-//
-//                let active = connection.status == NEVPNStatus.connected && manager.isEnabled
-//                let inProgress = [
-//                    NEVPNStatus.connecting, NEVPNStatus.disconnecting, NEVPNStatus.reasserting
-//                ].contains(connection.status)
-//
-//                return NetworkStatus(
-//                    active: active, inProgress: inProgress,
-//                    gatewayId: gatewayId, pauseSeconds: 0
-//                )
-//            }
-//            // Get the pause information from the NETX itself (ignore error)
-//            .flatMap { status  -> AnyPublisher<(NetworkStatus, String), Error> in
-//                BlockaLogger.v("WgService", "Query state: before report")
-//                return Publishers.CombineLatest(
-//                    Just(status).setFailureType(to: Error.self).eraseToAnyPublisher(),
-//                    self.sendWgMessage(msg: NetworkCommand.report.rawValue)
-//                    // First retry, maybe we queried too soon
-//                    .tryCatch { err in
-//                        self.sendWgMessage(msg: NetworkCommand.report.rawValue)
-//                        .delay(for: 3.0, scheduler: self.bgQueue)
-//                        .retry(1)
-//                    }
-//                    // Then ignore error, it's not the crucial part of the query
-//                    //.tryCatch { err in Just("0") }
-//                )
-//                .eraseToAnyPublisher()
-//            }
-//            // Put it all together
-//            .tryMap { it -> NetworkStatus in
-//                BlockaLogger.v("WgService", "Query state: after report")
-//                let (status, response) = it
-//                var pauseSeconds = 0
-//                if response != "off" {
-//                    pauseSeconds = Int(response) ?? 0
-//                }
-//                return NetworkStatus(
-//                    active: status.active, inProgress: status.inProgress,
-//                    gatewayId: status.gatewayId, pauseSeconds: pauseSeconds
-//                )
-//            }
-//            .tryMap { it in self.writeWgState.send(it) }
-//            .tryMap { _ in true }
-//            .tryCatch { err -> AnyPublisher<Ignored, Error> in
-//                BlockaLogger.e(
-//                    "WgService",
-//                    "queryWgState: could not get status info".cause(err)
-//                )
-//
-//                // Re-load the manager (maybe VPN profile removed)
-//                self.manager = Atomic(nil)
-//
-//                if let e = err as? CommonError, e == .vpnNoPermissions {
-//                    BlockaLogger.w("WgService", "marking VPN as disabled")
-//                    self.writeWgState.send(NetworkStatus.disconnected())
-//                }
-//
-//                throw err
-//            }
-//            .eraseToAnyPublisher()
-//        }
-//    }
 
     // Returns a manager ref, or errors out if not available
     private func getManager() -> AnyPublisher<TunnelsManager, Error> {
