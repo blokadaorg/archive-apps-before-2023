@@ -104,13 +104,22 @@ class WgService: NetxServiceIn {
 
     func setConfig(_ config: NetxConfig) -> AnyPublisher<Ignored, Error> {
         return getManager()
-        // Skip if no perms yet or wrong config
+        // Skip if anything is missing
         .tryMap { manager in
             if manager.numberOfTunnels() == 0 {
                 throw "No VPN perms yet"
             }
             if config.lease.vip4.isEmpty {
                 throw "No vip4 is set"
+            }
+            if config.privateKey.isEmpty {
+                throw "No privateKey is set"
+            }
+            if config.lease.vip4.isEmpty && config.lease.vip6.isEmpty {
+                throw "No vip4/vip6 is set for lease"
+            }
+            if config.gateway.public_key.isEmpty {
+                throw "No gateway is set"
             }
             return manager
         }
@@ -120,11 +129,11 @@ class WgService: NetxServiceIn {
             BlockaLogger.v("WgWgService", "setConfig: gateway: \(config.gateway.niceName()), tag: \(config.deviceTag), dns: \(dns)")
 
             var interface = InterfaceConfiguration(privateKey: PrivateKey(base64Key: config.privateKey)!)
-            interface.addresses = [
-                IPAddressRange(from: "\(config.lease.vip4)/32")!,
-                IPAddressRange(from: "\(config.lease.vip6)/64")!,
-            ]
             interface.dns = [DNSServer(from: dns)!]
+            interface.addresses = [
+                IPAddressRange(from: "\(config.lease.vip4)/32"),
+                IPAddressRange(from: "\(config.lease.vip6)/64"),
+            ].filter { it in it != nil }.map { it in it! }
 
             var peer = PeerConfiguration(publicKey: PublicKey(base64Key: config.gateway.public_key)!)
             peer.endpoint = Endpoint(from: "\(config.gateway.ipv4):51820")
