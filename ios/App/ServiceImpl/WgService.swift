@@ -320,20 +320,13 @@ class WgService: NetxServiceIn {
         .eraseToAnyPublisher()
     }
 
-    // Will create a NETX timer that is not killed in bg. No param means unpause.
     func changePause(until: Date? = nil) -> AnyPublisher<Ignored, Error> {
-//        return Just(until ?? Date())
-//        .tryMap { until in Int(until.timeIntervalSince(Date())) }
-//        .map { seconds in
-//            [ NetworkCommand.pause.rawValue, String(seconds) ]
-//            .joined(separator: " ")
-//        }
-//        .flatMap { request in self.sendWgMessage(msg: request) }
-//        .map { _ in self.queryWgState() }
-//        .map { _ in true }
-        return Just(false)
-        .setFailureType(to: Error.self)
-        .eraseToAnyPublisher()
+        // No timer support, just pause or unpause
+        if until == nil {
+            return startVpn()
+        } else {
+            return stopVpn()
+        }
     }
 
     func getStatePublisher() -> AnyPublisher<NetworkStatus, Never> {
