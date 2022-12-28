@@ -54,7 +54,6 @@
 		4E1681AA247860490040334B /* ActivityItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1681A8247860490040334B /* ActivityItemView.swift */; };
 		4E16FE762465621C00AA9853 /* hosts.txt in Resources */ = {isa = PBXBuildFile; fileRef = B2EED216241B8D6500407601 /* hosts.txt */; };
 		4E16FE772465622800AA9853 /* hosts.txt in Resources */ = {isa = PBXBuildFile; fileRef = B2EED216241B8D6500407601 /* hosts.txt */; };
-		4E1A84DF2476A6B9007FEAFB /* StatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1A84DE2476A6B9007FEAFB /* StatsModel.swift */; };
 		4E1A84E12476AE19007FEAFB /* StatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1A84E02476AE19007FEAFB /* StatsModel.swift */; };
 		4E1A84E22476AE19007FEAFB /* StatsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1A84E02476AE19007FEAFB /* StatsModel.swift */; };
 		4E1DC4CB27564F3100A4CAB1 /* AccountRepoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E1DC4CA27564F3100A4CAB1 /* AccountRepoTests.swift */; };
@@ -225,7 +224,6 @@
 		4E423558245194E0005A0779 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E423556245192C7005A0779 /* Date+Extensions.swift */; };
 		4E42355C2451959F005A0779 /* LoggerSaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E42355B2451959F005A0779 /* LoggerSaver.swift */; };
 		4E42355D245195FA005A0779 /* LoggerSaverMock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E42355924519582005A0779 /* LoggerSaverMock.swift */; };
-		4E4562B2240D111A0022CBF6 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4562B1240D111A0022CBF6 /* Error.swift */; };
 		4E4562B4240D114D0022CBF6 /* Error.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4562B3240D114D0022CBF6 /* Error.swift */; };
 		4E4562B8240E5E150022CBF6 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E4562B7240E5E150022CBF6 /* SceneDelegate.swift */; };
 		4E45F4ED248E87FF002D4DD6 /* AfterActivatedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E45F4EC248E87FF002D4DD6 /* AfterActivatedView.swift */; };
@@ -396,7 +394,6 @@
 		4E971F82246C14A400809EA6 /* AppleTokenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E971F81246C14A400809EA6 /* AppleTokenService.swift */; };
 		4E971F83246C14A400809EA6 /* AppleTokenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E971F81246C14A400809EA6 /* AppleTokenService.swift */; };
 		4E9A04622448A93F003AB48D /* NetworkCommand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9A04612448A93F003AB48D /* NetworkCommand.swift */; };
-		4E9A046424499317003AB48D /* NELogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9A046324499317003AB48D /* NELogger.swift */; };
 		4E9A04662449A006003AB48D /* EnvService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9A04652449A006003AB48D /* EnvService.swift */; };
 		4E9EB99027B548420040F375 /* SettingsWideVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EB98F27B548420040F375 /* SettingsWideVerticalView.swift */; };
 		4E9EB99127B548420040F375 /* SettingsWideVerticalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E9EB98F27B548420040F375 /* SettingsWideVerticalView.swift */; };
@@ -439,9 +436,6 @@
 		4EC014012460741C001DF5F7 /* TabItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC014002460741C001DF5F7 /* TabItemView.swift */; };
 		4EC014022460741C001DF5F7 /* TabItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC014002460741C001DF5F7 /* TabItemView.swift */; };
 		4ED3445623E1B0D90075B796 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ED3445323E1B0A60075B796 /* NetworkExtension.framework */; };
-		4ED3445E23E1B1450075B796 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED3445D23E1B1450075B796 /* PacketTunnelProvider.swift */; };
-		4ED3446723E1B1520075B796 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ED3445323E1B0A60075B796 /* NetworkExtension.framework */; };
-		4ED3446A23E1B7430075B796 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 4ED3443E23E190910075B796 /* libresolv.tbd */; };
 		4ED349C6246C6C0A00C843FA /* BlokadaPlusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED349C5246C6C0A00C843FA /* BlokadaPlusView.swift */; };
 		4ED349C7246C6C0A00C843FA /* BlokadaPlusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED349C5246C6C0A00C843FA /* BlokadaPlusView.swift */; };
 		4ED41CC42478406800155C88 /* ActivityViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED41CC32478406800155C88 /* ActivityViewModel.swift */; };
@@ -469,9 +463,6 @@
 		4EF564BE276A16E5005E3D70 /* StoreKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF564BD276A16E5005E3D70 /* StoreKitService.swift */; };
 		4EF564BF276A16E5005E3D70 /* StoreKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF564BD276A16E5005E3D70 /* StoreKitService.swift */; };
 		4EF7EDF5240E9E95001FA02E /* Resources.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EF7EDF4240E9E95001FA02E /* Resources.swift */; };
-		B25D04CF248FB73B00CC3EF7 /* libengine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B2240DD92417FA8900F13E97 /* libengine.a */; };
-		B285FFFD248F8AE5003EAA35 /* PacketLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = B285FFFC248F8AE5003EAA35 /* PacketLoop.swift */; };
-		B2EED218241BE4A800407601 /* hosts.txt in Resources */ = {isa = PBXBuildFile; fileRef = B2EED216241B8D6500407601 /* hosts.txt */; };
 		B2F720922418F4E20002B88E /* libengine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B2240DD92417FA8900F13E97 /* libengine.a */; };
 /* End PBXBuildFile section */
 
@@ -833,7 +824,6 @@
 		4ED3443E23E190910075B796 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		4ED3445323E1B0A60075B796 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 		4ED3445523E1B0D90075B796 /* IOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IOS.entitlements; sourceTree = "<group>"; };
-		4ED3445B23E1B1450075B796 /* NETX.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NETX.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4ED3445D23E1B1450075B796 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
 		4ED3445F23E1B1450075B796 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4ED3446023E1B1450075B796 /* IOSNetworkExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = IOSNetworkExtension.entitlements; sourceTree = "<group>"; };
@@ -905,16 +895,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		4ED3445823E1B1450075B796 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4ED3446723E1B1520075B796 /* NetworkExtension.framework in Frameworks */,
-				4ED3446A23E1B7430075B796 /* libresolv.tbd in Frameworks */,
-				B25D04CF248FB73B00CC3EF7 /* libengine.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -943,7 +923,6 @@
 			isa = PBXGroup;
 			children = (
 				47729E0222F447C800B9B36B /* Blokada 6.app */,
-				4ED3445B23E1B1450075B796 /* NETX.appex */,
 				B2240DC72417F83100F13E97 /* liblibengine.a */,
 				4E7FE9D8244DC28900851E9F /* Blokada Mocked.app */,
 				4E1DC4C827564F3100A4CAB1 /* AppTests.xctest */,
@@ -1575,23 +1554,6 @@
 			productReference = 4E7FE9D8244DC28900851E9F /* Blokada Mocked.app */;
 			productType = "com.apple.product-type.application";
 		};
-		4ED3445A23E1B1450075B796 /* NETX */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 4ED3446423E1B1450075B796 /* Build configuration list for PBXNativeTarget "NETX" */;
-			buildPhases = (
-				4ED3445723E1B1450075B796 /* Sources */,
-				4ED3445823E1B1450075B796 /* Frameworks */,
-				4ED3445923E1B1450075B796 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = NETX;
-			productName = IOSNetworkExtension;
-			productReference = 4ED3445B23E1B1450075B796 /* NETX.appex */;
-			productType = "com.apple.product-type.app-extension";
-		};
 		B2240DC62417F83100F13E97 /* Blocka Engine */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B2240DCB2417F83100F13E97 /* Build configuration list for PBXNativeTarget "Blocka Engine" */;
@@ -1629,9 +1591,6 @@
 					4E23CF97293DF7D100613D0A = {
 						CreatedOnToolsVersion = 14.1;
 					};
-					4ED3445A23E1B1450075B796 = {
-						CreatedOnToolsVersion = 11.2.1;
-					};
 					4EEF402E293A08390036EA57 = {
 						CreatedOnToolsVersion = 14.1;
 					};
@@ -1668,7 +1627,6 @@
 			targets = (
 				47729E0122F447C800B9B36B /* App */,
 				4E7FE98E244DC28900851E9F /* Mocked */,
-				4ED3445A23E1B1450075B796 /* NETX */,
 				B2240DC62417F83100F13E97 /* Blocka Engine */,
 				4E1DC4C727564F3100A4CAB1 /* AppTests */,
 				4EEF402E293A08390036EA57 /* WireGuardBridgeiOS */,
@@ -1715,14 +1673,6 @@
 				4E65293A248F760700EB871A /* Ui.strings in Resources */,
 				4E7FE9D1244DC28900851E9F /* LaunchScreen.storyboard in Resources */,
 				4E7FE9D2244DC28900851E9F /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4ED3445923E1B1450075B796 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				B2EED218241BE4A800407601 /* hosts.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2225,18 +2175,6 @@
 				4E61D8E827B2DA7F00C98D36 /* MainView.swift in Sources */,
 				4ED349C7246C6C0A00C843FA /* BlokadaPlusView.swift in Sources */,
 				4EA2783124657E9E00C6372E /* ShareSheet.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4ED3445723E1B1450075B796 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				4E9A046424499317003AB48D /* NELogger.swift in Sources */,
-				B285FFFD248F8AE5003EAA35 /* PacketLoop.swift in Sources */,
-				4E4562B2240D111A0022CBF6 /* Error.swift in Sources */,
-				4ED3445E23E1B1450075B796 /* PacketTunnelProvider.swift in Sources */,
-				4E1A84DF2476A6B9007FEAFB /* StatsModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2752,70 +2690,6 @@
 			};
 			name = Release;
 		};
-		4ED3446523E1B1450075B796 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NETX/IOSNetworkExtension.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HQH5AFGB68;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = NETX/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/BlockaEngine",
-				);
-				MARKETING_VERSION = 22.4.22;
-				PRODUCT_BUNDLE_IDENTIFIER = net.blocka.app.engine;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "BlockaEngine/IOS-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALID_ARCHS = "arm64 arm64e";
-			};
-			name = Debug;
-		};
-		4ED3446623E1B1450075B796 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = NETX/IOSNetworkExtension.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = HQH5AFGB68;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = NETX/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@executable_path/../../Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/BlockaEngine",
-				);
-				MARKETING_VERSION = 22.4.22;
-				PRODUCT_BUNDLE_IDENTIFIER = net.blocka.app.engine;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "BlockaEngine/IOS-Bridging-Header.h";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				VALID_ARCHS = "arm64 arm64e";
-			};
-			name = Release;
-		};
 		4EEF4030293A08390036EA57 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2925,15 +2799,6 @@
 			buildConfigurations = (
 				4E7FE9D6244DC28900851E9F /* Debug */,
 				4E7FE9D7244DC28900851E9F /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		4ED3446423E1B1450075B796 /* Build configuration list for PBXNativeTarget "NETX" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				4ED3446523E1B1450075B796 /* Debug */,
-				4ED3446623E1B1450075B796 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
