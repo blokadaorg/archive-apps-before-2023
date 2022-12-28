@@ -49,11 +49,22 @@ class TunnelsTracker {
 
 extension TunnelsTracker: TunnelsManagerActivationDelegate {
     func tunnelActivationAttemptFailed(tunnel: TunnelContainer, error: TunnelsManagerActivationAttemptError) {
-        BlockaLogger.e("TunnelsTracker", "tun: \(tunnel.name), activation attempt fail: \(error)")
-        onTunnelState(NetworkStatus.disconnected())
+        switch (error) {
+            case .tunnelIsNotInactive:
+                BlockaLogger.v("TunnelsTracker", "tun: \(tunnel.name), is active")
+                onTunnelState(NetworkStatus(
+                    active: true, inProgress: false,
+                    gatewayId: tunnel.tunnelConfiguration!.peers.first!.publicKey.base64Key,
+                    pauseSeconds: 0
+                ))
+            default:
+                BlockaLogger.e("TunnelsTracker", "tun: \(tunnel.name), activation attempt fail: \(error)")
+                onTunnelState(NetworkStatus.disconnected())
+        }
     }
 
     func tunnelActivationAttemptSucceeded(tunnel: TunnelContainer) {
+        BlockaLogger.v("TunnelsTracker", "tun: \(tunnel.name), activation attempt succeeded")
         onTunnelState(NetworkStatus(
             active: true, inProgress: false,
             gatewayId: tunnel.tunnelConfiguration!.peers.first!.publicKey.base64Key,
@@ -67,6 +78,7 @@ extension TunnelsTracker: TunnelsManagerActivationDelegate {
     }
 
     func tunnelActivationSucceeded(tunnel: TunnelContainer) {
+        BlockaLogger.v("TunnelsTracker", "tun: \(tunnel.name), activation succeeded")
         onTunnelState(NetworkStatus(
             active: true, inProgress: false,
             gatewayId: tunnel.tunnelConfiguration!.peers.first!.publicKey.base64Key,
@@ -75,6 +87,7 @@ extension TunnelsTracker: TunnelsManagerActivationDelegate {
     }
 
     func tunnelDeactivated(tunnel: TunnelContainer) {
+        BlockaLogger.v("TunnelsTracker", "tun: \(tunnel.name), deactivated")
         onTunnelState(NetworkStatus.disconnected())
     }
 }

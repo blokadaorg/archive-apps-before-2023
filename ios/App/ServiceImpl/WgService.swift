@@ -73,7 +73,7 @@ class WgService: NetxServiceIn {
                 self.tunnelsManager = Atomic(tunnelsManager)
                 self.tunnelsTracker = tunnelsTracker
 
-                self.workaroundFirstConfigProblem(manager: tunnelsManager)
+                //self.workaroundFirstConfigProblem(manager: tunnelsManager)
             }
         }
     }
@@ -148,7 +148,7 @@ class WgService: NetxServiceIn {
 
             let container = manager.tunnel(at: 0)
             return Future<TunnelsManager, Error> { promise in
-                manager.modify(tunnel: container, tunnelConfiguration: tunnelConfiguration, onDemandOption: .off) { error -> Void in
+                manager.modify(tunnel: container, tunnelConfiguration: tunnelConfiguration, onDemandOption: .anyInterface(.anySSID), shouldEnsureOnDemandEnabled: true) { error -> Void in
                     guard error == nil else {
                         return promise(.failure("setConfig: could not modify tunnel".cause(error)))
                     }
@@ -187,11 +187,25 @@ class WgService: NetxServiceIn {
             }
 
             return self.getManager()
-            .tryMap { manager in
+            .tryMap { manager -> TunnelsManager in
                 if manager.numberOfTunnels() == 0 {
                     throw "No VPN perms yet"
                 }
                 return manager
+            }
+            // Enable on-demand
+            .flatMap { manager -> AnyPublisher<TunnelsManager, Error> in
+                BlockaLogger.v("WgService", "Enabling on-demand")
+                return Future<TunnelsManager, Error> { promise in
+                    manager.setOnDemandEnabled(true, on: manager.tunnel(at: 0)) { error in
+                        guard error == nil else {
+                            return promise(.failure("startVpn: could not enable on-demand".cause(error)))
+                        }
+
+                        return promise(.success(manager))
+                    }
+                }
+                .eraseToAnyPublisher()
             }
             // Actually start VPN
             .tryMap { manager -> Ignored in
@@ -238,6 +252,19 @@ class WgService: NetxServiceIn {
             }
 
             return self.getManager()
+            // Disable on-demand
+            .flatMap { manager in
+                BlockaLogger.v("WgService", "Disabling on-demand")
+                return Future<TunnelsManager, Error> { promise in
+                    manager.setOnDemandEnabled(false, on: manager.tunnel(at: 0)) { error in
+                        guard error == nil else {
+                            return promise(.failure("stopVpn: could not disable on-demand".cause(error)))
+                        }
+                        
+                        return promise(.success(manager))
+                    }
+                }
+            }
             // Actually stop VPN
             .tryMap { manager -> Ignored in
                 BlockaLogger.v("WgService", "Stopping tunnel")
