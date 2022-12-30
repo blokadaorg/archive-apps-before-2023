@@ -17,6 +17,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.LifecycleOwner
@@ -154,6 +155,12 @@ class HomeLibreView : FrameLayout, IHomeContentView {
                 when {
                     s.inProgress -> Unit
                     s.error != null -> Unit
+                    EnvironmentService.isSlim() -> {
+                        // The slim build will not let to start the app (if not escaped).
+                        // This is because the slim build got banned by Google and this is the attempt
+                        // to migrate users that still have slim installed.
+                        Toast.makeText(context, "Could not activate. Search 'Blokada 6' on Google Play to update.", Toast.LENGTH_LONG).show()
+                    }
                     s.active -> {
                         vm.turnOff()
                         adsCounterVm.roll()
