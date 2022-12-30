@@ -179,6 +179,7 @@ class PlusRepo: Startable {
                 return
             }
 
+            BlockaLogger.v("PlusRepo", "Lease valid until: \(lease.expires)")
             BlockaLogger.v("PlusRepo", "Setting NETX config to: \(gateway.niceName()), \(gateway.public_key), \(lease.vip4), lgw: \(lease.gateway_id)")
             let config = NetxConfig(
                 lease: lease, gateway: gateway,
